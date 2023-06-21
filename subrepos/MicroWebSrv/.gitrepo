@@ -1,0 +1,12 @@
+; DO NOT EDIT (unless you know what you are doing)
+;
+; This subdirectory is a git "subrepo", and this file is maintained by the
+; git-subrepo command. See https://github.com/ingydotnet/git-subrepo#readme
+;
+[subrepo]
+	remote = https://github.com/jczic/MicroWebSrv.git
+	branch = master
+	commit = 9909b830792d5d06cd1c34dce50985b3291eb0da
+	parent = c42d13a10f99a9850ab73d8a5807cb3a15076a66
+	method = merge
+	cmdver = 0.4.5
