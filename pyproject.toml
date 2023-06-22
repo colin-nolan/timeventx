@@ -1,0 +1,14 @@
+[tool.poetry]
+name = "garden-watering"
+version = "0.1.0"
+description = ""
+authors = ["Colin Nolan <cn580@alumni.york.ac.uk>"]
+readme = "README.md"
+packages = [{include = "garden_watering"}, {include = "vendored/MicroWebSrv"}]
+
+[tool.poetry.dependencies]
+python = "^3.10"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
