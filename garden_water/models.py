@@ -2,18 +2,40 @@ from abc import ABC, abstractmethod
 from collections.abc import Container
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-from typing import NewType, cast
+from typing import NewType, cast, Optional
 
 TimerId = NewType("TimerId", int)
 
 
 @dataclass(frozen=True)
 class Timer:
-    id: TimerId
     name: str
     start_time: datetime
     duration: timedelta
     enabled: bool
+
+
+@dataclass(frozen=True)
+class IdentifiableTimer(Timer):
+    id: Optional[TimerId] = None
+
+    @staticmethod
+    def from_timer(timer: Timer, identifier: TimerId) -> "IdentifiableTimer":
+        return IdentifiableTimer(
+            id=identifier,
+            name=timer.name,
+            start_time=timer.start_time,
+            duration=timer.duration,
+            enabled=timer.enabled,
+        )
+
+    def to_timer(self):
+        return Timer(
+            name=self.name,
+            start_time=self.start_time,
+            duration=self.duration,
+            enabled=self.enabled,
+        )
 
 
 class TimersContainer(ABC, Container[Timer]):
@@ -34,9 +56,11 @@ class TimersContainer(ABC, Container[Timer]):
         """
 
     @abstractmethod
-    def add(self, timer: Timer):
+    def add(self, timer: Timer) -> Timer:
         """
         Adds the given timer to the collection.
+
+        A model of the timer added is returned
         :param timer: timer to add
         :raises ValueError: if timer with the same ID already exists
         """
