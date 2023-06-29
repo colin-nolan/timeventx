@@ -4,14 +4,16 @@ version = "0.1.0"
 description = ""
 authors = ["Colin Nolan <cn580@alumni.york.ac.uk>"]
 readme = "README.md"
-packages = [{include = "garden_watering"}, {include = "vendored/MicroWebSrv"}]
+packages = [{include = "garden_water"}]
 
 [tool.poetry.dependencies]
 python = "^3.10"
 sqlalchemy = "^2.0.17"
+microwebsrv2 = {git = "https://github.com/jczic/MicroWebSrv2.git"}
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^7.4.0"
+requests = "^2.31.0"
 
 [build-system]
 requires = ["poetry-core"]

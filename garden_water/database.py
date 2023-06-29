@@ -2,7 +2,7 @@ from sqlalchemy import Boolean, Column, DateTime, Integer, Interval, String, cre
 from sqlalchemy.exc import IntegrityError, NoResultFound
 from sqlalchemy.orm import declarative_base, sessionmaker
 
-from garden_water.models import Timer, TimerId, TimersContainer, IdentifiableTimer
+from garden_water.models import IdentifiableTimer, Timer, TimerId, TimersContainer
 
 Base = declarative_base()
 

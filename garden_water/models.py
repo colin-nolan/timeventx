@@ -1,8 +1,9 @@
 from abc import ABC, abstractmethod
 from collections.abc import Container
 from dataclasses import dataclass
-from datetime import datetime, timedelta
-from typing import NewType, cast, Optional
+from datetime import timedelta
+from time import struct_time
+from typing import NewType, Optional, cast
 
 TimerId = NewType("TimerId", int)
 
@@ -10,7 +11,7 @@ TimerId = NewType("TimerId", int)
 @dataclass(frozen=True)
 class Timer:
     name: str
-    start_time: datetime
+    start_time: struct_time
     duration: timedelta
     enabled: bool
 
