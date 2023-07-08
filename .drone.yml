@@ -1,0 +1,23 @@
+---
+
+kind: pipeline
+name: terraform
+platform:
+  arch: arm64
+
+steps:
+  - name: run Python tests
+    image: python:3.11
+    commands:
+      - pip install poetry
+      - poetry install
+      - poetry run pytest
+
+  - name: check Python format
+    image: python:3.11
+    commands:
+      - pip install poetry
+      - poetry install
+      - poetry run black --check garden_water
+      - poetry run isort --check garden_water
+

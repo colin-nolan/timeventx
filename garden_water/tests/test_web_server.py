@@ -30,7 +30,13 @@ def test_get_timers(server_location: str):
 
 def test_post_timer(server_location: str):
     response = requests.post(
-        f"{server_location}/timer", json={"name": "bar", "start_time": "01:02:03", "duration": 60, "enabled": True}
+        f"{server_location}/timer",
+        json={
+            "name": "bar",
+            "start_time": "01:02:03",
+            "duration": 60,
+            "enabled": True,
+        },
     )
     print(response.content)
     assert response.status_code == 200

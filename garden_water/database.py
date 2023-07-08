@@ -1,4 +1,12 @@
-from sqlalchemy import Boolean, Column, DateTime, Integer, Interval, String, create_engine
+from sqlalchemy import (
+    Boolean,
+    Column,
+    DateTime,
+    Integer,
+    Interval,
+    String,
+    create_engine,
+)
 from sqlalchemy.exc import IntegrityError, NoResultFound
 from sqlalchemy.orm import declarative_base, sessionmaker
 
