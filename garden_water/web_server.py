@@ -52,7 +52,7 @@ def post_timer(microWebSrv2: MicroWebSrv2Class, request: HttpRequest):
         request.Response.Return(_HTTP_CODE_BAD_RESPONSE, f"Timer attributes must be set")
         return
     if serialised_timer.get("id") is not None:
-        request.Response.Return(_HTTP_CODE_FORBIDDEN_RESPONSE, f"Timer cannot be posted with ID (try PUT)")
+        request.Response.Return(_HTTP_CODE_FORBIDDEN_RESPONSE, f"Timer cannot be posted with an ID")
         return
     try:
         start_time = deserialise_start_time(serialised_timer["start_time"])
