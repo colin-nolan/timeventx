@@ -5,6 +5,8 @@ from datetime import timedelta
 from time import struct_time
 from typing import NewType, Optional, cast
 
+START_TIME_FORMAT = "%H:%M:%S"
+
 TimerId = NewType("TimerId", int)
 
 

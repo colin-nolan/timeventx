@@ -1,5 +1,6 @@
 import os
-from time import sleep, strptime
+from datetime import timedelta
+from time import sleep
 
 from MicroWebSrv2 import GET, POST, HttpRequest
 from MicroWebSrv2 import MicroWebSrv2 as MicroWebSrv2Class
@@ -7,22 +8,41 @@ from MicroWebSrv2 import WebRoute
 
 from garden_water.database import TimersDatabase
 from garden_water.models import Timer
+from garden_water.serialisation import deserialise_start_time, timer_to_json
 
-DATABASE_LOCATION = os.getenv("GARDEN_WATER_DATABASE_LOCATION", "sqlite:///garden-water.sqlite")
-TIMERS_CONTAINER_SINGLETON = TimersDatabase(DATABASE_LOCATION)
+DATABASE_LOCATION_ENVIRONMENT_VARIABLE = "GARDEN_WATER_DATABASE_LOCATION"
+DEFAULT_DATABASE_LOCATION = "sqlite:///garden-water.sqlite"
 
+_TIMERS_DATABASE_SINGLETONS: dict[str, TimersDatabase] = {}
 _HTTP_CODE_BAD_RESPONSE = 400
+_HTTP_CODE_FORBIDDEN_RESPONSE = 403
 
 
-@WebRoute(GET, "/hello")
-def RequestTestRedirect(microWebSrv2: MicroWebSrv2Class, request: HttpRequest):
-    request.Response.ReturnOk("Hello World")
+def get_timers_database() -> TimersDatabase:
+    """
+    Gets timers database singleton for the database location specified via the `DATABASE_LOCATION_ENVIRONMENT_VARIABLE`
+    environment variable.
+
+    Not multi-thread safe.
+    :return: the database
+    """
+    database_location = os.getenv(DATABASE_LOCATION_ENVIRONMENT_VARIABLE, DEFAULT_DATABASE_LOCATION)
+    database = _TIMERS_DATABASE_SINGLETONS.get(database_location)
+    if database is None:
+        database = TimersDatabase(database_location)
+        _TIMERS_DATABASE_SINGLETONS[database_location] = database
+    return database
+
+
+@WebRoute(GET, "/healthcheck")
+def get_health(microWebSrv2: MicroWebSrv2Class, request: HttpRequest):
+    request.Response.ReturnOkJSON(True)
 
 
 @WebRoute(GET, "/timers")
 def get_timers(microWebSrv2: MicroWebSrv2Class, request: HttpRequest):
-    timers = TIMERS_CONTAINER_SINGLETON.get_all()
-    request.Response.ReturnOkJSON(timers)
+    timers = get_timers_database().get_all()
+    request.Response.ReturnOkJSON([timer_to_json(timer) for timer in timers])
 
 
 @WebRoute(POST, "/timer")
@@ -31,9 +51,12 @@ def post_timer(microWebSrv2: MicroWebSrv2Class, request: HttpRequest):
     if serialised_timer is None:
         request.Response.Return(_HTTP_CODE_BAD_RESPONSE, f"Timer attributes must be set")
         return
+    if serialised_timer.get("id") is not None:
+        request.Response.Return(_HTTP_CODE_FORBIDDEN_RESPONSE, f"Timer cannot be posted with ID (try PUT)")
+        return
     try:
-        start_time = strptime(serialised_timer["start_time"], "%H:%M:%S")
-    except KeyError | ValueError as e:
+        start_time = deserialise_start_time(serialised_timer["start_time"])
+    except (KeyError, ValueError) as e:
         request.Response.Return(_HTTP_CODE_BAD_RESPONSE, f"Invalid start_time: {e}")
         return
 
@@ -41,14 +64,14 @@ def post_timer(microWebSrv2: MicroWebSrv2Class, request: HttpRequest):
         timer = Timer(
             name=serialised_timer["name"],
             start_time=start_time,
-            duration=serialised_timer["duration"],
+            duration=timedelta(seconds=int(serialised_timer["duration"])),
             enabled=serialised_timer["enabled"],
         )
     except TypeError | KeyError as e:
         request.Response.Return(_HTTP_CODE_BAD_RESPONSE, f"Invalid timer attributes: {e}")
         return
-    identifier = TIMERS_CONTAINER_SINGLETON.add(timer)
-    request.Response.ReturnOkJSON(identifier)
+    identifiable_timer = get_timers_database().add(timer)
+    request.Response.ReturnOkJSON(timer_to_json(identifiable_timer))
 
 
 def create_web_server(port: int, interface: str = "0.0.0.0") -> MicroWebSrv2Class:
