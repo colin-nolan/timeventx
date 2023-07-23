@@ -11,7 +11,7 @@ from garden_water.tests._common import (
 from garden_water.timers.collections.abc import IdentifiableTimersCollection
 from garden_water.timers.collections.database import TimersDatabase
 from garden_water.timers.collections.memory import InMemoryIdentifiableTimersCollection
-from garden_water.timers.models import TimerId, IdentifiableTimer
+from garden_water.timers.timers import TimerId, IdentifiableTimer
 
 
 def timers_database() -> TimersDatabase:

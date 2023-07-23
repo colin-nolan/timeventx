@@ -7,8 +7,8 @@ from MicroWebSrv2 import MicroWebSrv2 as MicroWebSrv2Class
 from MicroWebSrv2 import WebRoute
 
 from garden_water.timers.collections.database import TimersDatabase
-from garden_water.timers.models import Timer
-from garden_water.timers.serialisation import timer_to_json, deserialise_start_time
+from garden_water.timers.timers import Timer
+from garden_water.timers.serialisation import timer_to_json, deserialise_daytime
 
 DATABASE_LOCATION_ENVIRONMENT_VARIABLE = "GARDEN_WATER_DATABASE_LOCATION"
 DEFAULT_DATABASE_LOCATION = "sqlite:///garden-water.sqlite"
@@ -54,7 +54,7 @@ def post_timer(microWebSrv2: MicroWebSrv2Class, request: HttpRequest):
         request.Response.Return(_HTTP_CODE_FORBIDDEN_RESPONSE, f"Timer cannot be posted with an ID")
         return
     try:
-        start_time = deserialise_start_time(serialised_timer["start_time"])
+        start_time = deserialise_daytime(serialised_timer["start_time"])
     except (KeyError, ValueError) as e:
         request.Response.Return(_HTTP_CODE_BAD_RESPONSE, f"Invalid start_time: {e}")
         return

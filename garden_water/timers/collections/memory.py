@@ -1,6 +1,6 @@
 from typing import Iterator, Iterable
 
-from garden_water.timers.models import TimerId, IdentifiableTimer, Timer
+from garden_water.timers.timers import TimerId, IdentifiableTimer, Timer
 from garden_water.timers.collections.abc import IdentifiableTimersCollection
 
 

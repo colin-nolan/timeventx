@@ -5,9 +5,9 @@ from sqlalchemy import CHAR, Boolean, Column, Integer, Interval, String, create_
 from sqlalchemy.exc import IntegrityError, NoResultFound
 from sqlalchemy.orm import declarative_base, sessionmaker
 
-from garden_water.timers.models import TimerId, IdentifiableTimer, Timer
+from garden_water.timers.timers import TimerId, IdentifiableTimer, Timer
 from garden_water.timers.collections.abc import IdentifiableTimersCollection
-from garden_water.timers.serialisation import deserialise_start_time, serialise_start_time
+from garden_water.timers.serialisation import deserialise_daytime, serialise_daytime
 
 Base = declarative_base()
 
@@ -18,7 +18,6 @@ class _DbTimer(Base):
     name = Column(String, nullable=False)
     start_time = Column(CHAR(8), nullable=False)
     duration = Column(Interval, nullable=False)
-    enabled = Column(Boolean, nullable=False)
 
 
 class TimersDatabase(IdentifiableTimersCollection):
@@ -34,9 +33,8 @@ class TimersDatabase(IdentifiableTimersCollection):
             IdentifiableTimer(
                 id=TimerId(db_timer.id),
                 name=db_timer.name,
-                start_time=deserialise_start_time(db_timer.start_time),
+                start_time=deserialise_daytime(db_timer.start_time),
                 duration=db_timer.duration,
-                enabled=db_timer.enabled,
             )
             for db_timer in db_timers
         )
@@ -54,9 +52,8 @@ class TimersDatabase(IdentifiableTimersCollection):
         return IdentifiableTimer(
             id=TimerId(db_timer.id),
             name=db_timer.name,
-            start_time=deserialise_start_time(db_timer.start_time),
+            start_time=deserialise_daytime(db_timer.start_time),
             duration=db_timer.duration,
-            enabled=db_timer.enabled,
         )
 
     def add(self, timer: Timer | IdentifiableTimer) -> IdentifiableTimer:
@@ -66,9 +63,8 @@ class TimersDatabase(IdentifiableTimersCollection):
             db_timer = _DbTimer(
                 id=timer_id,
                 name=timer.name,
-                start_time=serialise_start_time(timer.start_time),
+                start_time=serialise_daytime(timer.start_time),
                 duration=timer.duration,
-                enabled=timer.enabled,
             )
             session.add(db_timer)
             try:

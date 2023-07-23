@@ -1,8 +1,7 @@
 from abc import abstractmethod
-from functools import singledispatch
 from typing import Collection, cast
 
-from garden_water.timers.models import IdentifiableTimer, TimerId, Timer
+from garden_water.timers.timers import IdentifiableTimer, TimerId, Timer
 
 
 class IdentifiableTimersCollection(Collection[IdentifiableTimer]):
