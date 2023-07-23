@@ -10,6 +10,7 @@ packages = [{include = "garden_water"}]
 python = "^3.10"
 sqlalchemy = "^2.0.17"
 microwebsrv2 = {git = "https://github.com/jczic/MicroWebSrv2.git"}
+backoff = "^2.2.1"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^7.4.0"

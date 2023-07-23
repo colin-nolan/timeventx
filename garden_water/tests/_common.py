@@ -1,7 +1,7 @@
 from datetime import timedelta
 
-from garden_water.models import IdentifiableTimer, Timer, TimerId
-from garden_water.serialisation import deserialise_start_time
+from garden_water.timers.models import Timer, IdentifiableTimer, TimerId
+from garden_water.timers.serialisation import deserialise_start_time
 
 EXAMPLE_TIMER_1 = Timer("test-1", deserialise_start_time("00:01:02"), timedelta(minutes=10), True)
 EXAMPLE_TIMER_2 = Timer("test-2", deserialise_start_time("09:08:07"), timedelta(minutes=1000), True)

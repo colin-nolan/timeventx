@@ -6,14 +6,13 @@ import pytest
 import requests
 from MicroWebSrv2 import MicroWebSrv2 as MicroWebSrv2Class
 
-from garden_water.models import Timer
-from garden_water.serialisation import timer_to_json
 from garden_water.tests._common import (
     EXAMPLE_IDENTIFIABLE_TIMER_1,
     EXAMPLE_IDENTIFIABLE_TIMER_2,
     EXAMPLE_TIMER_1,
     EXAMPLE_TIMER_2,
 )
+from garden_water.timers.serialisation import timer_to_json
 from garden_water.web_server import (
     DATABASE_LOCATION_ENVIRONMENT_VARIABLE,
     create_web_server,

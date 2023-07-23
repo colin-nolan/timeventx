@@ -6,9 +6,9 @@ from MicroWebSrv2 import GET, POST, HttpRequest
 from MicroWebSrv2 import MicroWebSrv2 as MicroWebSrv2Class
 from MicroWebSrv2 import WebRoute
 
-from garden_water.database import TimersDatabase
-from garden_water.models import Timer
-from garden_water.serialisation import deserialise_start_time, timer_to_json
+from garden_water.timers.collections.database import TimersDatabase
+from garden_water.timers.models import Timer
+from garden_water.timers.serialisation import timer_to_json, deserialise_start_time
 
 DATABASE_LOCATION_ENVIRONMENT_VARIABLE = "GARDEN_WATER_DATABASE_LOCATION"
 DEFAULT_DATABASE_LOCATION = "sqlite:///garden-water.sqlite"
@@ -41,8 +41,7 @@ def get_health(microWebSrv2: MicroWebSrv2Class, request: HttpRequest):
 
 @WebRoute(GET, "/timers")
 def get_timers(microWebSrv2: MicroWebSrv2Class, request: HttpRequest):
-    timers = get_timers_database().get_all()
-    request.Response.ReturnOkJSON([timer_to_json(timer) for timer in timers])
+    request.Response.ReturnOkJSON([timer_to_json(timer) for timer in get_timers_database()])
 
 
 @WebRoute(POST, "/timer")

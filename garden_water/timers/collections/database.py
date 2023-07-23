@@ -1,9 +1,13 @@
+from functools import singledispatch
+from typing import Iterable, Optional
+
 from sqlalchemy import CHAR, Boolean, Column, Integer, Interval, String, create_engine
 from sqlalchemy.exc import IntegrityError, NoResultFound
 from sqlalchemy.orm import declarative_base, sessionmaker
 
-from garden_water.models import IdentifiableTimer, Timer, TimerId, TimersContainer
-from garden_water.serialisation import deserialise_start_time, serialise_start_time
+from garden_water.timers.models import TimerId, IdentifiableTimer, Timer
+from garden_water.timers.collections.abc import IdentifiableTimersCollection
+from garden_water.timers.serialisation import deserialise_start_time, serialise_start_time
 
 Base = declarative_base()
 
@@ -17,16 +21,16 @@ class _DbTimer(Base):
     enabled = Column(Boolean, nullable=False)
 
 
-class TimersDatabase(TimersContainer):
+class TimersDatabase(IdentifiableTimersCollection):
     def __init__(self, database_url: str):
         self._db_engine = create_engine(database_url)
         Base.metadata.create_all(self._db_engine)
         self._DbSession = sessionmaker(bind=self._db_engine)
 
-    def get_all(self) -> tuple[IdentifiableTimer]:
+    def __iter__(self) -> Iterable[IdentifiableTimer]:
         with self._DbSession() as session:
             db_timers = session.query(_DbTimer).all()
-        return tuple(
+        yield from (
             IdentifiableTimer(
                 id=TimerId(db_timer.id),
                 name=db_timer.name,
@@ -36,6 +40,10 @@ class TimersDatabase(TimersContainer):
             )
             for db_timer in db_timers
         )
+
+    def __len__(self) -> int:
+        with self._DbSession() as session:
+            return session.query(_DbTimer).count()
 
     def get(self, timer_id: TimerId) -> IdentifiableTimer:
         with self._DbSession() as session:
@@ -51,11 +59,12 @@ class TimersDatabase(TimersContainer):
             enabled=db_timer.enabled,
         )
 
-    def add(self, timer: Timer) -> IdentifiableTimer:
-        identifier = timer.id if isinstance(timer, IdentifiableTimer) else None
+    def add(self, timer: Timer | IdentifiableTimer) -> IdentifiableTimer:
+        timer_id = timer.id if isinstance(timer, IdentifiableTimer) else None
+
         with self._DbSession() as session:
             db_timer = _DbTimer(
-                id=identifier,
+                id=timer_id,
                 name=timer.name,
                 start_time=serialise_start_time(timer.start_time),
                 duration=timer.duration,
@@ -65,7 +74,7 @@ class TimersDatabase(TimersContainer):
             try:
                 session.commit()
             except IntegrityError as e:
-                raise ValueError(f"Timer with ID {timer.id} already exists") from e
+                raise ValueError(f"Timer with ID {timer_id} already exists") from e
 
             return IdentifiableTimer.from_timer(timer, TimerId(db_timer.id))
 

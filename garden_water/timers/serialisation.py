@@ -2,7 +2,7 @@ from dataclasses import fields
 from datetime import timedelta
 from time import strftime, strptime, struct_time
 
-from garden_water.models import START_TIME_FORMAT, Timer
+from garden_water.timers.models import START_TIME_FORMAT, Timer
 
 
 def serialise_start_time(start_time: struct_time) -> str:
