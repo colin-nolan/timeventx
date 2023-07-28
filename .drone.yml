@@ -1,7 +1,7 @@
 ---
 
 kind: pipeline
-name: terraform
+name: default
 platform:
   arch: arm64
 

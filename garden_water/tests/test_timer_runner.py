@@ -49,6 +49,51 @@ class TestTimerRunner:
                 )
             )
 
+    def test_calculate_on_off_times_never_off_regression_1(self):
+        with pytest.raises(ValueError):
+            _calculate_on_off_times(
+                (
+                    ("00:00:00", timedelta(hours=23)),
+                    ("23:00:00", timedelta(hours=1)),
+                )
+            )
+
+    def test_calculate_on_off_times_never_off_regression_2(self):
+        with pytest.raises(ValueError):
+            _calculate_on_off_times(
+                (
+                    ("23:00:00", timedelta(hours=23)),
+                    ("22:00:00", timedelta(hours=1)),
+                )
+            )
+
+    def test_calculate_on_off_times_never_off_regression_3(self):
+        with pytest.raises(ValueError):
+            _calculate_on_off_times(
+                (
+                    ("01:00:00", timedelta(hours=22)),
+                    ("22:00:00", timedelta(hours=3)),
+                )
+            )
+
+    def test_calculate_on_off_times_never_off_regression_4(self):
+        with pytest.raises(ValueError):
+            _calculate_on_off_times(
+                (
+                    ("11:30:00", timedelta(hours=23)),
+                    ("10:00:00", timedelta(hours=4)),
+                )
+            )
+
+    def test_calculate_on_off_times_never_off_regression_5(self):
+        with pytest.raises(ValueError):
+            _calculate_on_off_times(
+                (
+                    ("23:30:00", timedelta(hours=23)),
+                    ("22:00:00", timedelta(hours=4)),
+                )
+            )
+
     def test_calculate_on_off_times_multiple_no_overlaps(self):
         on_off_times = _calculate_on_off_times(
             (

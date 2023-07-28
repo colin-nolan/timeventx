@@ -66,18 +66,18 @@ class TimeInterval:
     start_time: DayTime
     end_time: DayTime
 
-    def __post_init__(self):
-        if self.start_time == self.end_time:
-            raise ValueError("Interval must be non-zero")
-
     # Safe to cache as the time interval is frozen
     @cached_property
     def duration(self) -> timedelta:
         return (
             timedelta(seconds=self.end_time.as_seconds() - self.start_time.as_seconds())
-            if self.start_time < self.end_time
+            if not self.spans_midnight()
             else timedelta(seconds=60 * 60 * 24 - self.start_time.as_seconds() + self.end_time.as_seconds())
         )
+
+    def __post_init__(self):
+        if self.start_time == self.end_time:
+            raise ValueError("Interval must be non-zero")
 
     def __eq__(self, other: object) -> bool:
         return (
@@ -86,6 +86,23 @@ class TimeInterval:
 
     def __repr__(self):
         return repr([self.start_time, self.end_time])
+
+    def spans_midnight(self) -> bool:
+        return self.start_time > self.end_time
+
+    def intersects(self, other: "TimeInterval") -> bool:
+        earlier_interval, later_interval = sorted((self, other), key=lambda interval: interval.start_time)
+
+        if earlier_interval.spans_midnight():
+            if later_interval.spans_midnight():
+                # Both intervals cross midnight, so they at least overlap at midnight
+                return True
+            earlier_interval, later_interval = later_interval, earlier_interval
+
+        if later_interval.spans_midnight():
+            return later_interval.start_time < earlier_interval.end_time or later_interval.end_time > earlier_interval.start_time
+        else:
+            return later_interval.start_time < earlier_interval.end_time and later_interval.end_time > earlier_interval.start_time
 
 
 @dataclass(frozen=True)

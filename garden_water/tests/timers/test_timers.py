@@ -2,7 +2,7 @@ from datetime import timedelta
 
 import pytest
 
-from garden_water.timers.timers import DayTime
+from garden_water.timers.timers import DayTime, TimeInterval
 
 
 class TestDayTime:
@@ -65,3 +65,59 @@ class TestDayTime:
 
     def test_add_timedelta_overflow_hours_with_seconds(self):
         assert DayTime(23, 59, 1) + timedelta(seconds=59) == DayTime(0, 0, 0)
+
+
+class TestTimeInterval:
+    def test_zero_time_invalid(self):
+        with pytest.raises(ValueError):
+            TimeInterval(DayTime(0, 0, 0), DayTime(0, 0, 0))
+
+    def test_duration(self):
+        assert TimeInterval(DayTime(0, 0, 0), DayTime(0, 0, 1)).duration == timedelta(seconds=1)
+        assert TimeInterval(DayTime(0, 0, 0), DayTime(0, 1, 0)).duration == timedelta(minutes=1)
+        assert TimeInterval(DayTime(0, 0, 0), DayTime(1, 0, 0)).duration == timedelta(hours=1)
+
+    def test_duration_spanning_midnight(self):
+        assert TimeInterval(DayTime(23, 59, 59), DayTime(0, 0, 1)).duration == timedelta(seconds=2)
+        assert TimeInterval(DayTime(23, 59, 0), DayTime(0, 1, 0)).duration == timedelta(minutes=2)
+        assert TimeInterval(DayTime(23, 0, 0), DayTime(1, 0, 0)).duration == timedelta(hours=2)
+
+    def test_spans_midnight(self):
+        assert TimeInterval(DayTime(23, 0, 0), DayTime(2, 0, 0)).spans_midnight()
+
+    def test_spans_midnight_when_does_not(self):
+        assert not TimeInterval(DayTime(1, 0, 0), DayTime(2, 0, 0)).spans_midnight()
+
+    def test_intersects_none(self):
+        assert not TimeInterval(DayTime(0, 0, 0), DayTime(1, 0, 0)).intersects(
+            TimeInterval(DayTime(2, 0, 0), DayTime(3, 0, 0)))
+
+    def test_intersects_start(self):
+        assert TimeInterval(DayTime(0, 0, 0), DayTime(1, 0, 0)).intersects(
+            TimeInterval(DayTime(0, 30, 0), DayTime(1, 30, 0)))
+
+    def test_intersects_start_exactly(self):
+        assert TimeInterval(DayTime(0, 30, 0), DayTime(1, 0, 0)).intersects(
+            TimeInterval(DayTime(0, 30, 0), DayTime(1, 30, 0)))
+
+    def test_intersects_same(self):
+        assert TimeInterval(DayTime(0, 0, 0), DayTime(1, 0, 0)).intersects(
+            TimeInterval(DayTime(0, 0, 0), DayTime(1, 0, 0)))
+
+    def test_intersects_superset(self):
+        assert TimeInterval(DayTime(0, 0, 0), DayTime(2, 0, 0)).intersects(
+            TimeInterval(DayTime(0, 30, 0), DayTime(1, 30, 0)))
+
+    def test_intersects_end(self):
+        assert TimeInterval(DayTime(0, 45, 0), DayTime(1, 0, 0)).intersects(
+            TimeInterval(DayTime(0, 30, 0), DayTime(1, 30, 0)))
+
+    def test_intersects_end_exactly(self):
+        assert TimeInterval(DayTime(0, 45, 0), DayTime(1, 30, 0)).intersects(
+            TimeInterval(DayTime(0, 30, 0), DayTime(1, 30, 0)))
+
+    def test_intersects_regression(self):
+        # Test: 23:55:00 - 00:05:00 intersects 22:00:00 - 23:00:00
+        assert not TimeInterval(DayTime(23, 55, 0), DayTime(0, 5, 0)).intersects(
+            TimeInterval(DayTime(22, 0, 0), DayTime(23, 0, 0))
+        )

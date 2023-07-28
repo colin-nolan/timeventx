@@ -64,7 +64,6 @@ def post_timer(microWebSrv2: MicroWebSrv2Class, request: HttpRequest):
             name=serialised_timer["name"],
             start_time=start_time,
             duration=timedelta(seconds=int(serialised_timer["duration"])),
-            enabled=serialised_timer["enabled"],
         )
     except TypeError | KeyError as e:
         request.Response.Return(_HTTP_CODE_BAD_RESPONSE, f"Invalid timer attributes: {e}")
