@@ -1,9 +1,9 @@
 from collections import defaultdict
-from enum import Enum, unique, auto
-from typing import Iterator, Callable, TypeAlias
+from enum import Enum, auto, unique
+from typing import Callable, Iterator, TypeAlias
 
 from garden_water.timers.collections.abc import IdentifiableTimersCollection
-from garden_water.timers.timers import Timer, IdentifiableTimer, TimerId
+from garden_water.timers.timers import IdentifiableTimer, Timer, TimerId
 
 AddListener: TypeAlias = Callable[[IdentifiableTimer], None]
 RemoveListener: TypeAlias = Callable[[TimerId], None]

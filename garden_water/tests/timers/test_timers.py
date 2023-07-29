@@ -90,31 +90,38 @@ class TestTimeInterval:
 
     def test_intersects_none(self):
         assert not TimeInterval(DayTime(0, 0, 0), DayTime(1, 0, 0)).intersects(
-            TimeInterval(DayTime(2, 0, 0), DayTime(3, 0, 0)))
+            TimeInterval(DayTime(2, 0, 0), DayTime(3, 0, 0))
+        )
 
     def test_intersects_start(self):
         assert TimeInterval(DayTime(0, 0, 0), DayTime(1, 0, 0)).intersects(
-            TimeInterval(DayTime(0, 30, 0), DayTime(1, 30, 0)))
+            TimeInterval(DayTime(0, 30, 0), DayTime(1, 30, 0))
+        )
 
     def test_intersects_start_exactly(self):
         assert TimeInterval(DayTime(0, 30, 0), DayTime(1, 0, 0)).intersects(
-            TimeInterval(DayTime(0, 30, 0), DayTime(1, 30, 0)))
+            TimeInterval(DayTime(0, 30, 0), DayTime(1, 30, 0))
+        )
 
     def test_intersects_same(self):
         assert TimeInterval(DayTime(0, 0, 0), DayTime(1, 0, 0)).intersects(
-            TimeInterval(DayTime(0, 0, 0), DayTime(1, 0, 0)))
+            TimeInterval(DayTime(0, 0, 0), DayTime(1, 0, 0))
+        )
 
     def test_intersects_superset(self):
         assert TimeInterval(DayTime(0, 0, 0), DayTime(2, 0, 0)).intersects(
-            TimeInterval(DayTime(0, 30, 0), DayTime(1, 30, 0)))
+            TimeInterval(DayTime(0, 30, 0), DayTime(1, 30, 0))
+        )
 
     def test_intersects_end(self):
         assert TimeInterval(DayTime(0, 45, 0), DayTime(1, 0, 0)).intersects(
-            TimeInterval(DayTime(0, 30, 0), DayTime(1, 30, 0)))
+            TimeInterval(DayTime(0, 30, 0), DayTime(1, 30, 0))
+        )
 
     def test_intersects_end_exactly(self):
         assert TimeInterval(DayTime(0, 45, 0), DayTime(1, 30, 0)).intersects(
-            TimeInterval(DayTime(0, 30, 0), DayTime(1, 30, 0)))
+            TimeInterval(DayTime(0, 30, 0), DayTime(1, 30, 0))
+        )
 
     def test_intersects_regression(self):
         # Test: 23:55:00 - 00:05:00 intersects 22:00:00 - 23:00:00

@@ -1,8 +1,8 @@
 from datetime import timedelta
 from uuid import uuid4
 
-from garden_water.timers.timers import Timer, IdentifiableTimer, TimerId
 from garden_water.timers.serialisation import deserialise_daytime
+from garden_water.timers.timers import IdentifiableTimer, Timer, TimerId
 
 EXAMPLE_TIMER_1 = Timer("test-1", deserialise_daytime("00:01:02"), timedelta(minutes=10))
 EXAMPLE_TIMER_2 = Timer("test-2", deserialise_daytime("09:08:07"), timedelta(minutes=1000))

@@ -1,7 +1,7 @@
 from abc import abstractmethod
 from typing import Collection, cast
 
-from garden_water.timers.timers import IdentifiableTimer, TimerId, Timer
+from garden_water.timers.timers import IdentifiableTimer, Timer, TimerId
 
 
 class IdentifiableTimersCollection(Collection[IdentifiableTimer]):

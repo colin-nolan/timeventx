@@ -3,8 +3,8 @@ import time
 from threading import Thread
 
 import backoff
-import ntptime
 import network
+import ntptime
 
 _logger = logging.getLogger(__name__)
 

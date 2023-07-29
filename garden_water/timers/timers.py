@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from datetime import timedelta
-from functools import total_ordering, cached_property
+from functools import cached_property, total_ordering
 from typing import NewType, cast
 
 START_TIME_FORMAT = "%H:%M:%S"
@@ -100,9 +100,15 @@ class TimeInterval:
             earlier_interval, later_interval = later_interval, earlier_interval
 
         if later_interval.spans_midnight():
-            return later_interval.start_time < earlier_interval.end_time or later_interval.end_time > earlier_interval.start_time
+            return (
+                later_interval.start_time < earlier_interval.end_time
+                or later_interval.end_time > earlier_interval.start_time
+            )
         else:
-            return later_interval.start_time < earlier_interval.end_time and later_interval.end_time > earlier_interval.start_time
+            return (
+                later_interval.start_time < earlier_interval.end_time
+                and later_interval.end_time > earlier_interval.start_time
+            )
 
 
 @dataclass(frozen=True)

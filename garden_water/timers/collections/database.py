@@ -5,9 +5,9 @@ from sqlalchemy import CHAR, Boolean, Column, Integer, Interval, String, create_
 from sqlalchemy.exc import IntegrityError, NoResultFound
 from sqlalchemy.orm import declarative_base, sessionmaker
 
-from garden_water.timers.timers import TimerId, IdentifiableTimer, Timer
 from garden_water.timers.collections.abc import IdentifiableTimersCollection
 from garden_water.timers.serialisation import deserialise_daytime, serialise_daytime
+from garden_water.timers.timers import IdentifiableTimer, Timer, TimerId
 
 Base = declarative_base()
 
