@@ -15,6 +15,11 @@ class DayTime:
     minute: int
     second: int
 
+    @staticmethod
+    def now() -> "DayTime":
+        # FIXME: implement
+        return DayTime(0, 0, 0)
+
     def __post_init__(self):
         if self.second < 0 or self.second >= 60:
             raise ValueError("second must be between 0 and 59")
@@ -62,56 +67,6 @@ class DayTime:
 
 
 @dataclass(frozen=True)
-class TimeInterval:
-    start_time: DayTime
-    end_time: DayTime
-
-    # Safe to cache as the time interval is frozen
-    @cached_property
-    def duration(self) -> timedelta:
-        return (
-            timedelta(seconds=self.end_time.as_seconds() - self.start_time.as_seconds())
-            if not self.spans_midnight()
-            else timedelta(seconds=60 * 60 * 24 - self.start_time.as_seconds() + self.end_time.as_seconds())
-        )
-
-    def __post_init__(self):
-        if self.start_time == self.end_time:
-            raise ValueError("Interval must be non-zero")
-
-    def __eq__(self, other: object) -> bool:
-        return (
-            isinstance(other, TimeInterval) and self.start_time == other.start_time and self.end_time == other.end_time
-        )
-
-    def __repr__(self):
-        return repr([self.start_time, self.end_time])
-
-    def spans_midnight(self) -> bool:
-        return self.start_time > self.end_time
-
-    def intersects(self, other: "TimeInterval") -> bool:
-        earlier_interval, later_interval = sorted((self, other), key=lambda interval: interval.start_time)
-
-        if earlier_interval.spans_midnight():
-            if later_interval.spans_midnight():
-                # Both intervals cross midnight, so they at least overlap at midnight
-                return True
-            earlier_interval, later_interval = later_interval, earlier_interval
-
-        if later_interval.spans_midnight():
-            return (
-                later_interval.start_time < earlier_interval.end_time
-                or later_interval.end_time > earlier_interval.start_time
-            )
-        else:
-            return (
-                later_interval.start_time < earlier_interval.end_time
-                and later_interval.end_time > earlier_interval.start_time
-            )
-
-
-@dataclass(frozen=True)
 class Timer:
     name: str
     start_time: DayTime
@@ -123,7 +78,11 @@ class Timer:
         return self.start_time + self.duration
 
     @cached_property
-    def interval(self) -> TimeInterval:
+    # Avoiding circular dependency
+    # def interval(self) -> "TimeInterval:
+    def interval(self):
+        from garden_water.timers.intervals import TimeInterval
+
         return TimeInterval(self.start_time, self.end_time)
 
     def __post_init__(self):

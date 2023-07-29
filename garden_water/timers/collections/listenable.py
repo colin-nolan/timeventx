@@ -16,7 +16,13 @@ class Event(Enum):
 
 
 class ListenableTimersCollection(IdentifiableTimersCollection):
-    def __init__(self, timers_collection: IdentifiableTimersCollection[Timer]):
+    """
+    Timers collection that can be listened to for changes.
+
+    Not (p)thread safe.
+    """
+
+    def __init__(self, timers_collection: IdentifiableTimersCollection):
         """
         Constructor.
 

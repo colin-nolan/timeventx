@@ -2,7 +2,8 @@ from datetime import timedelta
 
 import pytest
 
-from garden_water.timers.timers import DayTime, TimeInterval
+from garden_water.timers.intervals import TimeInterval
+from garden_water.timers.timers import DayTime
 
 
 class TestDayTime:

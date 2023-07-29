@@ -22,8 +22,6 @@ def get_timers_database() -> TimersDatabase:
     """
     Gets timers database singleton for the database location specified via the `DATABASE_LOCATION_ENVIRONMENT_VARIABLE`
     environment variable.
-
-    Not multi-thread safe.
     :return: the database
     """
     database_location = os.getenv(DATABASE_LOCATION_ENVIRONMENT_VARIABLE, DEFAULT_DATABASE_LOCATION)

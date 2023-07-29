@@ -1,8 +1,7 @@
 from dataclasses import fields
 from datetime import timedelta
-from time import strftime, strptime
 
-from garden_water.timers.timers import START_TIME_FORMAT, DayTime, Timer
+from garden_water.timers.timers import DayTime, Timer
 
 
 def serialise_daytime(start_time: DayTime) -> str:

@@ -1,202 +1,107 @@
+from dataclasses import dataclass
 from datetime import timedelta
-from typing import Iterable
+from typing import Generic, Iterable, TypeVar
 
 import pytest
 
-from garden_water.tests._common import create_example_timer
-from garden_water.timer_runner import TimerRunner
+from garden_water.tests._common import EXAMPLE_TIMERS, create_example_timer
+from garden_water.timer_runner import NoTimersError, TimerRunner
 from garden_water.timers.collections.memory import InMemoryIdentifiableTimersCollection
+from garden_water.timers.intervals import TimeInterval
 from garden_water.timers.serialisation import deserialise_daytime
-from garden_water.timers.timers import DayTime, TimeInterval
+from garden_water.timers.timers import DayTime
+
+T = TypeVar("T")
 
 
-def _create_timer_runner(start_duration_pairs: Iterable[tuple[str, timedelta]]) -> TimerRunner:
+@dataclass
+class MutableItem(Generic[T]):
+    value: T
+
+
+EXAMPLE_TIME_INTERVALS = (
+    ("00:00:00", timedelta(hours=1)),
+    ("01:30:00", timedelta(hours=1)),
+    ("23:00:00", timedelta(hours=2)),
+    ("12:00:00", timedelta(hours=1)),
+)
+
+
+def _create_timer_runner(
+    start_duration_pairs: Iterable[tuple[str, timedelta]]
+) -> tuple[TimerRunner, MutableItem[DayTime]]:
     timers = (create_example_timer(start_time, duration) for start_time, duration in start_duration_pairs)
-    return TimerRunner(InMemoryIdentifiableTimersCollection(timers))
+    current_time = MutableItem[DayTime](DayTime(0, 0, 0))
+    return (
+        TimerRunner(
+            InMemoryIdentifiableTimersCollection(timers),
+            lambda: None,
+            lambda: None,
+            time_source=lambda: current_time.value,
+        ),
+        current_time,
+    )
 
 
-def _calculate_on_off_times(timers_start_duration_pairs: Iterable[tuple[str, timedelta]]) -> tuple[TimeInterval, ...]:
-    timer_runner = _create_timer_runner(timers_start_duration_pairs)
-    return timer_runner.calculate_on_off_times()
-
-
-def _to_time_interval(serialised_start_time: str, serialised_end_time: str) -> TimeInterval:
-    return TimeInterval(deserialise_daytime(serialised_start_time), deserialise_daytime(serialised_end_time))
+def _create_interval(start_time: str, duration: timedelta) -> TimeInterval:
+    start_time = deserialise_daytime(start_time)
+    return TimeInterval(start_time, start_time + duration)
 
 
 class TestTimerRunner:
-    def test_calculate_on_off_times_none(self):
-        on_off_times = _calculate_on_off_times(())
-        assert len(on_off_times) == 0
+    def test_on_off_intervals_no_timers(self):
+        timer_runner, _ = _create_timer_runner(())
+        assert timer_runner.on_off_intervals == ()
 
-    def test_calculate_on_off_times_single(self):
-        on_off_times = _calculate_on_off_times((("00:00:00", timedelta(minutes=10)),))
-        assert len(on_off_times) == 1
-        assert on_off_times[0] == _to_time_interval("00:00:00", "00:10:00")
-
-    def test_calculate_on_off_times_wrap_around_midnight(self):
-        on_off_times = _calculate_on_off_times((("23:55:00", timedelta(minutes=10)),))
-        assert len(on_off_times) == 1
-        assert on_off_times[0] == _to_time_interval("23:55:00", "00:05:00")
-
-    def test_calculate_on_off_times_never_off(self):
-        with pytest.raises(ValueError):
-            _calculate_on_off_times(
-                (
-                    ("00:01:00", timedelta(minutes=180)),
-                    ("23:00:00", timedelta(hours=5)),
-                    ("01:00:00", timedelta(hours=23)),
-                )
-            )
-
-    def test_calculate_on_off_times_never_off_regression_1(self):
-        with pytest.raises(ValueError):
-            _calculate_on_off_times(
-                (
-                    ("00:00:00", timedelta(hours=23)),
-                    ("23:00:00", timedelta(hours=1)),
-                )
-            )
-
-    def test_calculate_on_off_times_never_off_regression_2(self):
-        with pytest.raises(ValueError):
-            _calculate_on_off_times(
-                (
-                    ("23:00:00", timedelta(hours=23)),
-                    ("22:00:00", timedelta(hours=1)),
-                )
-            )
-
-    def test_calculate_on_off_times_never_off_regression_3(self):
-        with pytest.raises(ValueError):
-            _calculate_on_off_times(
-                (
-                    ("01:00:00", timedelta(hours=22)),
-                    ("22:00:00", timedelta(hours=3)),
-                )
-            )
-
-    def test_calculate_on_off_times_never_off_regression_4(self):
-        with pytest.raises(ValueError):
-            _calculate_on_off_times(
-                (
-                    ("11:30:00", timedelta(hours=23)),
-                    ("10:00:00", timedelta(hours=4)),
-                )
-            )
-
-    def test_calculate_on_off_times_never_off_regression_5(self):
-        with pytest.raises(ValueError):
-            _calculate_on_off_times(
-                (
-                    ("23:30:00", timedelta(hours=23)),
-                    ("22:00:00", timedelta(hours=4)),
-                )
-            )
-
-    def test_calculate_on_off_times_multiple_no_overlaps(self):
-        on_off_times = _calculate_on_off_times(
-            (
-                ("00:00:00", timedelta(minutes=10)),
-                ("02:00:00", timedelta(minutes=30)),
-                ("01:00:00", timedelta(minutes=20)),
-            )
+    def test_on_off_intervals(self):
+        timer_runner, _ = _create_timer_runner(EXAMPLE_TIME_INTERVALS)
+        assert timer_runner.on_off_intervals == (
+            _create_interval("01:30:00", timedelta(hours=1)),
+            _create_interval("12:00:00", timedelta(hours=1)),
+            _create_interval("23:00:00", timedelta(hours=2)),
         )
-        assert len(on_off_times) == 3
-        assert on_off_times[0] == _to_time_interval("00:00:00", "00:10:00")
-        assert on_off_times[1] == _to_time_interval("01:00:00", "01:20:00")
-        assert on_off_times[2] == _to_time_interval("02:00:00", "02:30:00")
 
-    def test_calculate_on_off_times_repeat(self):
-        on_off_times = _calculate_on_off_times(
-            (
-                ("00:00:00", timedelta(minutes=10)),
-                ("00:00:00", timedelta(minutes=10)),
-                ("00:00:00", timedelta(minutes=10)),
-            )
-        )
-        assert len(on_off_times) == 1
-        assert on_off_times[0] == _to_time_interval("00:00:00", "00:10:00")
+    def test_is_on_no_timers(self):
+        timer_runner, _ = _create_timer_runner(())
+        assert not timer_runner.is_on()
 
-    def test_calculate_on_off_times_all_overlaps(self):
-        on_off_times = _calculate_on_off_times(
-            (
-                ("00:00:00", timedelta(minutes=10)),
-                ("00:05:00", timedelta(minutes=10)),
-                ("00:10:00", timedelta(minutes=10)),
-            )
-        )
-        assert len(on_off_times) == 1
-        assert on_off_times[0] == _to_time_interval("00:00:00", "00:20:00")
+    def test_is_on_when_is(self):
+        timer_runner, time_setter = _create_timer_runner(EXAMPLE_TIME_INTERVALS)
+        for time in (DayTime(0, 0, 0), DayTime(1, 59, 0), DayTime(12, 15, 0), DayTime(23, 0, 0), DayTime(23, 59, 0)):
+            time_setter.value = time
+            assert timer_runner.is_on()
 
-    def test_calculate_on_off_times_two_separate_overlaps(self):
-        on_off_times = _calculate_on_off_times(
-            (
-                ("00:00:00", timedelta(minutes=10)),
-                ("00:05:00", timedelta(minutes=15)),
-                ("01:00:00", timedelta(minutes=10)),
-                ("02:00:00", timedelta(minutes=30)),
-                ("02:05:00", timedelta(minutes=10)),
-            )
-        )
-        assert len(on_off_times) == 3
-        assert on_off_times[0] == _to_time_interval("00:00:00", "00:20:00")
-        assert on_off_times[1] == _to_time_interval("01:00:00", "01:10:00")
-        assert on_off_times[2] == _to_time_interval("02:00:00", "02:30:00")
+    def test_is_on_when_not(self):
+        timer_runner, time_setter = _create_timer_runner(EXAMPLE_TIME_INTERVALS)
+        for time in (DayTime(2, 35, 0), DayTime(22, 30, 0), DayTime(11, 30, 0)):
+            time_setter.value = time
+            assert not timer_runner.is_on()
 
-    def test_calculate_on_off_times_with_merge_over_midnight(self):
-        on_off_times = _calculate_on_off_times(
-            (
-                ("23:50:00", timedelta(minutes=10)),
-                ("01:00:00", timedelta(hours=1)),
-                ("23:55:00", timedelta(minutes=10)),
-                ("00:05:00", timedelta(minutes=10)),
-            )
-        )
-        assert len(on_off_times) == 2
-        assert on_off_times[0] == _to_time_interval("01:00:00", "02:00:00")
-        assert on_off_times[1] == _to_time_interval("23:50:00", "00:15:00")
+    def test_next_interval_no_timers(self):
+        timer_runner, _ = _create_timer_runner(())
+        with pytest.raises(NoTimersError):
+            timer_runner.next_interval()
 
-    def test_calculate_on_off_times_with_merge_over_midnight_many(self):
-        on_off_times = _calculate_on_off_times(
-            (
-                ("00:05:00", timedelta(minutes=10)),
-                ("23:00:00", timedelta(hours=23)),
-                ("01:00:00", timedelta(hours=1)),
-                ("23:55:00", timedelta(minutes=10)),
-            )
-        )
-        assert len(on_off_times) == 1
-        assert on_off_times[0] == _to_time_interval("23:00:00", "22:00:00")
+    def test_next_interval_when_current(self):
+        timer_runner, time_setter = _create_timer_runner(EXAMPLE_TIME_INTERVALS)
+        time_setter.value = DayTime(0, 0, 0)
+        assert timer_runner.next_interval() == (timer_runner.on_off_intervals[2], True)
+        time_setter.value = DayTime(1, 59, 0)
+        assert timer_runner.next_interval() == (timer_runner.on_off_intervals[0], True)
+        time_setter.value = DayTime(12, 15, 0)
+        assert timer_runner.next_interval() == (timer_runner.on_off_intervals[1], True)
+        time_setter.value = DayTime(23, 0, 0)
+        assert timer_runner.next_interval() == (timer_runner.on_off_intervals[2], True)
+        time_setter.value = DayTime(23, 59, 0)
+        assert timer_runner.next_interval() == (timer_runner.on_off_intervals[2], True)
 
-    def test_calculate_on_off_times_merge_regression_1(self):
-        on_off_times = _calculate_on_off_times(
-            (
-                ("00:01:00", timedelta(minutes=180)),
-                ("02:00:00", timedelta(hours=5)),
-                ("01:00:00", timedelta(hours=23)),
-            )
-        )
-        assert len(on_off_times) == 1
-        assert on_off_times[0] == _to_time_interval("00:01:00", "00:00:00")
-
-    def test_calculate_on_off_times_merge_regression_2(self):
-        on_off_times = _calculate_on_off_times(
-            (
-                ("00:01:00", timedelta(minutes=180)),
-                ("23:00:00", timedelta(hours=5)),
-                ("01:00:00", timedelta(hours=2)),
-            )
-        )
-        assert len(on_off_times) == 1
-        assert on_off_times[0] == _to_time_interval("23:00:00", "04:00:00")
-
-    def test_calculate_on_off_times_merge_regression_3(self):
-        on_off_times = _calculate_on_off_times(
-            (
-                ("00:01:00", timedelta(minutes=180)),
-                ("23:00:00", timedelta(hours=5)),
-            )
-        )
-        assert len(on_off_times) == 1
-        assert on_off_times[0] == _to_time_interval("23:00:00", "04:00:00")
+    def test_next_interval_when_not_current(self):
+        timer_runner, time_setter = _create_timer_runner(EXAMPLE_TIME_INTERVALS)
+        time_setter.value = DayTime(2, 35, 0)
+        assert timer_runner.next_interval() == (timer_runner.on_off_intervals[1], False)
+        time_setter.value = DayTime(22, 30, 0)
+        assert timer_runner.next_interval() == (timer_runner.on_off_intervals[2], False)
+        time_setter.value = DayTime(11, 30, 0)
+        assert timer_runner.next_interval() == (timer_runner.on_off_intervals[1], False)
+        time_setter.value = DayTime(1, 15, 0)
+        assert timer_runner.next_interval() == (timer_runner.on_off_intervals[0], False)
