@@ -3,11 +3,7 @@ from tempfile import TemporaryDirectory
 
 import pytest
 
-from garden_water.tests._common import (
-    EXAMPLE_IDENTIFIABLE_TIMER_1,
-    EXAMPLE_TIMER_1,
-    EXAMPLE_TIMERS,
-)
+from garden_water.tests._common import EXAMPLE_IDENTIFIABLE_TIMER_1, EXAMPLE_TIMER_1, EXAMPLE_TIMERS
 from garden_water.timers.collections.abc import IdentifiableTimersCollection
 from garden_water.timers.collections.database import TimersDatabase
 from garden_water.timers.collections.memory import InMemoryIdentifiableTimersCollection
