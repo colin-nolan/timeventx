@@ -1,5 +1,6 @@
 build
 garden-water.sqlite
+*.mpy
 
 ### Python template
 # Byte-compiled / optimized / DLL files
