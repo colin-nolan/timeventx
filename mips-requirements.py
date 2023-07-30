@@ -1,30 +1,42 @@
 import argparse
+import os
 
 import mip
 
 LIBRARIES_TO_INSTALL = (
     "abc",
     "collections-defaultdict",
+    (
+        "github:Mika64/micropython-lib/configparser/ConfigParser.py",
+        dict(version="37207ca59e716dba1e2c91cbb558c15225bdf71b"),
+        lambda source, mips_kwargs: os.rename(
+            f"{mips_kwargs['target']}/ConfigParser.py", f"{mips_kwargs['target']}/configparser.py"
+        ),
+    ),
     "datetime",
+    "github:pfalcon/pycopy-lib/ffilib/ffilib.py",
     "functools",
     "logging",
+    "pathlib",
     "threading",
     "github:pfalcon/pycopy-lib/typing/typing.py",
-    # Required by microwebsrv2
-    # "github:pfalcon/pycopy-lib/ffilib/ffilib.py",
-    # "github:pfalcon/pycopy-lib/select/select.py",
-    # "github:pfalcon/pycopy-lib/socket/socket.py",
+    "github:pfalcon/pycopy-lib/sqlite3/sqlite3.py",
 )
 
 
-def _install_libs(install_args: tuple[str | tuple[str, dict], ...], install_location: str):
+def _install_libs(install_args: tuple[str | tuple[str, dict] | tuple[str, dict, callable], ...], install_location: str):
     for args in install_args:
-        kwargs = dict(target=install_location, mpy=False)
-        if isinstance(args, dict):
-            kwargs = args[1] | kwargs
-            args = args[0]
+        mips_kwargs = dict(target=install_location, mpy=False)
+        if not isinstance(args, tuple):
+            source = args
+        else:
+            mips_kwargs = args[1] | mips_kwargs
+            source = args[0]
 
-        mip.install(args, **kwargs)
+        mip.install(source, **mips_kwargs)
+
+        if isinstance(args, tuple) and len(args) > 2:
+            args[2](source, mips_kwargs)
 
 
 def main():

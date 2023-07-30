@@ -1,6 +1,3 @@
-
-import sys
-sys.path.insert(0, "/home/colin/projects/garden-watering/build/any/lib")
 import os
 from datetime import timedelta
 from time import sleep
@@ -79,7 +76,6 @@ def create_web_server(port: int, interface: str = "0.0.0.0") -> MicroWebSrv2Clas
     web_server.CORSAllowAll = True
     web_server.AllowAllOrigins = True
     web_server.BindAddress = (interface, port)
-    # web_server._bindAddr = socket.getaddrinfo(interface, port)[0][-1]
     return web_server
 
 
