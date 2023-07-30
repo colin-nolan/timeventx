@@ -1,12 +1,13 @@
 #!/usr/bin/env bash
 
+# Not setting -f as deliberately globbing
 set -eu -o pipefail
 
-architecture="${1:-x64}"
+architecture="${1:-any}"
 
 script_directory="$(cd "$(dirname "${BASH_SOURCE[0]}")" > /dev/null 2>&1 && pwd)"
 project_directory="$(cd "${script_directory}/.." > /dev/null 2>&1 && pwd)"
-build_directory="${project_directory}/build"
+build_directory="${project_directory}/build/${architecture}"
 lib_install_directory="${build_directory}/lib"
 
 rm -rf "${build_directory}"
@@ -23,21 +24,16 @@ pip3 install -t "${lib_install_directory}" "${build_directory}"/*.whl
 rm -rf "${lib_install_directory}"/*.dist-info
 
 >&2 echo "Downloading mip requirements..."
-docker run --rm \
-    -v "${lib_install_directory}:/install" \
-    -v "${project_directory}/mips-requirements.py:/mips-requirements.py:ro" \
-    micropython/unix:latest \
-    micropython /mips-requirements.py /install
-# MicroPython complained about permission issues when running as non-root user so correcting file ownership in next step
-docker run --rm \
-    -v "${lib_install_directory}:/install" \
-    alpine:latest \
-    chown -R "$(id -u):$(id -g)" /install
+micropython "${project_directory}/mips-requirements.py" "${lib_install_directory}"
 
->&2 echo "Pre-compiling libs..."
-# Find py files, compile them, and remove the original
-find "${lib_install_directory}" -name "*.py" -type f \
-    -exec sh -c "mpy-cross -march=\"${architecture}\" \"\$0\"; rm \"\$0\"" {} \;
+if [[ "${architecture}" == "any" ]]; then
+    >&2 echo "Not pre-compiling libs to be architecture agnostic"
+else
+    >&2 echo "Pre-compiling libs for ${architecture}..."
+    # Find py files, compile them, and remove the original
+    find "${lib_install_directory}" -name "*.py" -type f \
+        -exec sh -c "mpy-cross -march=\"${architecture}\" \"\$0\"; rm \"\$0\"" {} \;
+fi
 
 popd > /dev/null
 

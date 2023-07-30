@@ -11,9 +11,9 @@ LIBRARIES_TO_INSTALL = (
     "threading",
     "github:pfalcon/pycopy-lib/typing/typing.py",
     # Required by microwebsrv2
-    "github:pfalcon/pycopy-lib/ffilib/ffilib.py",
-    "github:pfalcon/pycopy-lib/select/select.py",
-    "github:pfalcon/pycopy-lib/socket/socket.py",
+    # "github:pfalcon/pycopy-lib/ffilib/ffilib.py",
+    # "github:pfalcon/pycopy-lib/select/select.py",
+    # "github:pfalcon/pycopy-lib/socket/socket.py",
 )
 
 

@@ -1,5 +1,7 @@
+
+import sys
+sys.path.insert(0, "/home/colin/projects/garden-watering/build/any/lib")
 import os
-import socket
 from datetime import timedelta
 from time import sleep
 
