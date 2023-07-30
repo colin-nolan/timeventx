@@ -1,18 +1,23 @@
 from collections import defaultdict
-from enum import Enum, auto, unique
-from typing import Callable, Iterator, TypeAlias
+from typing import Callable, Iterator
 
 from garden_water.timers.collections.abc import IdentifiableTimersCollection
 from garden_water.timers.timers import IdentifiableTimer, Timer, TimerId
 
-AddListener: TypeAlias = Callable[[IdentifiableTimer], None]
-RemoveListener: TypeAlias = Callable[[TimerId], None]
+try:
+    from typing import TypeAlias
+
+    AddListener: TypeAlias = Callable[[IdentifiableTimer], None]
+    RemoveListener: TypeAlias = Callable[[TimerId], None]
+except ImportError:
+    AddListener = Callable[[IdentifiableTimer], None]
+    RemoveListener = Callable[[TimerId], None]
 
 
-@unique
-class Event(Enum):
-    TIMER_ADDED = auto()
-    TIMER_REMOVED = auto()
+# Not using enum because it is not available in MicroPython (or installable using `mip`)
+class Event:
+    TIMER_ADDED = "added"
+    TIMER_REMOVED = "removed"
 
 
 class ListenableTimersCollection(IdentifiableTimersCollection):

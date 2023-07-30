@@ -1,28 +1,25 @@
-from dataclasses import dataclass
 from datetime import timedelta
-from functools import cached_property
 from typing import Collection
 
 from garden_water.timers.timers import DayTime
 
 
-@dataclass(frozen=True)
+# Not using `dataclass` because it is not available in MicroPython (or installable using `mip`)
 class TimeInterval:
-    start_time: DayTime
-    end_time: DayTime
+    def __init__(self, start_time: DayTime, end_time: DayTime):
+        if start_time == end_time:
+            raise ValueError("Interval must be non-zero")
 
-    # Safe to cache as the time interval is frozen
-    @cached_property
+        self.start_time = start_time
+        self.end_time = end_time
+
+    @property
     def duration(self) -> timedelta:
         return (
             timedelta(seconds=self.end_time.as_seconds() - self.start_time.as_seconds())
             if not self.spans_midnight()
             else timedelta(seconds=60 * 60 * 24 - self.start_time.as_seconds() + self.end_time.as_seconds())
         )
-
-    def __post_init__(self):
-        if self.start_time == self.end_time:
-            raise ValueError("Interval must be non-zero")
 
     def __eq__(self, other: object) -> bool:
         return (

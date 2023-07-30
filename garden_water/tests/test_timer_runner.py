@@ -37,7 +37,7 @@ def _create_timer_runner(
             InMemoryIdentifiableTimersCollection(timers),
             lambda: None,
             lambda: None,
-            time_source=lambda: current_time.value,
+            current_time_getter=lambda: current_time.value,
         ),
         current_time,
     )

@@ -1,32 +1,39 @@
-from dataclasses import dataclass
 from datetime import timedelta
-from functools import cached_property, total_ordering
-from typing import NewType, cast
+from typing import Any, cast
 
 START_TIME_FORMAT = "%H:%M:%S"
 
-TimerId = NewType("TimerId", int)
+try:
+    from typing import NewType
+
+    TimerId = NewType("TimerId", int)
+except ImportError:
+    TimerId = int
 
 
-@total_ordering
-@dataclass(frozen=True)
+# Not using `total_ordering` or `dataclass` because they are not available in MicroPython (or installable using `mip`)
+# @total_ordering
+# @dataclass(frozen=True)
 class DayTime:
-    hour: int
-    minute: int
-    second: int
-
     @staticmethod
     def now() -> "DayTime":
         # FIXME: implement
         return DayTime(0, 0, 0)
 
-    def __post_init__(self):
-        if self.second < 0 or self.second >= 60:
+    def __init__(self, hour: int, minute: int, second: int):
+        if second < 0 or second >= 60:
             raise ValueError("second must be between 0 and 59")
-        if self.minute < 0 or self.minute >= 60:
+        if minute < 0 or minute >= 60:
             raise ValueError("minute must be between 0 and 59")
-        if self.hour < 0 or self.hour >= 24:
+        if hour < 0 or hour >= 24:
             raise ValueError("hour must be between 0 and 23")
+
+        self.hour = hour
+        self.minute = minute
+        self.second = second
+
+    def __hash__(self):
+        return hash((self.hour, self.minute, self.second))
 
     def __eq__(self, other: object) -> bool:
         return (
@@ -36,11 +43,23 @@ class DayTime:
             and self.second == other.second
         )
 
-    def __lt__(self, other: object) -> bool:
+    def __ne__(self, other: Any):
+        return not self.__eq__(other)
+
+    def __lt__(self, other: Any) -> bool:
         if not issubclass(type(other), DayTime):
             raise TypeError(f"'<' not supported between instances of 'DayTime' and '{type(other).__name__}'")
         other = cast(DayTime, other)
         return self.as_seconds() < other.as_seconds()
+
+    def __gt__(self, other: Any):
+        return not self.__lt__(other) and not self.__eq__(other)
+
+    def __le__(self, other: Any):
+        return self.__lt__(other) or self.__eq__(other)
+
+    def __ge__(self, other: Any):
+        return self.__gt__(other) or self.__eq__(other)
 
     def __add__(self, other: object) -> "DayTime":
         if not issubclass(type(other), timedelta):
@@ -66,18 +85,35 @@ class DayTime:
         return self.second + self.minute * 60 + self.hour * 3600
 
 
-@dataclass(frozen=True)
+# Not using dataclass because it is not available in MicroPython
+# @dataclass(frozen=True)
 class Timer:
-    name: str
-    start_time: DayTime
-    duration: timedelta
+    def __init__(self, name: str, start_time: DayTime, duration: timedelta):
+        if duration > timedelta(days=1):
+            raise ValueError("timer duration cannot be longer than 24 hours")
+        elif duration == timedelta(seconds=0):
+            raise ValueError("timer duration cannot be zero")
 
-    # Safe to cache as the timer is frozen
-    @cached_property
+        self.name = name
+        self.start_time = start_time
+        self.duration = duration
+
+    def __eq__(self, other: object) -> bool:
+        return (
+            isinstance(other, Timer)
+            and self.name == other.name
+            and self.start_time == other.start_time
+            and self.duration == other.duration
+        )
+
+    def __hash__(self):
+        return hash((self.name, self.start_time, self.duration))
+
+    @property
     def end_time(self) -> DayTime:
         return self.start_time + self.duration
 
-    @cached_property
+    @property
     # Avoiding circular dependency
     # def interval(self) -> "TimeInterval:
     def interval(self):
@@ -85,21 +121,30 @@ class Timer:
 
         return TimeInterval(self.start_time, self.end_time)
 
-    def __post_init__(self):
-        if self.duration > timedelta(days=1):
-            raise ValueError("timer duration cannot be longer than 24 hours")
-        elif self.duration == timedelta(seconds=0):
-            raise ValueError("timer duration cannot be zero")
 
-
-@dataclass(frozen=True)
+# Not using dataclass because it is not available in MicroPython
+# @dataclass(frozen=True)
 class IdentifiableTimer(Timer):
-    id: TimerId
+    def __init__(self, timer_id: TimerId, name: str, start_time: DayTime, duration: timedelta):
+        super().__init__(name=name, start_time=start_time, duration=duration)
+        self.id = timer_id
+
+    def __eq__(self, other: object) -> bool:
+        return (
+            isinstance(other, IdentifiableTimer)
+            and self.id == other.id
+            and self.name == other.name
+            and self.start_time == other.start_time
+            and self.duration == other.duration
+        )
+
+    def __hash__(self):
+        return hash((super().__hash__(), self.id))
 
     @staticmethod
     def from_timer(timer: Timer, identifier: TimerId) -> "IdentifiableTimer":
         return IdentifiableTimer(
-            id=identifier,
+            timer_id=identifier,
             name=timer.name,
             start_time=timer.start_time,
             duration=timer.duration,

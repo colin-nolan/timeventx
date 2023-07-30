@@ -1,5 +1,5 @@
 from datetime import timedelta
-from typing import Callable, Collection, Iterable, Optional
+from typing import Callable
 
 from garden_water.timers.collections.abc import IdentifiableTimersCollection
 from garden_water.timers.collections.listenable import Event, ListenableTimersCollection
@@ -23,12 +23,12 @@ class TimerRunner:
         timers: IdentifiableTimersCollection,
         on_action: Callable,
         off_action: Callable,
-        time_source: Callable[[], DayTime] = DayTime.now,
+        current_time_getter: Callable[[], DayTime] = DayTime.now,
     ):
         self.timers = ListenableTimersCollection(timers)
         self.on_action = on_action
         self.off_action = off_action
-        self.time_source = time_source
+        self.current_time_getter = current_time_getter
         self._on_off_intervals = self._calculate_on_off_intervals()
 
         def on_timers_change(*args) -> None:
@@ -47,7 +47,7 @@ class TimerRunner:
         if len(self._on_off_intervals) == 0:
             raise NoTimersError("No timers")
 
-        now = self.time_source()
+        now = self.current_time_getter()
         now_interval = TimeInterval(now, now + timedelta(seconds=1))
 
         for i, interval in enumerate(self._on_off_intervals):

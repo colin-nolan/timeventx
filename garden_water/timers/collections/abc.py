@@ -3,8 +3,15 @@ from typing import Collection, cast
 
 from garden_water.timers.timers import IdentifiableTimer, Timer, TimerId
 
+try:
+    from typing import TypeAlias
 
-class IdentifiableTimersCollection(Collection[IdentifiableTimer]):
+    IdentifiableTimerCollection: TypeAlias = Collection[IdentifiableTimer]
+except ImportError:
+    IdentifiableTimerCollection = Collection
+
+
+class IdentifiableTimersCollection(IdentifiableTimerCollection):
     @abstractmethod
     def get(self, timer_id: TimerId) -> IdentifiableTimer:
         """

@@ -1,7 +1,4 @@
-from dataclasses import fields
-from datetime import timedelta
-
-from garden_water.timers.timers import DayTime, Timer
+from garden_water.timers.timers import DayTime, IdentifiableTimer, Timer
 
 
 def serialise_daytime(start_time: DayTime) -> str:
@@ -12,16 +9,11 @@ def deserialise_daytime(start_time: str) -> DayTime:
     return DayTime(int(start_time[0:2]), int(start_time[3:5]), int(start_time[6:8]))
 
 
-def timer_to_json(timer: Timer) -> dict:
-    serialisable = {}
-    for field in fields(timer):
-        field_name = field.name
-        field_value = getattr(timer, field_name)
-        if isinstance(field_value, DayTime):
-            serialisable_field_value = serialise_daytime(field_value)
-        elif isinstance(field_value, timedelta):
-            serialisable_field_value = field_value.total_seconds()
-        else:
-            serialisable_field_value = field_value
-        serialisable[field_name] = serialisable_field_value
-    return serialisable
+def timer_to_json(timer: Timer | IdentifiableTimer) -> dict:
+    base = {"id": timer.id} if isinstance(timer, IdentifiableTimer) else {}
+    # Note: don't merge dicts using double splat operator as MicroPython does not like it
+    return base | {
+        "name": timer.name,
+        "start_time": serialise_daytime(timer.start_time),
+        "duration": timer.duration.total_seconds(),
+    }
