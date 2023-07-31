@@ -11,8 +11,8 @@ exclude = ["garden_water/tests"]
 python = "^3.11"
 # Using fork of MicroWebSrv2 to fix bug with MicroPython unix port
 #microwebsrv2 = {git = "git@github.com:colin-nolan/MicroWebSrv2.git"}
-microwebsrv2 = {git = "git@github.com:jczic/MicroWebSrv2.git"}
-microdot = {git = "git@github.com:miguelgrinberg/microdot.git"}
+#microwebsrv2 = {git = "git@github.com:jczic/MicroWebSrv2.git"}
+#microdot = {git = "git@github.com:miguelgrinberg/microdot.git"}
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^7.4.0"
@@ -20,6 +20,7 @@ requests = "^2.31.0"
 black = "^23.3.0"
 isort = "^5.12.0"
 mpy-cross = "^1.20.0"
+adafruit-ampy = "^1.1.0"
 
 [build-system]
 requires = ["poetry-core"]

@@ -28,6 +28,9 @@ find "${lib_install_directory}" -type d -name __pycache__ -exec rm -r {} +
 >&2 echo "Downloading mip requirements..."
 micropython "${project_directory}/mips-requirements.py" "${lib_install_directory}"
 
+>&2 echo "Applying custom MicroPython module patches..."
+find "${project_directory}/micropython" -type f -name "*.diff" -exec patch -d "${lib_install_directory}" -i {} \;
+
 >&2 echo "Creating entrypoint..."
 cp "${lib_install_directory}/${project_name/-/_}/main.py" "${lib_install_directory}"
 
@@ -47,6 +50,11 @@ else
     find "${lib_install_directory}" -name "*.py" -type f \
         -exec sh -c "mpy-cross -march=\"${architecture}\" \"\$0\"; rm \"\$0\"" {} \;
 fi
+
+pushd "${lib_install_directory}" > /dev/null
+>&2 echo "Creating md5sums..."
+find . -type f -exec md5sum {} + > md5sums.txt
+popd > /dev/null
 
 popd > /dev/null
 

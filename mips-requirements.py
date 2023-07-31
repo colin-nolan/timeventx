@@ -18,25 +18,27 @@ LIBRARIES_TO_INSTALL = (
     "functools",
     "logging",
     "pathlib",
+    "time",
     "threading",
     "github:pfalcon/pycopy-lib/typing/typing.py",
+    # TODO: investigate
     "github:pfalcon/pycopy-lib/sqlite3/sqlite3.py",
 )
 
 
 def _install_libs(install_args: tuple[str | tuple[str, dict] | tuple[str, dict, callable], ...], install_location: str):
     for args in install_args:
-        mips_kwargs = dict(target=install_location, mpy=False)
+        mip_kwargs = dict(target=install_location, mpy=False)
         if not isinstance(args, tuple):
             source = args
         else:
-            mips_kwargs = args[1] | mips_kwargs
+            mip_kwargs = args[1] | mip_kwargs
             source = args[0]
 
-        mip.install(source, **mips_kwargs)
+        mip.install(source, **mip_kwargs)
 
         if isinstance(args, tuple) and len(args) > 2:
-            args[2](source, mips_kwargs)
+            args[2](source, mip_kwargs)
 
 
 def main():

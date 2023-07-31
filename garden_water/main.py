@@ -1,12 +1,12 @@
-import logging
 import math
 import time
 from pathlib import Path
 from typing import Optional
+
+from garden_water._logging import setup_logging, get_logger
 from garden_water.configuration import Configuration
 
-_logger = logging.getLogger(__name__)
-
+_logger = get_logger(__name__)
 
 DEFAULT_CONFIGURATION_FILE_NAME = "config.ini"
 # Location is relevant to CWD, which isn't ideal but on the PicoPi will be the root, which is the correct location.
@@ -37,24 +37,35 @@ def connect_to_wifi(ssid: str, password: str, retries: int = math.inf, wait_for_
         raise RuntimeError("Failed to connect to WiFi")
 
 
-def sync_time(timezone: int = 0):
+def sync_time():
     # Deferring import to allow testing using MicroPython without a network module
     import ntptime
 
-    # TODO: harden
-    ntptime.settime(timezone=timezone)
-    _logger.info(f"Time synchronised: {time.localtime()}")
+    ntptime.settime()
+
+
+def setup_device(configuration: Configuration):
+    wifi_ssid = configuration[Configuration.WIFI_SSID]
+    wifi_password = configuration[Configuration.WIFI_PASSWORD]
+    connect_to_wifi(wifi_ssid, wifi_password)
+    _logger.info(f"Connected to WiFi: {wifi_ssid}")
+
+    sync_time()
+    formatted_time = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time()))
+    _logger.info(f"Time synchronised: {formatted_time}")
 
 
 def main(configuration_location: Optional[Path] = DEFAULT_CONFIGURATION_FILE_LOCATION):
     configuration = Configuration(configuration_location if configuration_location.exists() else None)
 
-    # TODO: monitor WiFi connection and reconnect if becomes unconnected?
-    connect_to_wifi(configuration[Configuration.WIFI_SSID], configuration[Configuration.WIFI_PASSWORD])
+    setup_logging(configuration)
+    _logger.info("Device turned on")
 
-    # # TODO: run periodically?
-    # time_sync_thread = Thread(target=sync_time)
-    # time_sync_thread.start()
+    try:
+        setup_device(configuration)
+    except Exception as e:
+        _logger.exception(e)
+        raise e
 
 
 if __name__ == "__main__":
