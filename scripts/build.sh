@@ -35,6 +35,8 @@ find "${project_directory}/micropython" -type f -name "*.diff" -exec patch -d "$
 cp "${lib_install_directory}/${project_name/-/_}/main.py" "${lib_install_directory}"
 
 >&2 echo "Creating configuration..."
+# TODO: import of main requires all dependencies to be installed (even if they will never be used). Consider moving the
+#       configuration constant into a separate module
 PYTHONPATH="${project_directory}" python -c "
 from garden_water.configuration import Configuration
 from garden_water.main import DEFAULT_CONFIGURATION_FILE_NAME

@@ -19,7 +19,7 @@ LIBRARIES_TO_INSTALL = (
     "logging",
     "pathlib",
     "time",
-    "threading",
+    # "threading",
     "github:pfalcon/pycopy-lib/typing/typing.py",
     # TODO: investigate
     "github:pfalcon/pycopy-lib/sqlite3/sqlite3.py",

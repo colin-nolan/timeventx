@@ -5,6 +5,7 @@ from typing import Optional
 
 from garden_water._logging import setup_logging, get_logger
 from garden_water.configuration import Configuration
+from garden_water.web_server import app
 
 _logger = get_logger(__name__)
 
@@ -41,6 +42,7 @@ def sync_time():
     # Deferring import to allow testing using MicroPython without a network module
     import ntptime
 
+    # FIXME: harden against network failures
     ntptime.settime()
 
 
@@ -55,6 +57,12 @@ def setup_device(configuration: Configuration):
     _logger.info(f"Time synchronised: {formatted_time}")
 
 
+def inner_main(configuration: Configuration):
+    setup_device(configuration)
+    app.run(debug=True)
+
+
+
 def main(configuration_location: Optional[Path] = DEFAULT_CONFIGURATION_FILE_LOCATION):
     configuration = Configuration(configuration_location if configuration_location.exists() else None)
 
@@ -62,10 +70,14 @@ def main(configuration_location: Optional[Path] = DEFAULT_CONFIGURATION_FILE_LOC
     _logger.info("Device turned on")
 
     try:
-        setup_device(configuration)
+        inner_main(configuration)
     except Exception as e:
         _logger.exception(e)
+
+        # TODO: auto-restart mechanism - but care not to rapidly error loop
         raise e
+
+
 
 
 if __name__ == "__main__":

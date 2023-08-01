@@ -220,6 +220,24 @@ plugins = ["setuptools"]
 requirements-deprecated-finder = ["pip-api", "pipreqs"]
 
 [[package]]
+name = "microdot"
+version = "1.3.4.dev0"
+description = ""
+optional = false
+python-versions = "*"
+files = []
+develop = false
+
+[package.extras]
+docs = ["sphinx"]
+
+[package.source]
+type = "git"
+url = "git@github.com:miguelgrinberg/microdot.git"
+reference = "HEAD"
+resolved_reference = "3eb57d0fcfea838e4524691de38e9e99bcdfb216"
+
+[[package]]
 name = "mpy-cross"
 version = "1.20.0"
 description = "micropython mpy-cross distribution"
@@ -387,4 +405,4 @@ zstd = ["zstandard (>=0.18.0)"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.11"
-content-hash = "b4a236728f2799cc0a5d110d7af734b32e63c7e0476fd0aa5b7e209e540beb6e"
+content-hash = "3a34cb15c454206d88afc9430a699ba2c4ade2773f84c37255f69f9291774bd0"
