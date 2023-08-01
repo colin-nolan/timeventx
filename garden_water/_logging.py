@@ -1,7 +1,7 @@
-import sys
-from logging import Logger, Formatter, FileHandler
 import logging
-from typing import Optional, Collection
+import sys
+from logging import FileHandler, Formatter, Logger
+from typing import Collection, Optional
 
 from garden_water.configuration import Configuration
 

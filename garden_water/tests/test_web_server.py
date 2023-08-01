@@ -4,11 +4,10 @@ from socket import socket
 
 import pytest
 import requests
-from MicroWebSrv2 import MicroWebSrv2 as MicroWebSrv2Class
 
 from garden_water.tests._common import EXAMPLE_IDENTIFIABLE_TIMER_1, EXAMPLE_IDENTIFIABLE_TIMER_2, EXAMPLE_TIMER_1
 from garden_water.timers.serialisation import timer_to_json
-from garden_water.web_server import DATABASE_LOCATION_ENVIRONMENT_VARIABLE, create_web_server, get_timers_database
+from garden_water.web_server import get_timers_database
 
 
 def _get_free_port() -> int:
@@ -18,9 +17,10 @@ def _get_free_port() -> int:
 
 
 @pytest.fixture
-def server_location(tmpdir: Path) -> MicroWebSrv2Class:
+def server_location(tmpdir: Path) -> str:
     os.environ[DATABASE_LOCATION_ENVIRONMENT_VARIABLE] = f"sqlite:///{Path(tmpdir / 'test.db')}"
     port = _get_free_port()
+    # FIXME
     server = create_web_server(port, "localhost")
     server.StartManaged()
     yield f"http://localhost:{port}"

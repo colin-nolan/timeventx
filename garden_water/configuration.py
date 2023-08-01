@@ -1,8 +1,7 @@
-from configparser import ConfigParser
 import os
+from configparser import ConfigParser
 from pathlib import Path
-from typing import Optional, Any
-
+from typing import Any, Optional
 
 ENVIRONMENT_VARIABLE_PREFIX = "GARDEN_WATER"
 

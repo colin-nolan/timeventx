@@ -6,6 +6,7 @@ import mip
 LIBRARIES_TO_INSTALL = (
     "abc",
     "collections-defaultdict",
+    "contextlib",
     (
         "github:Mika64/micropython-lib/configparser/ConfigParser.py",
         dict(version="37207ca59e716dba1e2c91cbb558c15225bdf71b"),
@@ -18,11 +19,7 @@ LIBRARIES_TO_INSTALL = (
     "functools",
     "logging",
     "pathlib",
-    "time",
-    # "threading",
     "github:pfalcon/pycopy-lib/typing/typing.py",
-    # TODO: investigate
-    "github:pfalcon/pycopy-lib/sqlite3/sqlite3.py",
 )
 
 

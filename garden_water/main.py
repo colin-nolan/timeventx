@@ -3,11 +3,17 @@ import time
 from pathlib import Path
 from typing import Optional
 
-from garden_water._logging import setup_logging, get_logger
+from garden_water._logging import get_logger, setup_logging
 from garden_water.configuration import Configuration
 from garden_water.web_server import app
 
-_logger = get_logger(__name__)
+try:
+    import uasyncio as asyncio
+except ImportError:
+    import asyncio
+
+
+logger = get_logger(__name__)
 
 DEFAULT_CONFIGURATION_FILE_NAME = "config.ini"
 # Location is relevant to CWD, which isn't ideal but on the PicoPi will be the root, which is the correct location.
@@ -50,34 +56,44 @@ def setup_device(configuration: Configuration):
     wifi_ssid = configuration[Configuration.WIFI_SSID]
     wifi_password = configuration[Configuration.WIFI_PASSWORD]
     connect_to_wifi(wifi_ssid, wifi_password)
-    _logger.info(f"Connected to WiFi: {wifi_ssid}")
+    logger.info(f"Connected to WiFi: {wifi_ssid}")
 
     sync_time()
-    formatted_time = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time()))
-    _logger.info(f"Time synchronised: {formatted_time}")
+    formatted_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(time.time()))
+    logger.info(f"Time synchronised: {formatted_time}")
 
 
 def inner_main(configuration: Configuration):
     setup_device(configuration)
-    app.run(debug=True)
 
+    logger.info("Starting tweeter")
+    tweeter_task = asyncio.create_task(tweeter())
+    logger.info("Starting web server")
+    app_task = asyncio.create_task(app.run(debug=True))
+
+    # asyncio.wait_for(app_task
+    # await tweeter_task
+
+
+async def tweeter():
+    while True:
+        logger.info("Tweeting")
+        await asyncio.sleep(5)
 
 
 def main(configuration_location: Optional[Path] = DEFAULT_CONFIGURATION_FILE_LOCATION):
     configuration = Configuration(configuration_location if configuration_location.exists() else None)
 
     setup_logging(configuration)
-    _logger.info("Device turned on")
+    logger.info("Device turned on")
 
     try:
         inner_main(configuration)
     except Exception as e:
-        _logger.exception(e)
+        logger.exception(e)
 
         # TODO: auto-restart mechanism - but care not to rapidly error loop
         raise e
-
-
 
 
 if __name__ == "__main__":
