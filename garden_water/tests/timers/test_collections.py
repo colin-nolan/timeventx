@@ -3,7 +3,7 @@ from tempfile import TemporaryDirectory
 
 import pytest
 
-from garden_water.tests._common import EXAMPLE_IDENTIFIABLE_TIMER_1, EXAMPLE_TIMER_1, EXAMPLE_TIMERS
+from garden_water.tests._common import EXAMPLE_IDENTIFIABLE_TIMER_1, EXAMPLE_TIMER_1, EXAMPLE_TIMERS, EXAMPLE_TIMER_2
 from garden_water.timers.collections.abc import IdentifiableTimersCollection
 from garden_water.timers.collections.database import TimersDatabase
 from garden_water.timers.collections.memory import InMemoryIdentifiableTimersCollection
@@ -13,7 +13,7 @@ from garden_water.timers.timers import IdentifiableTimer, TimerId
 def timers_database() -> TimersDatabase:
     # Create temporary database in temp directory
     with TemporaryDirectory() as tmpdir:
-        yield TimersDatabase(f"sqlite:///{Path(Path(tmpdir) / 'test.db')}")
+        yield TimersDatabase(Path(tmpdir) / 'test.db')
 
 
 def in_memory_collection() -> InMemoryIdentifiableTimersCollection:
@@ -26,6 +26,14 @@ def timers_collection(request):
 
 
 class TestIdentifiableTimersCollection:
+    def test_len_when_zero(self, timers_collection: IdentifiableTimersCollection):
+        assert len(timers_collection) == 0
+
+    def test_len_when_non_zero(self, timers_collection: IdentifiableTimersCollection):
+        timers_collection.add(EXAMPLE_TIMER_1)
+        timers_collection.add(EXAMPLE_TIMER_2)
+        assert len(timers_collection) == 2
+
     def test_add(self, timers_collection: IdentifiableTimersCollection):
         added_timer = timers_collection.add(EXAMPLE_TIMER_1)
         assert added_timer.to_timer() == EXAMPLE_TIMER_1
