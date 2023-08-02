@@ -1,12 +1,15 @@
 from contextlib import contextmanager
 from datetime import timedelta
 from pathlib import Path
+from time import sleep
 from typing import Iterable
 
+from garden_water.temp_debug import get_memory_usage
 from garden_water.timers.collections.abc import IdentifiableTimersCollection
 from garden_water.timers.serialisation import deserialise_daytime, serialise_daytime
 from garden_water.timers.timers import IdentifiableTimer, Timer, TimerId
 
+# sqlite does not work on Pico Pi due to insufficient RAM
 try:
     import usqlite as sqlite3
 except ImportError:
@@ -34,7 +37,12 @@ class TimersDatabase(IdentifiableTimersCollection):
             yield connection
 
     def _create_tables(self):
+        print(get_memory_usage())
+        import gc
+        gc.collect()
+
         with self._db_connection as connection:
+            print(get_memory_usage())
             connection.execute(
                 f"""
                     CREATE TABLE IF NOT EXISTS {TimersDatabase.TIMERS_TABLE_NAME} (
@@ -77,7 +85,6 @@ class TimersDatabase(IdentifiableTimersCollection):
                 raise KeyError(timer_id)
 
         return TimersDatabase._result_to_timer(result)
-
 
     def add(self, timer: Timer | IdentifiableTimer) -> IdentifiableTimer:
         timer_id = timer.id if isinstance(timer, IdentifiableTimer) else None

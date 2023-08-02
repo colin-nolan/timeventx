@@ -1,18 +1,28 @@
+import logging
 import os
 from configparser import ConfigParser
 from pathlib import Path
 from typing import Any, Optional
 
 ENVIRONMENT_VARIABLE_PREFIX = "GARDEN_WATER"
+DEFAULT_CONFIGURATION_FILE_NAME = "config.ini"
 
 
 # Not using dataclass as not supported by MicroPython
 class ConfigurationDescription:
-    def __init__(self, environment_variable_name: str, ini_name: str, parser: callable, empty_allowed: bool = False):
+    def __init__(
+        self,
+        environment_variable_name: str,
+        ini_name: str,
+        parser: callable,
+        default: Any = None,
+        allow_none: bool = True,
+    ):
         self.environment_variable_name = environment_variable_name
         self.ini_name = ini_name
         self.parser = parser
-        self.empty_allowed = empty_allowed
+        self.default = default
+        self.allow_none = allow_none
 
     def get_ini_section(self) -> str:
         section = "".join(self.ini_name.split(".")[:-1])
@@ -23,12 +33,15 @@ class ConfigurationDescription:
 
 
 class Configuration:
-    WIFI_SSID = ConfigurationDescription(f"{ENVIRONMENT_VARIABLE_PREFIX}_WIFI_SSID", "wifi.ssid", str)
-    WIFI_PASSWORD = ConfigurationDescription(f"{ENVIRONMENT_VARIABLE_PREFIX}_WIFI_PASSWORD", "wifi.password", str)
-    LOG_LEVEL = ConfigurationDescription(f"{ENVIRONMENT_VARIABLE_PREFIX}_LOG_LEVEL", "log.level", int)
+    LOG_LEVEL = ConfigurationDescription(f"{ENVIRONMENT_VARIABLE_PREFIX}_LOG_LEVEL", "log.level", int, default=logging.INFO)
     LOG_FILE_LOCATION = ConfigurationDescription(
-        f"{ENVIRONMENT_VARIABLE_PREFIX}_LOG_FILE_LOCATION", "log.file_location", str
+        f"{ENVIRONMENT_VARIABLE_PREFIX}_LOG_FILE_LOCATION", "log.file_location", str, default="main.log"
     )
+    TIMERS_DATABASE_LOCATION = ConfigurationDescription(
+        f"{ENVIRONMENT_VARIABLE_PREFIX}_TIMERS_DATABASE_LOCATION", "database.location", str, default="timers.sqlite"
+    )
+    WIFI_SSID = ConfigurationDescription(f"{ENVIRONMENT_VARIABLE_PREFIX}_WIFI_SSID", "wifi.ssid", str, allow_none=False)
+    WIFI_PASSWORD = ConfigurationDescription(f"{ENVIRONMENT_VARIABLE_PREFIX}_WIFI_PASSWORD", "wifi.password", str, allow_none=False)
 
     @staticmethod
     def write_env_to_config_file(config_file_location: Path):
@@ -46,10 +59,17 @@ class Configuration:
         configuration_parser = ConfigParser()
 
         for configuration_description in configuration_descriptions:
-            value = os.environ.get(configuration_description.environment_variable_name, "")
+            value = os.environ.get(configuration_description.environment_variable_name)
 
-            if value == "" and not configuration_description.empty_allowed:
-                continue
+            if value is None:
+                value = configuration_description.default
+
+                if value is None:
+                    if not configuration_description.allow_none:
+                        raise ValueError(f"Configuration value must be set for {configuration_description.ini_name} " +
+                                         f"(try {configuration_description.environment_variable_name})")
+
+                value = str(value)
 
             section = configuration_description.get_ini_section()
             if not configuration_parser.has_section(section):
@@ -81,15 +101,11 @@ class Configuration:
             except Exception as e:
                 raise KeyError(f"Configuration value not found: {configuration_description.ini_name}") from e
 
-        if value == "" and not configuration_description.empty_allowed:
-            raise AttributeError(
-                f"Configuration value for {configuration_description.environment_variable_name} is empty, which has "
-                + f"been set as not allowed"
-            )
-
         return configuration_description.parser(value)
 
-    def get(self, configuration_description: ConfigurationDescription, default: Optional[Any] = None) -> Any:
+    def get(
+        self, configuration_description: ConfigurationDescription, default: Optional[Any] = None
+    ) -> Any:
         try:
             return self[configuration_description]
         except KeyError:

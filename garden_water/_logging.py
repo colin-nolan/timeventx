@@ -5,9 +5,6 @@ from typing import Collection, Optional
 
 from garden_water.configuration import Configuration
 
-DEFAULT_LOG_FILE_LOCATION = "main.log"
-DEFAULT_LOG_LEVEL = logging.WARNING
-
 _LOGGERS_TO_SETUP = []
 _LOGGER_LEVEL: Optional[int] = None
 _LOGGER_HANDLERS: Optional[Collection[FileHandler]] = None
@@ -17,16 +14,16 @@ def setup_logging(configuration: Configuration):
     formatter = Formatter("%(asctime)s\t%(name)s\t%(levelname)s\t%(message)s")
 
     # Create a FileHandler for logging to a file
-    file_handler = FileHandler(configuration.get(Configuration.LOG_FILE_LOCATION, DEFAULT_LOG_FILE_LOCATION))
-    file_handler.setLevel(configuration.get(Configuration.LOG_LEVEL, DEFAULT_LOG_LEVEL))
+    file_handler = FileHandler(configuration[Configuration.LOG_FILE_LOCATION])
+    file_handler.setLevel(configuration[Configuration.LOG_LEVEL])
     file_handler.setFormatter(formatter)
 
     # Create a StreamHandler for logging to stderr
     stream_handler = logging.StreamHandler(sys.stderr)
-    stream_handler.setLevel(configuration.get(Configuration.LOG_LEVEL, DEFAULT_LOG_LEVEL))
+    stream_handler.setLevel(configuration[Configuration.LOG_LEVEL])
     stream_handler.setFormatter(formatter)
 
-    log_level = configuration.get(Configuration.LOG_LEVEL, DEFAULT_LOG_LEVEL)
+    log_level = configuration[Configuration.LOG_LEVEL]
 
     global _LOGGER_HANDLERS, _LOGGER_LEVEL
     _LOGGER_LEVEL = log_level

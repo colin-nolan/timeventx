@@ -19,6 +19,7 @@ LIBRARIES_TO_INSTALL = (
     "functools",
     "logging",
     "pathlib",
+    "time",
     "github:pfalcon/pycopy-lib/typing/typing.py",
 )
 

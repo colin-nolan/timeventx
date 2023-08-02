@@ -13,7 +13,7 @@ from garden_water.timers.timers import IdentifiableTimer, TimerId
 def timers_database() -> TimersDatabase:
     # Create temporary database in temp directory
     with TemporaryDirectory() as tmpdir:
-        yield TimersDatabase(Path(tmpdir) / 'test.db')
+        yield TimersDatabase(Path(tmpdir) / "test.db")
 
 
 def in_memory_collection() -> InMemoryIdentifiableTimersCollection:

@@ -1,47 +1,37 @@
 import json
 from datetime import timedelta
+from typing import Optional
 
 from microdot_asyncio import Microdot, Request, Response, abort
 
 from garden_water._logging import get_logger
 from garden_water.timers.collections.abc import IdentifiableTimersCollection
 from garden_water.timers.collections.database import TimersDatabase
-from garden_water.timers.collections.memory import InMemoryIdentifiableTimersCollection
 from garden_water.timers.serialisation import deserialise_daytime, timer_to_json
 from garden_water.timers.timers import Timer
 
-# DATABASE_LOCATION_ENVIRONMENT_VARIABLE = "GARDEN_WATER_DATABASE_LOCATION"
-# DEFAULT_DATABASE_LOCATION = "sqlite:///garden-water.sqlite"
+_TIMERS_DATABASE_SINGLETON: Optional[TimersDatabase] = None
 
-_TIMERS_DATABASE_SINGLETONS: dict[str, TimersDatabase] = {}
 _HTTP_CODE_BAD_RESPONSE = 400
 _HTTP_CODE_FORBIDDEN_RESPONSE = 403
+_CONTENT_TYPE_APPLICATION_JSON = "application/json"
 
 
-Response.default_content_type = "application/json"
-
+Response.default_content_type = _CONTENT_TYPE_APPLICATION_JSON
 
 logger = get_logger(__name__)
-
 app = Microdot()
 
 
-_TEMP_IN_MEMORY_TIMERS_COLLECTION = InMemoryIdentifiableTimersCollection()
+def set_timers_database(timers_database: IdentifiableTimersCollection):
+    global _TIMERS_DATABASE_SINGLETON
+    _TIMERS_DATABASE_SINGLETON = timers_database
 
 
 def get_timers_database() -> IdentifiableTimersCollection:
-    """
-    Gets timers database singleton for the database location specified via the `DATABASE_LOCATION_ENVIRONMENT_VARIABLE`
-    environment variable.
-    :return: the database
-    """
-    # database_location = os.getenv(DATABASE_LOCATION_ENVIRONMENT_VARIABLE, DEFAULT_DATABASE_LOCATION)
-    # database = _TIMERS_DATABASE_SINGLETONS.get(database_location)
-    # if database is None:
-    #     database = TimersDatabase(database_location)
-    #     _TIMERS_DATABASE_SINGLETONS[database_location] = database
-    # return database
-    return _TEMP_IN_MEMORY_TIMERS_COLLECTION
+    if _TIMERS_DATABASE_SINGLETON is None:
+        raise RuntimeError("Timers database single has not been set")
+    return _TIMERS_DATABASE_SINGLETON
 
 
 @app.get("/healthcheck")
@@ -50,13 +40,17 @@ def get_health(request: Request):
 
 
 @app.get("/timers")
-def get_timers(request):
+def get_timers(request: Request):
     return json.dumps([timer_to_json(timer) for timer in get_timers_database()])
 
 
 @app.post("/timer")
-def post_timer(request):
-    serialised_timer = request.GetPostedJSONObject()
+def post_timer(request: Request):
+    if request.content_type is None:
+        # request.json is only available if content type is set (it assumes a lot of the client!)
+        request.content_type = _CONTENT_TYPE_APPLICATION_JSON
+
+    serialised_timer = request.json
     if serialised_timer is None:
         abort(_HTTP_CODE_BAD_RESPONSE, f"Timer attributes must be set")
     if serialised_timer.get("id") is not None:
@@ -79,7 +73,7 @@ def post_timer(request):
 
 
 @app.route("/stats")
-async def index(request):
+async def index(request: Request):
     import gc
 
     output = _get_memory_usage()
@@ -98,13 +92,6 @@ def _get_memory_usage() -> str:
 
     return f"{allocated_memory} / {total_memory} bytes ({(allocated_memory / total_memory) * 100}%), {free_memory} bytes free"
 
-
-def main():
-    app.run(debug=True)
-
-
-if __name__ == "__main__":
-    main()
 
 
 # import os

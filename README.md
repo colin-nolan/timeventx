@@ -25,6 +25,5 @@ To subsequently deploy the files to a device:
 ./scripts/deploy.sh -d [architecture (default: any)] [device (default: /dev/ttyACM0)]
 ```
 
-To manually interact with the RP2040 device::
-- `rshell`, which makes the device files available at `/pyboard`, and provides access to a REPL using `repl`
-- `ampy`, which allows easy execution of a script on the device e.g. `ampy --port /dev/ttyACM0 run garden_water/main.py` 
+To manually interact with the RP2040 device:
+- `mpremote`

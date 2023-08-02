@@ -28,18 +28,15 @@ find "${lib_install_directory}" -type d -name __pycache__ -exec rm -r {} +
 >&2 echo "Downloading mip requirements..."
 micropython "${project_directory}/mips-requirements.py" "${lib_install_directory}"
 
+# FIXME: sort
+>&2 echo "Applying custom MicroPython module patches..."
+find "${project_directory}/micropython" -type f -name "*.diff" -exec patch -d "${lib_install_directory}" -i {} \;
+
 >&2 echo "Creating entrypoint..."
 cp "${lib_install_directory}/${project_name/-/_}/main.py" "${lib_install_directory}"
 
 >&2 echo "Creating configuration..."
-# TODO: import of main requires all dependencies to be installed (even if they will never be used). Consider moving the
-#       configuration constant into a separate module
-PYTHONPATH="${project_directory}" python -c "
-from garden_water.configuration import Configuration
-from garden_water.main import DEFAULT_CONFIGURATION_FILE_NAME
-
-Configuration.write_env_to_config_file(f'${lib_install_directory}/{DEFAULT_CONFIGURATION_FILE_NAME}')
-"
+"${script_directory}/create-config.py" "${lib_install_directory}"
 
 if [[ "${architecture}" == "any" ]]; then
     >&2 echo "Not pre-compiling libs to be architecture agnostic"

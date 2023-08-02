@@ -1,11 +1,20 @@
+import logging
 import math
+import sys
 import time
 from pathlib import Path
 from typing import Optional
+import usqlite
 
 from garden_water._logging import get_logger, setup_logging
-from garden_water.configuration import Configuration
-from garden_water.web_server import app
+from garden_water.configuration import Configuration, DEFAULT_CONFIGURATION_FILE_NAME
+from garden_water.timer_runner import TimerRunner
+from garden_water.timers.collections.abc import IdentifiableTimersCollection
+from garden_water.timers.collections.database import TimersDatabase
+from garden_water.timers.collections.memory import InMemoryIdentifiableTimersCollection
+from garden_water.web_server import set_timers_database, app
+
+# from garden_water.web_server import set_timers_database
 
 try:
     import uasyncio as asyncio
@@ -15,7 +24,7 @@ except ImportError:
 
 logger = get_logger(__name__)
 
-DEFAULT_CONFIGURATION_FILE_NAME = "config.ini"
+
 # Location is relevant to CWD, which isn't ideal but on the PicoPi will be the root, which is the correct location.
 # `__file__` and `os.path` do not work on MicroPython
 DEFAULT_CONFIGURATION_FILE_LOCATION = Path(DEFAULT_CONFIGURATION_FILE_NAME)
@@ -55,9 +64,10 @@ def sync_time():
 def setup_device(configuration: Configuration):
     wifi_ssid = configuration[Configuration.WIFI_SSID]
     wifi_password = configuration[Configuration.WIFI_PASSWORD]
+    logger.info(f"Connecting to WiFi: {wifi_ssid}")
     connect_to_wifi(wifi_ssid, wifi_password)
-    logger.info(f"Connected to WiFi: {wifi_ssid}")
 
+    logger.info("Synchronising time")
     sync_time()
     formatted_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(time.time()))
     logger.info(f"Time synchronised: {formatted_time}")
@@ -66,18 +76,29 @@ def setup_device(configuration: Configuration):
 def inner_main(configuration: Configuration):
     setup_device(configuration)
 
+    logger.info("Setting up database")
+    # timers_database = TimersDatabase(
+    #     configuration.get(Configuration.TIMERS_DATABASE_LOCATION)
+    # )
+
+    timers_database = InMemoryIdentifiableTimersCollection()
+    set_timers_database(timers_database)
+
     logger.info("Starting tweeter")
-    tweeter_task = asyncio.create_task(tweeter())
+    asyncio.create_task(tweeter(timers_database))
     logger.info("Starting web server")
-    app_task = asyncio.create_task(app.run(debug=True))
+    app.run(debug=True)
 
-    # asyncio.wait_for(app_task
-    # await tweeter_task
+    logger.error("Web server stopped")
+    # FIXME
 
 
-async def tweeter():
+async def tweeter(timers: IdentifiableTimersCollection):
+    # FIXME: `IdentifiableTimersCollection` need to be iterable
+    timer_runner = TimerRunner(timers, lambda: None, lambda: None)
+
     while True:
-        logger.info("Tweeting")
+        logger.info(timer_runner.on_off_intervals)
         await asyncio.sleep(5)
 
 
