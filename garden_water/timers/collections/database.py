@@ -1,3 +1,4 @@
+import itertools
 import json
 from contextlib import contextmanager
 from pathlib import Path
@@ -21,73 +22,63 @@ from garden_water.timers.timers import IdentifiableTimer, Timer, TimerId
 
 
 class TimersDatabase(IdentifiableTimersCollection):
-    @staticmethod
-    def _get_unique_key(open_database: btree.BTree) -> int:
-        keys = tuple(open_database.keys())
-        if len(keys) == 0:
-            return 1
-        return int(max(keys)) + 1
+    def __init__(self, database_directory: Path):
+        self.database_directory = database_directory
 
-    def __init__(self, database_location: Path):
-        self.database_location = database_location
+        if not database_directory.exists():
+            database_directory.mkdir()
 
     def __iter__(self) -> Iterable[IdentifiableTimer]:
-        with self._open_database(read_only=True) as database:
-            for value in database.values():
-                try:
-                    yield json_to_identifiable_timer(json.loads(value.decode()))
-                except KeyError:
-                    raise
+        # Read all files in self.database_directory
+        # For each file, read the contents and yield the timer
+        for location in self.database_directory.iterdir():
+            timer_id = self._database_file_to_timer_id(location)
+            yield self.get(timer_id)
 
     def __len__(self) -> int:
-        try:
-            with self._open_database(read_only=True) as database:
-                return sum(1 for _ in database.keys())
-        # TODO: likely MicroPython gives a different error?
-        except FileNotFoundError:
-            return 0
+        return sum(1 for _ in self.database_directory.iterdir())
 
     def get(self, timer_id: TimerId) -> IdentifiableTimer:
-        with self._open_database(read_only=True) as database:
-            try:
-                data = database[str(timer_id).encode()]
-            except KeyError as e:
-                raise KeyError(f"Timer with id {timer_id} does not exist") from e
-
-        serialised_timer = json.loads(data.decode())
-        return json_to_identifiable_timer(serialised_timer)
+        location = self._timer_id_to_database_file(timer_id)
+        try:
+            with open(location, "r") as file:
+                serialised_timer = file.read()
+        except FileNotFoundError:
+            raise KeyError(f"Timer with id {timer_id} does not exist")
+        return json_to_identifiable_timer(json.loads(serialised_timer))
 
     def add(self, timer: Timer | IdentifiableTimer) -> IdentifiableTimer:
-        with self._open_database() as database:
-            key = timer.id if isinstance(timer, IdentifiableTimer) else TimersDatabase._get_unique_key(database)
+        timer_id = timer.id if isinstance(timer, IdentifiableTimer) else self._get_unique_timer_id()
 
-            if str(key).encode() in database:
-                raise ValueError(f"Timer with id {key} already exists")
+        location = self._timer_id_to_database_file(timer_id)
+        if location.exists():
+            raise ValueError(f"Timer with id {timer_id} already exists")
 
-            identifiable_timer = (
-                IdentifiableTimer.from_timer(timer, TimerId(key)) if not isinstance(timer, IdentifiableTimer) else timer
-            )
+        identifiable_timer = (
+            IdentifiableTimer.from_timer(timer, timer_id) if not isinstance(timer, IdentifiableTimer) else timer
+        )
+        serialised_timer = json.dumps(timer_to_json(identifiable_timer))
 
-            database[str(key).encode()] = json.dumps(timer_to_json(identifiable_timer)).encode()
+        with open(location, "w") as file:
+            file.write(serialised_timer)
 
         return identifiable_timer
 
     def remove(self, timer_id: TimerId) -> bool:
-        with self._open_database() as database:
-            try:
-                del database[str(timer_id).encode()]
-                return True
-            except KeyError:
-                return False
+        location = self._timer_id_to_database_file(timer_id)
+        if not location.exists():
+            return False
+        location.unlink()
+        return True
 
-    @contextmanager
-    def _open_database(self, read_only: bool = False) -> ContextManager[btree.BTree]:
-        if not self.database_location.exists():
-            self.database_location.touch()
+    def _timer_id_to_database_file(self, timer_id: TimerId) -> Path:
+        return self.database_directory / f"{timer_id}.json"
 
-        with open(self.database_location, "r+b" if read_only else "a+b") as file:
-            try:
-                database = btree.open(file)
-                yield database
-            finally:
-                database.close()
+    def _database_file_to_timer_id(self, database_file: Path) -> TimerId:
+        return TimerId(int(database_file.stem))
+
+    def _get_unique_timer_id(self) -> TimerId:
+        # `itertools.chain` combines the sorted generator with a fixed value of 1 to work when there are no files
+        return TimerId(
+            max(itertools.chain(sorted(int(file.stem) for file in self.database_directory.iterdir()), (1,))) + 1
+        )

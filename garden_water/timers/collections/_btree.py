@@ -50,44 +50,44 @@ class BTree:
         self._storage.flush()
 
     @fail_if_closed
-    def __getitem__(self, key: bytes) -> bytes:
+    def __getitem__(self, key: str) -> str:
         return self._data.__getitem__(key)
 
     @fail_if_closed
-    def get(self, key: bytes, default: bytes = None) -> bytes:
+    def get(self, key: str, default: str = None) -> str:
         return self._data.get(key, default)
 
     @fail_if_closed
-    def __setitem__(self, key: bytes, value: bytes):
+    def __setitem__(self, key: str, value: str):
         self._data.__setitem__(key, value)
 
     @fail_if_closed
-    def __delitem__(self, key: bytes):
+    def __delitem__(self, key: str):
         self._data.__delitem__(key)
 
     @fail_if_closed
-    def __contains__(self, key: bytes) -> bool:
+    def __contains__(self, key: str) -> bool:
         return self._data.__contains__(key)
 
     @fail_if_closed
-    def __iter__(self) -> Iterable[bytes]:
+    def __iter__(self) -> Iterable[str]:
         return self._data.__iter__()
 
     @fail_if_closed
-    def keys(self) -> Iterable[bytes]:
+    def keys(self) -> Iterable[str]:
         return self._data.keys()
 
     @fail_if_closed
-    def values(self) -> Iterable[bytes]:
+    def values(self) -> Iterable[str]:
         return self._data.values()
 
     @fail_if_closed
-    def items(self) -> Iterable[tuple[bytes, bytes]]:
+    def items(self) -> Iterable[tuple[str, str]]:
         return self._data.items()
 
     # Note: __len__ is missing on purpose, as it is not referenced in MicroPython's btree docs
 
-    def _read(self) -> dict[bytes, bytes]:
+    def _read(self) -> dict[str, str]:
         self._storage.seek(0)
 
         data = self._storage.read()
