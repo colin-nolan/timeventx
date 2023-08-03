@@ -93,7 +93,6 @@ def _get_memory_usage() -> str:
     return f"{allocated_memory} / {total_memory} bytes ({(allocated_memory / total_memory) * 100}%), {free_memory} bytes free"
 
 
-
 # import os
 # import machine
 #

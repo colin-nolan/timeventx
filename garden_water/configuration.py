@@ -33,7 +33,9 @@ class ConfigurationDescription:
 
 
 class Configuration:
-    LOG_LEVEL = ConfigurationDescription(f"{ENVIRONMENT_VARIABLE_PREFIX}_LOG_LEVEL", "log.level", int, default=logging.INFO)
+    LOG_LEVEL = ConfigurationDescription(
+        f"{ENVIRONMENT_VARIABLE_PREFIX}_LOG_LEVEL", "log.level", int, default=logging.INFO
+    )
     LOG_FILE_LOCATION = ConfigurationDescription(
         f"{ENVIRONMENT_VARIABLE_PREFIX}_LOG_FILE_LOCATION", "log.file_location", str, default="main.log"
     )
@@ -41,7 +43,9 @@ class Configuration:
         f"{ENVIRONMENT_VARIABLE_PREFIX}_TIMERS_DATABASE_LOCATION", "database.location", str, default="timers.sqlite"
     )
     WIFI_SSID = ConfigurationDescription(f"{ENVIRONMENT_VARIABLE_PREFIX}_WIFI_SSID", "wifi.ssid", str, allow_none=False)
-    WIFI_PASSWORD = ConfigurationDescription(f"{ENVIRONMENT_VARIABLE_PREFIX}_WIFI_PASSWORD", "wifi.password", str, allow_none=False)
+    WIFI_PASSWORD = ConfigurationDescription(
+        f"{ENVIRONMENT_VARIABLE_PREFIX}_WIFI_PASSWORD", "wifi.password", str, allow_none=False
+    )
 
     @staticmethod
     def write_env_to_config_file(config_file_location: Path):
@@ -66,8 +70,10 @@ class Configuration:
 
                 if value is None:
                     if not configuration_description.allow_none:
-                        raise ValueError(f"Configuration value must be set for {configuration_description.ini_name} " +
-                                         f"(try {configuration_description.environment_variable_name})")
+                        raise ValueError(
+                            f"Configuration value must be set for {configuration_description.ini_name} "
+                            + f"(try {configuration_description.environment_variable_name})"
+                        )
 
                 value = str(value)
 
@@ -103,9 +109,7 @@ class Configuration:
 
         return configuration_description.parser(value)
 
-    def get(
-        self, configuration_description: ConfigurationDescription, default: Optional[Any] = None
-    ) -> Any:
+    def get(self, configuration_description: ConfigurationDescription, default: Optional[Any] = None) -> Any:
         try:
             return self[configuration_description]
         except KeyError:

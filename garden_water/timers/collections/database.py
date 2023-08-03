@@ -2,7 +2,7 @@ import itertools
 import json
 from contextlib import contextmanager
 from pathlib import Path
-from typing import Iterable, ContextManager
+from typing import ContextManager, Iterable
 
 try:
     # Note that `btree` is not currently included in the standard MicroPython build for rp2. Posts from the past
@@ -12,16 +12,18 @@ try:
 except ImportError:
     import garden_water.timers.collections._btree as btree
 
-
 from garden_water.timers.collections.abc import IdentifiableTimersCollection
-from garden_water.timers.serialisation import (
-    timer_to_json,
-    json_to_identifiable_timer,
-)
+from garden_water.timers.serialisation import json_to_identifiable_timer, timer_to_json
 from garden_water.timers.timers import IdentifiableTimer, Timer, TimerId
 
 
 class TimersDatabase(IdentifiableTimersCollection):
+    _DATABASE_FILE_EXTENSION = ".json"
+
+    @property
+    def _database_files(self) -> Iterable[Path]:
+        yield from self.database_directory.glob(f"*{TimersDatabase._DATABASE_FILE_EXTENSION}")
+
     def __init__(self, database_directory: Path):
         self.database_directory = database_directory
 
@@ -31,19 +33,20 @@ class TimersDatabase(IdentifiableTimersCollection):
     def __iter__(self) -> Iterable[IdentifiableTimer]:
         # Read all files in self.database_directory
         # For each file, read the contents and yield the timer
-        for location in self.database_directory.iterdir():
+        for location in self._database_files:
             timer_id = self._database_file_to_timer_id(location)
             yield self.get(timer_id)
 
     def __len__(self) -> int:
-        return sum(1 for _ in self.database_directory.iterdir())
+        return sum(1 for _ in self._database_files)
 
     def get(self, timer_id: TimerId) -> IdentifiableTimer:
         location = self._timer_id_to_database_file(timer_id)
         try:
-            with open(location, "r") as file:
+            # String cast required with MicroPython due to use of non-standard `Path` lib
+            with open(str(location), "r") as file:
                 serialised_timer = file.read()
-        except FileNotFoundError:
+        except OSError:
             raise KeyError(f"Timer with id {timer_id} does not exist")
         return json_to_identifiable_timer(json.loads(serialised_timer))
 
@@ -59,7 +62,8 @@ class TimersDatabase(IdentifiableTimersCollection):
         )
         serialised_timer = json.dumps(timer_to_json(identifiable_timer))
 
-        with open(location, "w") as file:
+        # String cast required with MicroPython due to use of non-standard `Path` lib
+        with open(str(location), "w") as file:
             file.write(serialised_timer)
 
         return identifiable_timer
@@ -79,6 +83,4 @@ class TimersDatabase(IdentifiableTimersCollection):
 
     def _get_unique_timer_id(self) -> TimerId:
         # `itertools.chain` combines the sorted generator with a fixed value of 1 to work when there are no files
-        return TimerId(
-            max(itertools.chain(sorted(int(file.stem) for file in self.database_directory.iterdir()), (1,))) + 1
-        )
+        return TimerId(max(itertools.chain(sorted(int(file.stem) for file in self._database_files), (1,))) + 1)

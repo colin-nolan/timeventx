@@ -4,12 +4,11 @@ from pathlib import Path
 from typing import Optional
 
 from garden_water._logging import get_logger, setup_logging
-from garden_water.configuration import Configuration, DEFAULT_CONFIGURATION_FILE_NAME
+from garden_water.configuration import DEFAULT_CONFIGURATION_FILE_NAME, Configuration
 from garden_water.timer_runner import TimerRunner
 from garden_water.timers.collections.abc import IdentifiableTimersCollection
 from garden_water.timers.collections.memory import InMemoryIdentifiableTimersCollection
-from garden_water.web_server import set_timers_database, app
-
+from garden_water.web_server import app, set_timers_database
 
 try:
     import uasyncio as asyncio

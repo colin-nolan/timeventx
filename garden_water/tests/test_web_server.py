@@ -5,7 +5,11 @@ from socket import socket
 import pytest
 import requests
 
-from garden_water.tests._common import EXAMPLE_IDENTIFIABLE_TIMER_1, EXAMPLE_IDENTIFIABLE_TIMER_2, EXAMPLE_TIMER_1
+from garden_water.tests._common import (
+    EXAMPLE_IDENTIFIABLE_TIMER_1,
+    EXAMPLE_IDENTIFIABLE_TIMER_2,
+    EXAMPLE_TIMER_1,
+)
 from garden_water.timers.serialisation import timer_to_json
 from garden_water.web_server import get_timers_database
 
