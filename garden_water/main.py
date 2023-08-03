@@ -1,20 +1,15 @@
-import logging
 import math
-import sys
 import time
 from pathlib import Path
 from typing import Optional
-import usqlite
 
 from garden_water._logging import get_logger, setup_logging
 from garden_water.configuration import Configuration, DEFAULT_CONFIGURATION_FILE_NAME
 from garden_water.timer_runner import TimerRunner
 from garden_water.timers.collections.abc import IdentifiableTimersCollection
-from garden_water.timers.collections.database import TimersDatabase
 from garden_water.timers.collections.memory import InMemoryIdentifiableTimersCollection
 from garden_water.web_server import set_timers_database, app
 
-# from garden_water.web_server import set_timers_database
 
 try:
     import uasyncio as asyncio
@@ -27,6 +22,7 @@ logger = get_logger(__name__)
 
 # Location is relevant to CWD, which isn't ideal but on the PicoPi will be the root, which is the correct location.
 # `__file__` and `os.path` do not work on MicroPython
+# TODO: look at micropython-lib `os-path`
 DEFAULT_CONFIGURATION_FILE_LOCATION = Path(DEFAULT_CONFIGURATION_FILE_NAME)
 WIFI_CONNECTION_CHECK_PERIOD = 0.5
 

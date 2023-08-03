@@ -1,125 +1,93 @@
+import json
 from contextlib import contextmanager
-from datetime import timedelta
 from pathlib import Path
-from time import sleep
-from typing import Iterable
+from typing import Iterable, ContextManager
 
-from garden_water.temp_debug import get_memory_usage
-from garden_water.timers.collections.abc import IdentifiableTimersCollection
-from garden_water.timers.serialisation import deserialise_daytime, serialise_daytime
-from garden_water.timers.timers import IdentifiableTimer, Timer, TimerId
-
-# sqlite does not work on Pico Pi due to insufficient RAM
 try:
-    import usqlite as sqlite3
+    # Note that `btree` is not currently included in the standard MicroPython build for rp2. Posts from the past
+    # suggests that it was unstable on Pico Pis: https://github.com/micropython/micropython/issues/6186. More recent
+    # discussions suggest that it may work now though: https://github.com/orgs/micropython/discussions/9626.
+    import btree
 except ImportError:
-    import sqlite3
+    import garden_water.timers.collections._btree as btree
+
+
+from garden_water.timers.collections.abc import IdentifiableTimersCollection
+from garden_water.timers.serialisation import (
+    timer_to_json,
+    json_to_identifiable_timer,
+)
+from garden_water.timers.timers import IdentifiableTimer, Timer, TimerId
 
 
 class TimersDatabase(IdentifiableTimersCollection):
-    TIMERS_TABLE_NAME = "Timer"
-
     @staticmethod
-    def _result_to_timer(result: tuple[int, str, str, int]) -> IdentifiableTimer:
-        timer_id, name, start_time, duration = result
-
-        return IdentifiableTimer(
-            timer_id=timer_id,
-            name=name,
-            start_time=deserialise_daytime(start_time),
-            duration=timedelta(seconds=duration),
-        )
-
-    @property
-    @contextmanager
-    def _db_connection(self) -> sqlite3.Connection:
-        with sqlite3.connect(str(self.database_location)) as connection:
-            yield connection
-
-    def _create_tables(self):
-        print(get_memory_usage())
-        import gc
-        gc.collect()
-
-        with self._db_connection as connection:
-            print(get_memory_usage())
-            connection.execute(
-                f"""
-                    CREATE TABLE IF NOT EXISTS {TimersDatabase.TIMERS_TABLE_NAME} (
-                        id INTEGER, 
-                        name VARCHAR NOT NULL, 
-                        start_time CHAR(8) NOT NULL, 
-                        duration INTEGER NOT NULL, 
-                        PRIMARY KEY (id)
-                    )
-                """
-            )
+    def _get_unique_key(open_database: btree.BTree) -> int:
+        keys = tuple(open_database.keys())
+        if len(keys) == 0:
+            return 1
+        return int(max(keys)) + 1
 
     def __init__(self, database_location: Path):
         self.database_location = database_location
-        self._create_tables()
 
     def __iter__(self) -> Iterable[IdentifiableTimer]:
-        with self._db_connection as connection:
-            results = connection.execute(
-                f"""
-                    SELECT * FROM {TimersDatabase.TIMERS_TABLE_NAME}
-                """
-            ).fetchall()
-
-        yield from (TimersDatabase._result_to_timer(result) for result in results)
+        with self._open_database(read_only=True) as database:
+            for value in database.values():
+                try:
+                    yield json_to_identifiable_timer(json.loads(value.decode()))
+                except KeyError:
+                    raise
 
     def __len__(self) -> int:
-        with self._db_connection as connection:
-            return connection.execute(f"SELECT COUNT(*) from {TimersDatabase.TIMERS_TABLE_NAME}").fetchone()[0]
+        try:
+            with self._open_database(read_only=True) as database:
+                return sum(1 for _ in database.keys())
+        # TODO: likely MicroPython gives a different error?
+        except FileNotFoundError:
+            return 0
 
     def get(self, timer_id: TimerId) -> IdentifiableTimer:
-        with self._db_connection as connection:
-            result = connection.execute(
-                f"""
-                    SELECT * FROM {TimersDatabase.TIMERS_TABLE_NAME} WHERE id = ?
-                """,
-                (timer_id,),
-            ).fetchone()
-            if result is None:
-                raise KeyError(timer_id)
+        with self._open_database(read_only=True) as database:
+            try:
+                data = database[str(timer_id).encode()]
+            except KeyError as e:
+                raise KeyError(f"Timer with id {timer_id} does not exist") from e
 
-        return TimersDatabase._result_to_timer(result)
+        serialised_timer = json.loads(data.decode())
+        return json_to_identifiable_timer(serialised_timer)
 
     def add(self, timer: Timer | IdentifiableTimer) -> IdentifiableTimer:
-        timer_id = timer.id if isinstance(timer, IdentifiableTimer) else None
+        with self._open_database() as database:
+            key = timer.id if isinstance(timer, IdentifiableTimer) else TimersDatabase._get_unique_key(database)
 
-        with self._db_connection as connection:
-            try:
-                result = connection.execute(
-                    f"""
-                        INSERT INTO {TimersDatabase.TIMERS_TABLE_NAME} (
-                            id, name, start_time, duration
-                        ) VALUES (
-                            ?, ?, ?, ?
-                        )
-                    """,
-                    (
-                        timer_id,
-                        timer.name,
-                        serialise_daytime(timer.start_time),
-                        timer.duration.total_seconds(),
-                    ),
-                )
-            except sqlite3.IntegrityError as e:
-                raise ValueError(f"Timer with ID already exists: {timer_id}") from e
-            # If the table has a column of type INTEGER PRIMARY KEY then that column is another alias for the rowid.
-            # https://www.sqlite.org/c3ref/last_insert_rowid.html
-            timer_id = TimerId(result.lastrowid)
+            if str(key).encode() in database:
+                raise ValueError(f"Timer with id {key} already exists")
 
-        return IdentifiableTimer.from_timer(timer, TimerId(timer_id))
+            identifiable_timer = (
+                IdentifiableTimer.from_timer(timer, TimerId(key)) if not isinstance(timer, IdentifiableTimer) else timer
+            )
+
+            database[str(key).encode()] = json.dumps(timer_to_json(identifiable_timer)).encode()
+
+        return identifiable_timer
 
     def remove(self, timer_id: TimerId) -> bool:
-        with self._db_connection as connection:
-            result = connection.execute(
-                f"""
-                    DELETE FROM {TimersDatabase.TIMERS_TABLE_NAME} WHERE id = ?
-                """,
-                (timer_id,),
-            )
-        return result.rowcount == 1
+        with self._open_database() as database:
+            try:
+                del database[str(timer_id).encode()]
+                return True
+            except KeyError:
+                return False
+
+    @contextmanager
+    def _open_database(self, read_only: bool = False) -> ContextManager[btree.BTree]:
+        if not self.database_location.exists():
+            self.database_location.touch()
+
+        with open(self.database_location, "r+b" if read_only else "a+b") as file:
+            try:
+                database = btree.open(file)
+                yield database
+            finally:
+                database.close()

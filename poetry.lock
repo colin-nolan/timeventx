@@ -242,23 +242,18 @@ resolved_reference = "3eb57d0fcfea838e4524691de38e9e99bcdfb216"
 
 [[package]]
 name = "mpremote"
-version = "1.9.3.post6442+g6f55e0075d.d20230801"
+version = "1.20.0"
 description = "Tool for interacting remotely with MicroPython devices"
 optional = false
 python-versions = ">=3.4"
-files = []
-develop = false
+files = [
+    {file = "mpremote-1.20.0-py3-none-any.whl", hash = "sha256:24de67b56b11134e29c53bb8467459b9c34745e9f490bef5a08dbe524899c62f"},
+    {file = "mpremote-1.20.0.tar.gz", hash = "sha256:5c342762a04791309dd49bce63c70a075aa7c548b1c0076262b96f9ccc398ca2"},
+]
 
 [package.dependencies]
 importlib-metadata = ">=1.4"
 pyserial = ">=3.3"
-
-[package.source]
-type = "git"
-url = "git@github.com:jimmo/micropython.git"
-reference = "6f55e00"
-resolved_reference = "6f55e0075d3865ab68c4d4197fb11cf386286f3b"
-subdirectory = "tools/mpremote"
 
 [[package]]
 name = "mpy-cross"
@@ -429,4 +424,4 @@ testing = ["big-O", "jaraco.functools", "jaraco.itertools", "more-itertools", "p
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.11"
-content-hash = "025f3d43adc9941bea33d50e1cab5660f2a3efd50a61ef29aa38913d01d76e94"
+content-hash = "5f3d7f804803eb0a47981bb4c98184a1509fb9aa4fba638a9461d91e4967ba54"

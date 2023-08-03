@@ -1,4 +1,6 @@
-from garden_water.timers.timers import DayTime, IdentifiableTimer, Timer
+from datetime import timedelta
+
+from garden_water.timers.timers import DayTime, IdentifiableTimer, Timer, TimerId
 
 
 def serialise_daytime(start_time: DayTime) -> str:
@@ -17,3 +19,12 @@ def timer_to_json(timer: Timer | IdentifiableTimer) -> dict:
         "start_time": serialise_daytime(timer.start_time),
         "duration": timer.duration.total_seconds(),
     }
+
+
+def json_to_identifiable_timer(timer_json: dict) -> IdentifiableTimer:
+    return IdentifiableTimer(
+        timer_id=TimerId(timer_json["id"]),
+        name=timer_json["name"],
+        start_time=deserialise_daytime(timer_json["start_time"]),
+        duration=timedelta(seconds=timer_json["duration"]),
+    )

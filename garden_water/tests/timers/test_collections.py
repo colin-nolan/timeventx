@@ -29,7 +29,7 @@ class TestIdentifiableTimersCollection:
     def test_len_when_zero(self, timers_collection: IdentifiableTimersCollection):
         assert len(timers_collection) == 0
 
-    def test_len_when_non_zero(self, timers_collection: IdentifiableTimersCollection):
+    def test_len(self, timers_collection: IdentifiableTimersCollection):
         timers_collection.add(EXAMPLE_TIMER_1)
         timers_collection.add(EXAMPLE_TIMER_2)
         assert len(timers_collection) == 2

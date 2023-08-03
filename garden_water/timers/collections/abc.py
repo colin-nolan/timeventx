@@ -11,6 +11,7 @@ except ImportError:
     IdentifiableTimerCollection = Collection
 
 
+# TODO: `Sized` and `Iterable`
 class IdentifiableTimersCollection(IdentifiableTimerCollection):
     @abstractmethod
     def get(self, timer_id: TimerId) -> IdentifiableTimer:
