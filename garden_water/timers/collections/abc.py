@@ -1,5 +1,5 @@
 from abc import abstractmethod
-from typing import Collection, cast
+from typing import Collection, cast, Iterable
 
 from garden_water.timers.timers import IdentifiableTimer, Timer, TimerId
 
@@ -39,6 +39,20 @@ class IdentifiableTimersCollection(IdentifiableTimerCollection):
         Removes the timer with the given ID.
         :param timer_id: ID of the timer to remove
         :return: `True` if a timer with the given ID was removed
+        """
+
+    @abstractmethod
+    def __iter__(self) -> Iterable[IdentifiableTimer]:
+        """
+        Gets an iterator over the timers in the collection.
+        :return: iterator over timers in the collection
+        """
+
+    @abstractmethod
+    def __len__(self) -> int:
+        """
+        Gets the number of timers in the collection.
+        :return: number of timers in the collection
         """
 
     def __contains__(self, item: object) -> bool:

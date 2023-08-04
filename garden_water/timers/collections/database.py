@@ -1,8 +1,7 @@
 import itertools
 import json
-from contextlib import contextmanager
 from pathlib import Path
-from typing import ContextManager, Iterable
+from typing import Iterable
 
 try:
     # Note that `btree` is not currently included in the standard MicroPython build for rp2. Posts from the past
@@ -22,7 +21,7 @@ class TimersDatabase(IdentifiableTimersCollection):
 
     @property
     def _database_files(self) -> Iterable[Path]:
-        yield from self.database_directory.glob(f"*{TimersDatabase._DATABASE_FILE_EXTENSION}")
+        yield from (Path(path) for path in self.database_directory.glob(f"*{TimersDatabase._DATABASE_FILE_EXTENSION}"))
 
     def __init__(self, database_directory: Path):
         self.database_directory = database_directory

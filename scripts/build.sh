@@ -14,6 +14,7 @@ project_name="$(poetry version | cut -d ' ' -f 1)"
 rm -rf "${build_directory}"
 mkdir -p "${build_directory}"
 
+# FIXME: make pretty subdirectories!
 pushd "${project_directory}" > /dev/null
 
 >&2 echo "Packaging as wheel..."

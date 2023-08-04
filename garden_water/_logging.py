@@ -14,7 +14,7 @@ def setup_logging(configuration: Configuration):
     formatter = Formatter("%(asctime)s\t%(name)s\t%(levelname)s\t%(message)s")
 
     # Create a FileHandler for logging to a file
-    file_handler = FileHandler(configuration[Configuration.LOG_FILE_LOCATION])
+    file_handler = FileHandler(str(configuration[Configuration.LOG_FILE_LOCATION]))
     file_handler.setLevel(configuration[Configuration.LOG_LEVEL])
     file_handler.setFormatter(formatter)
 

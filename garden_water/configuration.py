@@ -37,10 +37,10 @@ class Configuration:
         f"{ENVIRONMENT_VARIABLE_PREFIX}_LOG_LEVEL", "log.level", int, default=logging.INFO
     )
     LOG_FILE_LOCATION = ConfigurationDescription(
-        f"{ENVIRONMENT_VARIABLE_PREFIX}_LOG_FILE_LOCATION", "log.file_location", str, default="main.log"
+        f"{ENVIRONMENT_VARIABLE_PREFIX}_LOG_FILE_LOCATION", "log.file_location", Path, default="main.log"
     )
     TIMERS_DATABASE_LOCATION = ConfigurationDescription(
-        f"{ENVIRONMENT_VARIABLE_PREFIX}_TIMERS_DATABASE_LOCATION", "database.location", str, default="timers.sqlite"
+        f"{ENVIRONMENT_VARIABLE_PREFIX}_TIMERS_DATABASE_LOCATION", "database.location", Path, default="/timers"
     )
     WIFI_SSID = ConfigurationDescription(f"{ENVIRONMENT_VARIABLE_PREFIX}_WIFI_SSID", "wifi.ssid", str, allow_none=False)
     WIFI_PASSWORD = ConfigurationDescription(
