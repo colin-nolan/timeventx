@@ -1,3 +1,4 @@
+# TODO: move to micropython directory
 import argparse
 import os
 
@@ -8,6 +9,7 @@ LIBRARIES_TO_INSTALL = (
     "collections-defaultdict",
     "contextlib",
     (
+        # PR against micropython-lib to add `configparser` module
         "github:Mika64/micropython-lib/configparser/ConfigParser.py",
         dict(version="37207ca59e716dba1e2c91cbb558c15225bdf71b"),
         lambda source, mips_kwargs: os.rename(

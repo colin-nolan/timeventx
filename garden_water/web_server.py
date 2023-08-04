@@ -1,10 +1,11 @@
 import json
 from datetime import timedelta
+from logging import FileHandler
 from typing import Optional
 
 from microdot_asyncio import Microdot, Request, Response, abort, send_file
 
-from garden_water._logging import get_logger
+from garden_water._logging import get_logger, flush_file_logs
 from garden_water.configuration import Configuration
 from garden_water.timers.collections.abc import IdentifiableTimersCollection
 from garden_water.timers.collections.database import TimersDatabase
@@ -86,7 +87,7 @@ async def reset(request: Request):
 @app.route("/logs")
 async def logs(request: Request):
     log_location = request.app.configuration[Configuration.LOG_FILE_LOCATION]
-
+    flush_file_logs()
     return send_file(str(log_location), max_age=0, content_type="text/plain")
 
 
