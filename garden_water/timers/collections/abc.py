@@ -1,14 +1,13 @@
 from abc import abstractmethod
-from typing import Collection, cast, Iterable
+from typing import Collection, cast, Iterable, TypeAlias
 
 from garden_water.timers.timers import IdentifiableTimer, Timer, TimerId
 
-try:
-    from typing import TypeAlias
 
+try:
     IdentifiableTimerCollection: TypeAlias = Collection[IdentifiableTimer]
-except ImportError:
-    IdentifiableTimerCollection = Collection
+except TypeError:
+    IdentifiableTimerCollection: TypeAlias = Collection
 
 
 # TODO: `Sized` and `Iterable`

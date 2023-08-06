@@ -4,7 +4,7 @@ from pathlib import Path
 from typing import Optional
 from time import sleep
 
-from garden_water._logging import get_logger, setup_logging
+from garden_water._logging import get_logger, setup_logging, clear_logs, add_log_listener
 from garden_water.configuration import DEFAULT_CONFIGURATION_FILE_NAME, Configuration
 from garden_water.timer_runner import TimerRunner
 from garden_water.timers.collections.abc import IdentifiableTimersCollection
@@ -12,9 +12,9 @@ from garden_water.timers.collections.database import TimersDatabase
 from garden_water.web_server import app
 
 try:
-    import uasyncio as asyncio
-except ImportError:
     import asyncio
+except ImportError:
+    import uasyncio as asyncio
 
 
 logger = get_logger(__name__)
@@ -81,6 +81,7 @@ def inner_main(configuration: Configuration):
     logger.info("Starting web server")
     app.configuration = configuration
     app.database = timers_database
+    # TODO: use app.start() and then monitor all threads
     app.run(debug=True)
 
     logger.warning("Web server stopped")
@@ -102,7 +103,7 @@ def reset(cooldown_time_in_seconds: int = 30):
 
     import machine
 
-    machine.reset()
+    machine.soft_reset()
 
 
 def main(configuration_location: Optional[Path] = DEFAULT_CONFIGURATION_FILE_LOCATION):

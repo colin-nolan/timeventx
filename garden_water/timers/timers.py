@@ -1,14 +1,9 @@
 from datetime import timedelta
-from typing import Any, cast
+from typing import Any, cast, NewType
 
 START_TIME_FORMAT = "%H:%M:%S"
 
-try:
-    from typing import NewType
-
-    TimerId = NewType("TimerId", int)
-except ImportError:
-    TimerId = int
+TimerId = NewType("TimerId", int)
 
 
 # Not using `total_ordering` or `dataclass` because they are not available in MicroPython (or installable using `mip`)

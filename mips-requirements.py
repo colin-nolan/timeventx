@@ -10,8 +10,8 @@ LIBRARIES_TO_INSTALL = (
     "contextlib",
     (
         # PR against micropython-lib to add `configparser` module
-        "github:Mika64/micropython-lib/configparser/ConfigParser.py",
-        dict(version="37207ca59e716dba1e2c91cbb558c15225bdf71b"),
+        "github:colin-nolan/micropython-lib/configparser/ConfigParser.py",
+        dict(version="mika64-master"),
         lambda source, mips_kwargs: os.rename(
             f"{mips_kwargs['target']}/ConfigParser.py", f"{mips_kwargs['target']}/configparser.py"
         ),
@@ -19,11 +19,22 @@ LIBRARIES_TO_INSTALL = (
     "datetime",
     "functools",
     "github:pfalcon/pycopy-lib/ffilib/ffilib.py",
+    "inspect",
     "itertools",
-    "logging",
+    (
+        "github:colin-nolan/micropython-lib/python-stdlib/logging/logging.py",
+        dict(version="fix/minor-logging-issues"),
+    ),
+    (
+        "github:colin-nolan/micropython-lib/micropython/ucontextlib-async/ucontextlib/_async.py",
+        dict(version="async_contextlib"),
+        lambda source, mips_kwargs: os.rename(
+            f"{mips_kwargs['target']}/_async.py", f"{mips_kwargs['target']}/ucontentlib_async.py"
+        ),
+    ),
     "pathlib",
     "time",
-    "github:pfalcon/pycopy-lib/typing/typing.py",
+    ("github:colin-nolan/pycopy-lib/typing/typing.py", dict(version="more-types")),
 )
 
 

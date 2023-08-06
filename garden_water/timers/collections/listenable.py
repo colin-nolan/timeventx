@@ -1,17 +1,12 @@
 from collections import defaultdict
-from typing import Callable, Iterator
+from typing import Callable, Iterator, TypeAlias
 
 from garden_water.timers.collections.abc import IdentifiableTimersCollection
 from garden_water.timers.timers import IdentifiableTimer, Timer, TimerId
 
-try:
-    from typing import TypeAlias
 
-    AddListener: TypeAlias = Callable[[IdentifiableTimer], None]
-    RemoveListener: TypeAlias = Callable[[TimerId], None]
-except ImportError:
-    AddListener = Callable[[IdentifiableTimer], None]
-    RemoveListener = Callable[[TimerId], None]
+AddListener: TypeAlias = Callable[[IdentifiableTimer], None]
+RemoveListener: TypeAlias = Callable[[TimerId], None]
 
 
 # Not using enum because it is not available in MicroPython (or installable using `mip`)

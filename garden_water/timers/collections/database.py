@@ -3,14 +3,6 @@ import json
 from pathlib import Path
 from typing import Iterable
 
-try:
-    # Note that `btree` is not currently included in the standard MicroPython build for rp2. Posts from the past
-    # suggests that it was unstable on Pico Pis: https://github.com/micropython/micropython/issues/6186. More recent
-    # discussions suggest that it may work now though: https://github.com/orgs/micropython/discussions/9626.
-    import btree
-except ImportError:
-    import garden_water.timers.collections._btree as btree
-
 from garden_water.timers.collections.abc import IdentifiableTimersCollection
 from garden_water.timers.serialisation import json_to_identifiable_timer, timer_to_json
 from garden_water.timers.timers import IdentifiableTimer, Timer, TimerId
