@@ -94,7 +94,7 @@ async def tweeter(timers: IdentifiableTimersCollection):
 
     while True:
         logger.info(timer_runner.on_off_intervals)
-        await asyncio.sleep(5)
+        await asyncio.sleep(2.5)
 
 
 def reset(cooldown_time_in_seconds: int = 30):

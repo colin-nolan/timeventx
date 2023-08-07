@@ -144,7 +144,7 @@ class ListenableStream(TextIOBase):
         self.listeners = list(listeners)
 
     def write(self, content: str) -> int:
-        print(f"Listeners: {self.listeners}")
+        # print(f"Listeners: {self.listeners}")
         i = 0
         for listener in self.listeners:
             i += 1
@@ -153,10 +153,10 @@ class ListenableStream(TextIOBase):
             if inspect.isfunction(listener):
                 listener(content)
             else:
-                print(f"----- Calling listener {i}: {content}")
+                # print(f"----- Calling listener {i}: {content}")
                 asyncio.run(listener(content))
-                print("----- Finished calling listener")
-        print(f"Written: {len(content)}")
+                # print("----- Finished calling listener")
+        # print(f"Written: {len(content)}")
         return len(content)
 
 
@@ -194,32 +194,27 @@ class LogEmitter(AsyncIterable):
         return self
 
     async def __anext__(self):
-        print(f"Going for next: {len(self._logs)}")
+        # print(f"Going for next: {len(self._logs)}")
 
         if len(self._logs) == 0:
-            print("Awaiting log event")
             await self._log_receive_event.wait()
 
-        async with self._logs_lock:
-            log = self._logs.pop(0)
+        # async with self._logs_lock:
+        #     log = self._logs.pop(0)
+        #
+        # if len(self._logs) == 0:
+        #     async with self._log_receive_event_lock:
+        #         # Need to check for logs again, as logs may have been added whilst waiting for the lock
+        #         if len(self._logs) == 0:
+        #             self._log_receive_event.clear()
 
-        if len(self._logs) == 0:
-            print("Awaiting log lock")
-            async with self._log_receive_event_lock:
-                print(f"Got log lock")
-                # Need to check for logs again, as logs may have been added whilst waiting for the lock
-                if len(self._logs) == 0:
-                    self._log_receive_event.clear()
+        log = "test"
 
         return log
 
     async def _on_log(self, line: str):
-        print(f"start _on_log")
         async with self._logs_lock:
-            print("Added log to list")
             self._logs.append(line)
         # TODO: are both locks required?
         async with self._log_receive_event_lock:
-            print("Set event")
             self._log_receive_event.set()
-        print("finished on_log")

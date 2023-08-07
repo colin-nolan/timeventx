@@ -8,6 +8,7 @@ from microdot_asyncio_websocket import with_websocket
 from garden_water._logging import (
     get_logger,
     LogEmitter,
+    remove_log_listener,
 )
 from garden_water.configuration import Configuration
 from garden_water.timers.serialisation import deserialise_daytime, timer_to_json
@@ -98,12 +99,21 @@ async def logs(request: Request):
 async def echo(request: Request, ws):
     logger.info("Websocket connection established")
 
-    # async with LogEmitter() as logs:
-    #     for log in logs:
-    #         await ws.send(log)
-    async for log in LogEmitter():
-        print(f"Log: {log}")
-        await ws.send(log)
+    # async for log in LogEmitter():
+    #     print(f"Log: {log}")
+    #     await ws.send(log)
+    #     print("Finished sending log")
+
+    # log = await LogEmitter().__anext__()
+    # print(f"Second anext complete: {log}")
+    # await ws.send(log)
+
+    log_emitter = LogEmitter()
+    log = await log_emitter.__anext__()
+    remove_log_listener(log_emitter._on_log)
+    print(f"First anext complete: {log}")
+    await ws.send("Hello")
+    await ws.receive()
 
     print("Websocket connection terminated")
 
