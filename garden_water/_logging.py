@@ -3,10 +3,9 @@ import sys
 from _thread import LockType, allocate_lock
 from logging import FileHandler, Formatter, Logger, StreamHandler, Handler
 from pathlib import Path
-from typing import Collection, Optional, Callable, Iterable, Any, AsyncIterable, Coroutine, TypeAlias, Union
+from typing import Collection, Optional, Callable, Coroutine, TypeAlias, Union
 
 from garden_water.configuration import Configuration
-import inspect
 
 try:
     from io import TextIOBase
@@ -72,17 +71,11 @@ def setup_logging(configuration: Configuration):
     stream_handler.setLevel(configuration[Configuration.LOG_LEVEL])
     stream_handler.setFormatter(formatter)
 
-    # Create a stream that can be listened to
-    listenable_stream = StreamHandler(ListenableStream())
-    # TODO: it would be nice if this could be set dynamically when listened to
-    listenable_stream.setLevel(configuration[Configuration.LOG_LEVEL])
-    listenable_stream.setFormatter(formatter)
-
     log_level = configuration[Configuration.LOG_LEVEL]
 
     global _LOGGER_HANDLERS, _LOGGER_LEVEL
     _LOGGER_LEVEL = log_level
-    _LOGGER_HANDLERS = (file_handler, stream_handler, listenable_stream)
+    _LOGGER_HANDLERS = (file_handler, stream_handler)
 
     while len(_LOGGERS_TO_SETUP) > 0:
         logger = _LOGGERS_TO_SETUP.pop()
@@ -137,84 +130,3 @@ class LockableHandler(Handler):
     def emit(self, *args, **kwargs):
         with self._lock:
             self._wrapped_handler.emit(*args, **kwargs)
-
-
-class ListenableStream(TextIOBase):
-    def __init__(self, listeners: Iterable[LogListener] = ()):
-        self.listeners = list(listeners)
-
-    def write(self, content: str) -> int:
-        # print(f"Listeners: {self.listeners}")
-        i = 0
-        for listener in self.listeners:
-            i += 1
-            # Unfortunately, `iscoroutinefunction` is not implemented in the MicroPython `inspect` library in use
-            # TODO: put listeners in buckets when added?
-            if inspect.isfunction(listener):
-                listener(content)
-            else:
-                # print(f"----- Calling listener {i}: {content}")
-                asyncio.run(listener(content))
-                # print("----- Finished calling listener")
-        # print(f"Written: {len(content)}")
-        return len(content)
-
-
-def add_log_listener(listener: LogListener):
-    # All loggers share the same handlers so don't need to add to each logger's handlers
-    for handler in _LOGGER_HANDLERS:
-        if not isinstance(handler, StreamHandler) or not isinstance(handler.stream, ListenableStream):
-            continue
-        handler.stream.listeners.append(listener)
-
-
-def remove_log_listener(listener: LogListener):
-    # All loggers share the same handlers so don't need to remove from each logger's handlers
-    for handler in _LOGGER_HANDLERS:
-        if not isinstance(handler, StreamHandler) or not isinstance(handler.stream, ListenableStream):
-            continue
-        try:
-            handler.stream.listeners.remove(listener)
-        except ValueError:
-            pass
-
-
-# `asynccontextmanager` is unfortunately not available yet (https://github.com/micropython/micropython-lib/pull/657)
-class LogEmitter(AsyncIterable):
-    def __init__(self):
-        self._log_receive_event = asyncio.Event()
-        self._log_receive_event_lock = asyncio.Lock()
-        self._logs = []
-        self._logs_lock = asyncio.Lock()
-
-        # FIXME: context managed, with removal!
-        add_log_listener(self._on_log)
-
-    def __aiter__(self):
-        return self
-
-    async def __anext__(self):
-        # print(f"Going for next: {len(self._logs)}")
-
-        if len(self._logs) == 0:
-            await self._log_receive_event.wait()
-
-        # async with self._logs_lock:
-        #     log = self._logs.pop(0)
-        #
-        # if len(self._logs) == 0:
-        #     async with self._log_receive_event_lock:
-        #         # Need to check for logs again, as logs may have been added whilst waiting for the lock
-        #         if len(self._logs) == 0:
-        #             self._log_receive_event.clear()
-
-        log = "test"
-
-        return log
-
-    async def _on_log(self, line: str):
-        async with self._logs_lock:
-            self._logs.append(line)
-        # TODO: are both locks required?
-        async with self._log_receive_event_lock:
-            self._log_receive_event.set()

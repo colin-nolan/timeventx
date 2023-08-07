@@ -94,30 +94,6 @@ async def logs(request: Request):
     return send_file(str(log_location), max_age=0, content_type="text/plain")
 
 
-@app.route("/echo")
-@with_websocket
-async def echo(request: Request, ws):
-    logger.info("Websocket connection established")
-
-    # async for log in LogEmitter():
-    #     print(f"Log: {log}")
-    #     await ws.send(log)
-    #     print("Finished sending log")
-
-    # log = await LogEmitter().__anext__()
-    # print(f"Second anext complete: {log}")
-    # await ws.send(log)
-
-    log_emitter = LogEmitter()
-    log = await log_emitter.__anext__()
-    remove_log_listener(log_emitter._on_log)
-    print(f"First anext complete: {log}")
-    await ws.send("Hello")
-    await ws.receive()
-
-    print("Websocket connection terminated")
-
-
 def _get_memory_usage() -> str:
     import gc
 

@@ -19,7 +19,6 @@ LIBRARIES_TO_INSTALL = (
     "datetime",
     "functools",
     "github:pfalcon/pycopy-lib/ffilib/ffilib.py",
-    "inspect",
     "itertools",
     (
         "github:colin-nolan/micropython-lib/python-stdlib/logging/logging.py",
