@@ -52,9 +52,10 @@ logger = get_logger(__name__)
 
 
 def setup_logging(configuration: Configuration):
-    global _LOGGER_LEVEL
+    global _LOGGER_LEVEL, logger
     if _LOGGER_LEVEL is not None:
-        raise RuntimeError("Logging already setup")
+        logger.info("Logging already setup")
+        return
 
     formatter = Formatter("%(asctime)s\t%(name)s\t%(levelname)s\t%(message)s")
 

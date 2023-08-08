@@ -122,9 +122,14 @@ async def ui(request: Request, path: str):
 
 
 def serve_ui(request: Request, path: Path):
-    # Need to sanitise path! (e.g. no .., no / start)
+    # TODO: Need to sanitise path! (e.g. no .., no / start)
 
-    full_path = Path(f"/website") / path
+    try:
+        frontend_location = request.app.configuration[Configuration.FRONTEND_ROOT_DIRECTORY]
+    except KeyError:
+        frontend_location = Path(__file__).resolve().parent / Path("../frontend")
+
+    full_path = frontend_location / path
     if not full_path.exists() or not full_path.is_file():
         abort(404, f"File not found: {full_path}")
         raise

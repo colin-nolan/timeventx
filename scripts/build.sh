@@ -11,12 +11,14 @@ backend_directory="${project_directory}/backend"
 
 build_directory="${project_directory}/build/${architecture}"
 dist_directory="${build_directory}/dist"
-packaged_directory="${dist_directory}/libs/packaged"
-stdlib_directory="${dist_directory}/libs/stdlib"
+packaged_libs_directory="${dist_directory}/libs/packaged"
+stdlib_libs_directory="${dist_directory}/libs/stdlib"
+frontend_directory="${dist_directory}/frontend"
 
 rm -rf "${build_directory}"
-mkdir -p "${build_directory}" "${packaged_directory}" "${stdlib_directory}"
+mkdir -p "${build_directory}" "${packaged_libs_directory}" "${stdlib_libs_directory}" "${frontend_directory}"
 
+# Build the backend --------------------------------------------------
 pushd "${backend_directory}" > /dev/null
 
 >&2 echo "Packaging as wheel..."
@@ -24,17 +26,17 @@ poetry build --format wheel
 cp dist/*.whl "${build_directory}"
 
 >&2 echo "Downloading Poetry requirements..."
-pip3 install -t "${packaged_directory}" "${build_directory}"/*.whl
-rm -rf "${packaged_directory}"/*.dist-info
-find "${packaged_directory}" -type d -name __pycache__ -exec rm -r {} +
-rm "${packaged_directory}/microdot_test_client.py"
+pip3 install -t "${packaged_libs_directory}" "${build_directory}"/*.whl
+rm -rf "${packaged_libs_directory}"/*.dist-info
+find "${packaged_libs_directory}" -type d -name __pycache__ -exec rm -r {} +
+rm "${packaged_libs_directory}/microdot_test_client.py"
 
 >&2 echo "Downloading mip requirements..."
-micropython mips-requirements.py "${stdlib_directory}"
+micropython mips-requirements.py "${stdlib_libs_directory}"
 
 # FIXME: sort
 >&2 echo "Applying custom MicroPython module patches..."
-find "${backend_directory}/micropython" -type f -name "*.diff" -exec patch -d "${stdlib_directory}" -i {} \;
+find "${backend_directory}/micropython" -type f -name "*.diff" -exec patch -d "${stdlib_libs_directory}" -i {} \;
 
 project_name="$(poetry version | cut -d ' ' -f 1)"
 python_module_name="${project_name/-/_}"
@@ -53,10 +55,21 @@ else
         -exec sh -c "mpy-cross -march=\"${architecture}\" \"\$0\"; rm \"\$0\"" {} \;
 fi
 
+popd > /dev/null
+
+# Build the frontend --------------------------------------------------
+pushd "${project_directory}/frontend" > /dev/null
+
+>&2 echo "Building frontend..."
+yarn build --base / --outDir "${frontend_directory}"
+
+popd > /dev/null
+
+# Finalise --------------------------------------------------
 pushd "${dist_directory}" > /dev/null
+
 >&2 echo "Creating md5sums..."
 find . -type f -exec md5sum {} + > md5sums.txt
-popd > /dev/null
 
 popd > /dev/null
 

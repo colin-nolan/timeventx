@@ -46,6 +46,12 @@ class Configuration:
     WIFI_PASSWORD = ConfigurationDescription(
         f"{ENVIRONMENT_VARIABLE_PREFIX}_WIFI_PASSWORD", "wifi.password", str, allow_none=False
     )
+    FRONTEND_ROOT_DIRECTORY = ConfigurationDescription(
+        f"{ENVIRONMENT_VARIABLE_PREFIX}_FRONTEND_ROOT_DIRECTORY",
+        "frontend.root",
+        Path,
+        default="/frontend",
+    )
 
     @staticmethod
     def write_env_to_config_file(config_file_location: Path):
