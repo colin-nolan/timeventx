@@ -16,10 +16,8 @@ class TimersDatabase(IdentifiableTimersCollection):
         yield from (Path(path) for path in self.database_directory.glob(f"*{TimersDatabase._DATABASE_FILE_EXTENSION}"))
 
     def __init__(self, database_directory: Path):
+        database_directory.mkdir(parents=True, exist_ok=True)
         self.database_directory = database_directory
-
-        if not database_directory.exists():
-            database_directory.mkdir()
 
     def __iter__(self) -> Iterable[IdentifiableTimer]:
         # Read all files in self.database_directory

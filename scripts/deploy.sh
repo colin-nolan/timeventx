@@ -21,7 +21,8 @@ device="${2:-/dev/ttyACM0}"
 script_directory="$(cd "$(dirname "${BASH_SOURCE[0]}")" > /dev/null 2>&1 && pwd)"
 project_directory="$(cd "${script_directory}/.." > /dev/null 2>&1 && pwd)"
 build_directory="${project_directory}/build/${architecture}"
-lib_install_directory="${build_directory}/lib"
+
+dist_directory="${build_directory}/dist"
 
 
 function delete_directory_contents() {
@@ -43,10 +44,12 @@ if "${delete_existing_files}"; then
     delete_directory_contents /
 fi
 
-pushd "${lib_install_directory}" > /dev/null
+pushd "${dist_directory}" > /dev/null
 
 mpremote fs cp -r . :
 
 popd > /dev/null
+
+mpremote df
 
 >&2 echo "Complete!"

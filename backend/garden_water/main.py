@@ -4,7 +4,7 @@ from pathlib import Path
 from typing import Optional
 from time import sleep
 
-from garden_water._logging import get_logger, setup_logging, clear_logs, add_log_listener
+from garden_water._logging import get_logger, setup_logging
 from garden_water.configuration import DEFAULT_CONFIGURATION_FILE_NAME, Configuration
 from garden_water.timer_runner import TimerRunner
 from garden_water.timers.collections.abc import IdentifiableTimersCollection
@@ -94,7 +94,7 @@ async def tweeter(timers: IdentifiableTimersCollection):
 
     while True:
         logger.info(timer_runner.on_off_intervals)
-        await asyncio.sleep(2.5)
+        await asyncio.sleep(30)
 
 
 def reset(cooldown_time_in_seconds: int = 30):
