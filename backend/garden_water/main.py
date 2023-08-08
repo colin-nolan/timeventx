@@ -1,4 +1,6 @@
 import math
+import os
+import sys
 import time
 from pathlib import Path
 from typing import Optional
@@ -16,15 +18,12 @@ try:
 except ImportError:
     import uasyncio as asyncio
 
+DEFAULT_CONFIGURATION_FILE_LOCATION = Path("/") / DEFAULT_CONFIGURATION_FILE_NAME
+WIFI_CONNECTION_CHECK_PERIOD = 0.5
+MICROPYTHON = sys.implementation.name == "micropython"
+
 
 logger = get_logger(__name__)
-
-
-# Location is relevant to CWD, which isn't ideal but on the PicoPi will be the root, which is the correct location.
-# `__file__` and `os.path` do not work on MicroPython
-# TODO: look at micropython-lib `os-path`
-DEFAULT_CONFIGURATION_FILE_LOCATION = Path(DEFAULT_CONFIGURATION_FILE_NAME)
-WIFI_CONNECTION_CHECK_PERIOD = 0.5
 
 
 def connect_to_wifi(ssid: str, password: str, retries: int = math.inf, wait_for_connection_time_in_seconds: float = 60):
@@ -70,21 +69,30 @@ def setup_device(configuration: Configuration):
 
 
 def inner_main(configuration: Configuration):
-    setup_device(configuration)
+    if MICROPYTHON:
+        setup_device(configuration)
 
     logger.info("Setting up database")
-    timers_database = TimersDatabase(configuration.get(Configuration.TIMERS_DATABASE_LOCATION))
+    timers_database = TimersDatabase(configuration[Configuration.TIMERS_DATABASE_LOCATION])
+
+    tasks = []
 
     logger.info("Starting tweeter")
-    asyncio.create_task(tweeter(timers_database))
+    tasks.append(asyncio.create_task(tweeter(timers_database)))
 
     logger.info("Starting web server")
     app.configuration = configuration
     app.database = timers_database
     # TODO: use app.start() and then monitor all threads
-    app.run(debug=True)
+    tasks.append(app.start_server())
 
-    logger.warning("Web server stopped")
+    for task in tasks:
+        asyncio.wait_for(task, 0)
+
+    logger.error("Website has shutdown")
+
+    app.run()
+
     reset()
 
 
@@ -97,13 +105,16 @@ async def tweeter(timers: IdentifiableTimersCollection):
         await asyncio.sleep(30)
 
 
-def reset(cooldown_time_in_seconds: int = 30):
+def reset(cooldown_time_in_seconds: int = 10):
     logger.info(f"Resetting after a cooldown of {cooldown_time_in_seconds}s (prevents rapid reset loops)")
     sleep(cooldown_time_in_seconds)
 
-    import machine
+    try:
+        import machine
 
-    machine.soft_reset()
+        machine.soft_reset()
+    except ImportError:
+        os.execv(sys.executable, ["python"] + sys.argv)
 
 
 def main(configuration_location: Optional[Path] = DEFAULT_CONFIGURATION_FILE_LOCATION):

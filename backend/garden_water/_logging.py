@@ -5,7 +5,6 @@ from logging import FileHandler, Formatter, Logger, StreamHandler, Handler
 from pathlib import Path
 from typing import Collection, Optional, Callable, Coroutine, TypeAlias, Union
 
-from garden_water.configuration import Configuration
 
 try:
     from io import TextIOBase
@@ -51,36 +50,43 @@ def get_logger(name: str) -> Logger:
 logger = get_logger(__name__)
 
 
-def setup_logging(configuration: Configuration):
-    global _LOGGER_LEVEL, logger
+def setup_logging(configuration: "Configuration"):
+    from garden_water.configuration import Configuration
+
+    global _LOGGER_LEVEL, logger, _LOGGER_HANDLERS, _LOG_FILE_LOCATION
+
     if _LOGGER_LEVEL is not None:
         logger.info("Logging already setup")
         return
 
+    _LOGGER_HANDLERS = []
+
     formatter = Formatter("%(asctime)s\t%(name)s\t%(levelname)s\t%(message)s")
 
     # Create a FileHandler for logging to a file
-    global _LOG_FILE_LOCATION
-    _LOG_FILE_LOCATION = configuration[Configuration.LOG_FILE_LOCATION]
+    try:
+        _LOG_FILE_LOCATION = configuration[Configuration.LOG_FILE_LOCATION]
+        use_log_file = True
+    except KeyError:
+        use_log_file = False
 
-    file_handler = LockableHandler(FileHandler(str(_LOG_FILE_LOCATION)), _LOG_FILE_LOCK)
-    file_handler.setLevel(configuration[Configuration.LOG_LEVEL])
-    file_handler.setFormatter(formatter)
+    _LOGGER_LEVEL = configuration.get(Configuration.LOG_LEVEL, Configuration.LOG_LEVEL.default)
+
+    if use_log_file:
+        file_handler = LockableHandler(FileHandler(str(_LOG_FILE_LOCATION)), _LOG_FILE_LOCK)
+        file_handler.setLevel(_LOGGER_LEVEL)
+        file_handler.setFormatter(formatter)
+        _LOGGER_HANDLERS.append(file_handler)
 
     # Create a StreamHandler for logging to stderr
     stream_handler = StreamHandler(sys.stderr)
-    stream_handler.setLevel(configuration[Configuration.LOG_LEVEL])
+    stream_handler.setLevel(_LOGGER_LEVEL)
     stream_handler.setFormatter(formatter)
-
-    log_level = configuration[Configuration.LOG_LEVEL]
-
-    global _LOGGER_HANDLERS, _LOGGER_LEVEL
-    _LOGGER_LEVEL = log_level
-    _LOGGER_HANDLERS = (file_handler, stream_handler)
+    _LOGGER_HANDLERS.append(stream_handler)
 
     while len(_LOGGERS_TO_SETUP) > 0:
         logger = _LOGGERS_TO_SETUP.pop()
-        logger.setLevel(log_level)
+        logger.setLevel(_LOGGER_LEVEL)
         for handler in _LOGGER_HANDLERS:
             logger.addHandler(handler)
 
@@ -119,14 +125,9 @@ class LockableHandler(Handler):
         self._wrapped_handler = wrapped_handler
         self._lock = lock
 
-    def __getattribute__(self, name: str) -> callable:
-        print("__getattribute__")
-        attr = getattr(self._wrapped_handler if name != "emit" else self, name)
-        print(f"{name} == {attr}")
-        return attr
-
     def __getattr__(self, name: str) -> callable:
-        print("__getattr__")
+        attr = getattr(self._wrapped_handler if name != "emit" else self, name)
+        return attr
 
     def emit(self, *args, **kwargs):
         with self._lock:

@@ -4,8 +4,12 @@ from configparser import ConfigParser
 from pathlib import Path
 from typing import Any, Optional
 
+from garden_water._logging import get_logger
+
 ENVIRONMENT_VARIABLE_PREFIX = "GARDEN_WATER"
 DEFAULT_CONFIGURATION_FILE_NAME = "config.ini"
+
+logger = get_logger(__name__)
 
 
 # Not using dataclass as not supported by MicroPython
@@ -96,24 +100,40 @@ class Configuration:
             configuration_parser.write(config_file)
 
     def __init__(self, config_file_location: Optional[Path] = None):
+        self._config_file_location = config_file_location
         self._configuration_parser = ConfigParser()
-        if config_file_location:
-            self._configuration_parser.read(str(config_file_location))
+        if self._config_file_location:
+            self._configuration_parser.read(str(self._config_file_location))
 
     def __getitem__(self, configuration_description: ConfigurationDescription) -> Any:
         try:
+            logger.debug(
+                f"Attempting to get configuration value from the environment: "
+                + f"{configuration_description.environment_variable_name}"
+            )
             value = os.environ[configuration_description.environment_variable_name]
         except (KeyError, AttributeError, OSError):
-            # Using legacy API `get` opposed to subscribable syntax as expected to run on minimal `configparser`
-            # implementation that is compatible with MicroPython
+            if self._config_file_location is None:
+                raise RuntimeError("No configuration file location setup")
             try:
+                logger.debug(
+                    f'Attempting to get configuration value "{configuration_description.ini_name}" from the '
+                    + f"file: {self._config_file_location}"
+                )
+                # Using legacy API `get` opposed to subscribable syntax as expected to run on minimal `configparser`
+                # implementation that is compatible with MicroPython
                 value = self._configuration_parser.get(
                     configuration_description.get_ini_section(), configuration_description.get_ini_option()
                 )
             except Exception as e:
-                raise KeyError(f"Configuration value not found: {configuration_description.ini_name}") from e
+                raise KeyError(
+                    f"Configuration value not found: {configuration_description.ini_name} "
+                    + f"(can be set with {configuration_description.environment_variable_name})"
+                ) from e
 
-        return configuration_description.parser(value)
+        parsed_value = configuration_description.parser(value)
+        logger.debug(f'Got value for "{configuration_description.ini_name}": {parsed_value}')
+        return parsed_value
 
     def get(self, configuration_description: ConfigurationDescription, default: Optional[Any] = None) -> Any:
         try:

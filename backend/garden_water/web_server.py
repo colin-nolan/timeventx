@@ -3,7 +3,7 @@ import os
 from datetime import timedelta
 from pathlib import Path
 
-from microdot_asyncio import Microdot, Request, abort, send_file
+from microdot_asyncio import Microdot, Request, abort, send_file, Response
 
 from garden_water._logging import (
     get_logger,
@@ -43,6 +43,22 @@ _API_VERSION = "v1"
 
 logger = get_logger(__name__)
 app = Microdot()
+
+
+@app.before_request
+def before_request(request: Request):
+    logger.debug(f"{request.method} {request.path}")
+
+
+@app.after_request
+def after_request(request: Request, response: Response):
+    logger.info(f"{response.status_code} {request.method} {request.path}")
+    return response
+
+
+@app.after_error_request
+def after_error_request(request: Request, response: Response):
+    return after_request(request, response)
 
 
 # TODO: return type
@@ -127,7 +143,8 @@ def serve_ui(request: Request, path: Path):
     try:
         frontend_location = request.app.configuration[Configuration.FRONTEND_ROOT_DIRECTORY]
     except KeyError:
-        frontend_location = Path(__file__).resolve().parent / Path("../frontend")
+        # The pathlib library in use with MicroPython has a bug where `Path.resolve` returns a `str` instead of a `Path`
+        frontend_location = Path(Path(__file__).resolve()).parent / Path("../frontend")
 
     full_path = frontend_location / path
     if not full_path.exists() or not full_path.is_file():
