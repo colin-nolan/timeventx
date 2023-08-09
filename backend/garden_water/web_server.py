@@ -21,25 +21,36 @@ try:
 except ImportError:
     import uasyncio as asyncio
 
-# TODO: make constants of class like standard lib
-# http module is not available in MicroPython
-_HTTP_CODE_OK_RESPONSE = 200
-_HTTP_CODE_ACCEPTED_RESPONSE = 202
-_HTTP_CODE_BAD_RESPONSE = 400
-_HTTP_CODE_NOT_FOUND = 404
-_HTTP_CODE_FORBIDDEN_RESPONSE = 403
-_HTTP_CODE_NOT_IMPLEMENTED = 501
-_CONTENT_TYPE_APPLICATION_JSON = "application/json"
 
-_KNOWN_CONTENT_TYPES = {
-    ".css": "text/css",
-    ".html": "text/html",
-    ".js": "application/javascript",
-    ".json": "application/json",
-    ".png": "image/png",
-    ".svg": "image/svg+xml",
-    ".txt": "text/plain",
-    ".jpg": "image/jpeg",
+class _HTTPStatus:
+    OK = 200
+    ACCEPTED = 202
+    BAD_REQUEST = 400
+    NOT_FOUND = 404
+    FORBIDDEN = 403
+    NOT_IMPLEMENTED = 501
+
+
+class _ContentType:
+    CSS = "text/css"
+    HTML = "text/html"
+    JAVASCRIPT = "application/javascript"
+    JSON = "application/json"
+    PNG = "image/png"
+    SVG = "image/svg+xml"
+    TEXT = "text/plain"
+    JPG = "image/jpeg"
+
+
+_FILE_EXTENSION_TO_CONTENT_TYPE = {
+    ".css": _ContentType.CSS,
+    ".html": _ContentType.HTML,
+    ".js": _ContentType.JAVASCRIPT,
+    ".json": _ContentType.JSON,
+    ".png": _ContentType.PNG,
+    ".svg": _ContentType.SVG,
+    ".txt": _ContentType.TEXT,
+    ".jpg": _ContentType.JPG,
 }
 
 API_VERSION = "v1"
@@ -47,9 +58,12 @@ API_VERSION = "v1"
 
 logger = get_logger(__name__)
 app = Microdot()
-CORS(app, allowed_origins='*', allow_credentials=True)
+CORS(app, allowed_origins="*", allow_credentials=True)
 
 
+# TODO: consider decorator instead
+def _create_content_type_header(content_type: str) -> dict:
+    return {"Content-Type": content_type}
 
 
 @app.before_request
@@ -71,31 +85,35 @@ def _after_error_request(request: Request, response: Response):
 # TODO: return type
 @app.get(f"/api/{API_VERSION}/healthcheck")
 async def get_healthcheck(request: Request):
-    return json.dumps(True)
+    return json.dumps(True), _HTTPStatus.OK, _create_content_type_header(_ContentType.JSON)
 
 
 @app.get(f"/api/{API_VERSION}/timers")
 async def get_timers(request: Request):
-    return json.dumps([timer_to_json(timer) for timer in request.app.database])
+    return (
+        json.dumps([timer_to_json(timer) for timer in request.app.database]),
+        _HTTPStatus.OK,
+        _create_content_type_header(_ContentType.JSON),
+    )
 
 
 @app.post(f"/api/{API_VERSION}/timer")
 async def post_timer(request: Request):
     if request.content_type is None:
         # request.json is only available if content type is set (it assumes a lot of the client!)
-        request.content_type = _CONTENT_TYPE_APPLICATION_JSON
+        request.content_type = _ContentType.JSON
 
     serialised_timer = request.json
     if serialised_timer is None:
-        abort(_HTTP_CODE_BAD_RESPONSE, f"Timer attributes must be set")
+        abort(_HTTPStatus.BAD_REQUEST, f"Timer attributes must be set")
         raise
     if serialised_timer.get("id") is not None:
-        abort(_HTTP_CODE_FORBIDDEN_RESPONSE, f"Timer cannot be posted with an ID")
+        abort(_HTTPStatus.FORBIDDEN, f"Timer cannot be posted with an ID (it will be automatically assigned)")
         raise
     try:
         start_time = deserialise_daytime(serialised_timer["start_time"])
-    except (KeyError, ValueError) as e:
-        abort(_HTTP_CODE_BAD_RESPONSE, f"Invalid start_time: {e}")
+    except (KeyError, ValueError, TypeError) as e:
+        abort(_HTTPStatus.BAD_REQUEST, f"Invalid start_time: {e}")
         raise
 
     try:
@@ -104,22 +122,22 @@ async def post_timer(request: Request):
             start_time=start_time,
             duration=timedelta(seconds=int(serialised_timer["duration"])),
         )
-    except TypeError | KeyError as e:
-        abort(_HTTP_CODE_BAD_RESPONSE, f"Invalid timer attributes: {e}")
+    except (TypeError, KeyError, ValueError) as e:
+        abort(_HTTPStatus.BAD_REQUEST, f"Invalid timer attributes: {e}")
         raise
     identifiable_timer = request.app.database.add(timer)
 
-    return json.dumps(timer_to_json(identifiable_timer))
+    return json.dumps(timer_to_json(identifiable_timer)), _HTTPStatus.OK, _create_content_type_header(_ContentType.JSON)
 
 
 @app.route(f"/api/{API_VERSION}/stats")
 async def get_stats(request: Request):
     if not RP2040_DETECTED:
-        abort(_HTTP_CODE_NOT_IMPLEMENTED, "Not implemented on non-RP2040 devices")
+        abort(_HTTPStatus.NOT_IMPLEMENTED, "Not implemented on non-RP2040 devices")
 
     output = f"Memory: {_get_memory_usage()}<br>Storage: {_get_disk_usage()}"
 
-    return output, _HTTP_CODE_OK_RESPONSE, {"Content-Type": "text/html"}
+    return output, _HTTPStatus.OK, _create_content_type_header(_ContentType.HTML)
 
 
 # TODO: This should be a post
@@ -136,7 +154,7 @@ async def get_reset(request: Request):
     # Shutdown in another thread to allow response to return
     _thread.start_new_thread(delayed_shutdown, ())
 
-    return "Resetting device", _HTTP_CODE_ACCEPTED_RESPONSE, {"Content-Type": "text/html"}
+    return "Resetting device", _HTTPStatus.ACCEPTED, _create_content_type_header(_ContentType.TEXT)
 
 
 @app.route(f"/api/{API_VERSION}/logs")
@@ -144,10 +162,10 @@ async def get_logs(request: Request):
     try:
         log_location = request.app.configuration[Configuration.LOG_FILE_LOCATION]
     except ConfigurationNotFoundError:
-        abort(_HTTP_CODE_NOT_IMPLEMENTED, "Logs not being saved to file")
+        abort(_HTTPStatus.NOT_IMPLEMENTED, "Logs not being saved to file")
         raise
     flush_file_logs()
-    return send_file(str(log_location), max_age=0, content_type="text/plain")
+    return send_file(str(log_location), max_age=0, content_type=_ContentType.TEXT)
 
 
 @app.route(f"/")
@@ -164,7 +182,7 @@ async def get(request: Request, path: str):
 def serve_ui(request: Request, path: Path):
     # MicroPython `pathlib` implementation does not support `is_absolute`
     if str(path).startswith("/"):
-        abort(_HTTP_CODE_NOT_FOUND)
+        abort(_HTTPStatus.NOT_FOUND)
         raise
 
     try:
@@ -178,15 +196,16 @@ def serve_ui(request: Request, path: Path):
         # `Path.__truediv__` is not implemented in `pathlib` module in use with MicroPython
         full_path = resolve_path(Path(f"{frontend_location}/{path}"))
     except OSError:
-        abort(_HTTP_CODE_NOT_FOUND)
+        abort(_HTTPStatus.NOT_FOUND)
         raise
 
-    if not str(full_path).startswith(str(frontend_location)) or "../" in str(full_path):
-        abort(_HTTP_CODE_NOT_FOUND)
-        raise
-
-    if not full_path.exists() or not full_path.is_file():
-        abort(_HTTP_CODE_NOT_FOUND)
+    if (
+        not str(full_path).startswith(str(frontend_location))
+        or "../" in str(full_path)
+        or not full_path.exists()
+        or not full_path.is_file()
+    ):
+        abort(_HTTPStatus.NOT_FOUND)
         raise
 
     content_type = _get_content_type(full_path)
@@ -220,6 +239,6 @@ def _get_disk_usage() -> str:
 # mimetypes module does not exist for MicroPython
 def _get_content_type(path: Path) -> str:
     try:
-        return _KNOWN_CONTENT_TYPES[path.suffix]
+        return _FILE_EXTENSION_TO_CONTENT_TYPE[path.suffix]
     except KeyError:
         return "application/octet-stream"

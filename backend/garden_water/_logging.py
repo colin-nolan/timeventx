@@ -91,8 +91,10 @@ def setup_logging(configuration: "Configuration"):
 
 
 def flush_file_logs():
-    for logger in _LOGGERS:
-        for handler in logger.handlers:
+    for _logger in _LOGGERS:
+        for handler in _logger.handlers:
+            if isinstance(handler, LockableHandler):
+                handler = handler.wrapped_handler
             if not isinstance(handler, FileHandler):
                 continue
             try:
@@ -121,13 +123,13 @@ class LockableHandler(Handler):
 
     def __init__(self, wrapped_handler: Handler, lock: LockType, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self._wrapped_handler = wrapped_handler
+        self.wrapped_handler = wrapped_handler
         self._lock = lock
 
     def __getattr__(self, name: str) -> callable:
-        attr = getattr(self._wrapped_handler if name != "emit" else self, name)
+        attr = getattr(self.wrapped_handler if name != "emit" else self, name)
         return attr
 
     def emit(self, *args, **kwargs):
         with self._lock:
-            self._wrapped_handler.emit(*args, **kwargs)
+            self.wrapped_handler.emit(*args, **kwargs)

@@ -6,7 +6,7 @@ from pathlib import Path
 from typing import Optional
 from time import sleep
 
-from garden_water._common import noop_if_not_rp2040
+from garden_water._common import noop_if_not_rp2040, RP2040_DETECTED
 from garden_water._logging import get_logger, setup_logging
 from garden_water.configuration import DEFAULT_CONFIGURATION_FILE_NAME, Configuration
 from garden_water.timer_runner import TimerRunner
@@ -78,8 +78,8 @@ async def inner_main(configuration: Configuration):
 
     tasks = []
 
-    logger.info("Starting tweeter")
-    tasks.append(asyncio.create_task(tweeter(timers_database)))
+    # logger.info("Starting tweeter")
+    # tasks.append(asyncio.create_task(tweeter(timers_database)))
 
     logger.info("Starting web server")
     app.configuration = configuration
@@ -114,11 +114,11 @@ def reset(cooldown_time_in_seconds: int = 10):
     logger.info(f"Resetting after a cooldown of {cooldown_time_in_seconds}s (prevents rapid reset loops)")
     sleep(cooldown_time_in_seconds)
 
-    try:
+    if RP2040_DETECTED:
         import machine
 
         machine.soft_reset()
-    except ImportError:
+    else:
         os.execv(sys.executable, ["python"] + sys.argv)
 
 
