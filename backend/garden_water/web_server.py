@@ -4,6 +4,7 @@ import os
 from datetime import timedelta
 from pathlib import Path
 
+from microdot_cors import CORS
 from microdot_asyncio import Microdot, Request, abort, send_file, Response
 
 from garden_water._common import RP2040_DETECTED, resolve_path
@@ -46,6 +47,9 @@ API_VERSION = "v1"
 
 logger = get_logger(__name__)
 app = Microdot()
+CORS(app, allowed_origins='*', allow_credentials=True)
+
+
 
 
 @app.before_request
