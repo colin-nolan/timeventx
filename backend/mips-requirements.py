@@ -1,4 +1,4 @@
-# TODO: move to micropython directory
+# TODO: move script to micropython directory?
 import argparse
 import os
 
@@ -6,6 +6,13 @@ import mip
 
 LIBRARIES_TO_INSTALL = (
     "abc",
+    (
+        "github:colin-nolan/micropython-lib/micropython/ucontextlib-async/ucontextlib/_async.py",
+        dict(version="async_contextlib"),
+        lambda source, mips_kwargs: os.rename(
+            f"{mips_kwargs['target']}/_async.py", f"{mips_kwargs['target']}/ucontentlib_async.py"
+        ),
+    ),
     "collections-defaultdict",
     "contextlib",
     (
@@ -24,13 +31,7 @@ LIBRARIES_TO_INSTALL = (
         "github:colin-nolan/micropython-lib/python-stdlib/logging/logging.py",
         dict(version="fix/minor-logging-issues"),
     ),
-    (
-        "github:colin-nolan/micropython-lib/micropython/ucontextlib-async/ucontextlib/_async.py",
-        dict(version="async_contextlib"),
-        lambda source, mips_kwargs: os.rename(
-            f"{mips_kwargs['target']}/_async.py", f"{mips_kwargs['target']}/ucontentlib_async.py"
-        ),
-    ),
+    "os-path",
     "pathlib",
     "time",
     ("github:colin-nolan/pycopy-lib/typing/typing.py", dict(version="more-types")),

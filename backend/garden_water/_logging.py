@@ -5,7 +5,6 @@ from logging import FileHandler, Formatter, Logger, StreamHandler, Handler
 from pathlib import Path
 from typing import Collection, Optional, Callable, Coroutine, TypeAlias, Union
 
-
 try:
     from io import TextIOBase
 except ImportError:
@@ -51,7 +50,7 @@ logger = get_logger(__name__)
 
 
 def setup_logging(configuration: "Configuration"):
-    from garden_water.configuration import Configuration
+    from garden_water.configuration import Configuration, ConfigurationNotFoundError
 
     global _LOGGER_LEVEL, logger, _LOGGER_HANDLERS, _LOG_FILE_LOCATION
 
@@ -67,10 +66,10 @@ def setup_logging(configuration: "Configuration"):
     try:
         _LOG_FILE_LOCATION = configuration[Configuration.LOG_FILE_LOCATION]
         use_log_file = True
-    except KeyError:
+    except ConfigurationNotFoundError:
         use_log_file = False
 
-    _LOGGER_LEVEL = configuration.get(Configuration.LOG_LEVEL, Configuration.LOG_LEVEL.default)
+    _LOGGER_LEVEL = configuration.get_with_standard_default(Configuration.LOG_LEVEL)
 
     if use_log_file:
         file_handler = LockableHandler(FileHandler(str(_LOG_FILE_LOCATION)), _LOG_FILE_LOCK)

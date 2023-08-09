@@ -14,6 +14,10 @@ logger = get_logger(__name__)
 
 # Not using dataclass as not supported by MicroPython
 class ConfigurationDescription:
+    @property
+    def name(self) -> str:
+        return self.ini_name
+
     def __init__(
         self,
         environment_variable_name: str,
@@ -36,6 +40,17 @@ class ConfigurationDescription:
         return self.ini_name.split(".")[-1]
 
 
+class ConfigurationNotFoundError(RuntimeError):
+    def __init__(self, configuration_description: ConfigurationDescription):
+        hint = (
+            f" (can be set set using {configuration_description.environment_variable_name})"
+            if hasattr(os, "environ")
+            else ""
+        )
+        super().__init__(f"Configuration not found for: {configuration_description.name}{hint}")
+        self.configuration_description = configuration_description
+
+
 class Configuration:
     LOG_LEVEL = ConfigurationDescription(
         f"{ENVIRONMENT_VARIABLE_PREFIX}_LOG_LEVEL", "log.level", int, default=logging.INFO
@@ -55,6 +70,12 @@ class Configuration:
         "frontend.root",
         Path,
         default="/frontend",
+    )
+    BACKEND_PORT = ConfigurationDescription(
+        f"{ENVIRONMENT_VARIABLE_PREFIX}_BACKEND_PORT", "backend.port", int, default=8080
+    )
+    BACKEND_HOST = ConfigurationDescription(
+        f"{ENVIRONMENT_VARIABLE_PREFIX}_BACKEND_INTERFACE", "backend.interface", str, default="0.0.0.0"
     )
 
     @staticmethod
@@ -81,7 +102,7 @@ class Configuration:
                 if value is None:
                     if not configuration_description.allow_none:
                         raise ValueError(
-                            f"Configuration value must be set for {configuration_description.ini_name} "
+                            f"Configuration value must be set for {configuration_description.name} "
                             + f"(try {configuration_description.environment_variable_name})"
                         )
 
@@ -113,9 +134,10 @@ class Configuration:
             )
             value = os.environ[configuration_description.environment_variable_name]
         except (KeyError, AttributeError, OSError):
-            if self._config_file_location is None:
-                raise RuntimeError("No configuration file location setup")
             try:
+                if self._config_file_location is None:
+                    raise FileNotFoundError("No configuration file location setup")
+
                 logger.debug(
                     f'Attempting to get configuration value "{configuration_description.ini_name}" from the '
                     + f"file: {self._config_file_location}"
@@ -126,10 +148,7 @@ class Configuration:
                     configuration_description.get_ini_section(), configuration_description.get_ini_option()
                 )
             except Exception as e:
-                raise KeyError(
-                    f"Configuration value not found: {configuration_description.ini_name} "
-                    + f"(can be set with {configuration_description.environment_variable_name})"
-                ) from e
+                raise ConfigurationNotFoundError(configuration_description) from e
 
         parsed_value = configuration_description.parser(value)
         logger.debug(f'Got value for "{configuration_description.ini_name}": {parsed_value}')
@@ -138,5 +157,8 @@ class Configuration:
     def get(self, configuration_description: ConfigurationDescription, default: Optional[Any] = None) -> Any:
         try:
             return self[configuration_description]
-        except KeyError:
+        except ConfigurationNotFoundError:
             return default
+
+    def get_with_standard_default(self, configuration_description: ConfigurationDescription) -> Any:
+        return self.get(configuration_description, configuration_description.default)

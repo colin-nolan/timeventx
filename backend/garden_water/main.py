@@ -6,6 +6,7 @@ from pathlib import Path
 from typing import Optional
 from time import sleep
 
+from garden_water._common import noop_if_not_rp2040
 from garden_water._logging import get_logger, setup_logging
 from garden_water.configuration import DEFAULT_CONFIGURATION_FILE_NAME, Configuration
 from garden_water.timer_runner import TimerRunner
@@ -20,7 +21,6 @@ except ImportError:
 
 DEFAULT_CONFIGURATION_FILE_LOCATION = Path("/") / DEFAULT_CONFIGURATION_FILE_NAME
 WIFI_CONNECTION_CHECK_PERIOD = 0.5
-MICROPYTHON = sys.implementation.name == "micropython"
 
 
 logger = get_logger(__name__)
@@ -48,6 +48,7 @@ def connect_to_wifi(ssid: str, password: str, retries: int = math.inf, wait_for_
         raise RuntimeError("Failed to connect to WiFi")
 
 
+@noop_if_not_rp2040
 def sync_time():
     # Deferring import to allow testing using MicroPython without a network module
     import ntptime
@@ -56,6 +57,7 @@ def sync_time():
     ntptime.settime()
 
 
+@noop_if_not_rp2040
 def setup_device(configuration: Configuration):
     wifi_ssid = configuration[Configuration.WIFI_SSID]
     wifi_password = configuration[Configuration.WIFI_PASSWORD]
@@ -68,9 +70,8 @@ def setup_device(configuration: Configuration):
     logger.info(f"Time synchronised: {formatted_time}")
 
 
-def inner_main(configuration: Configuration):
-    if MICROPYTHON:
-        setup_device(configuration)
+async def inner_main(configuration: Configuration):
+    setup_device(configuration)
 
     logger.info("Setting up database")
     timers_database = TimersDatabase(configuration[Configuration.TIMERS_DATABASE_LOCATION])
@@ -83,17 +84,21 @@ def inner_main(configuration: Configuration):
     logger.info("Starting web server")
     app.configuration = configuration
     app.database = timers_database
-    # TODO: use app.start() and then monitor all threads
-    tasks.append(app.start_server())
+    tasks.append(
+        asyncio.create_task(
+            app.start_server(
+                host=configuration.get_with_standard_default(Configuration.BACKEND_HOST),
+                port=configuration.get_with_standard_default(Configuration.BACKEND_PORT),
+            )
+        )
+    )
 
+    logger.info("Awaiting tasks")
+    # FIXME: detect failure of any task?
     for task in tasks:
-        asyncio.wait_for(task, 0)
+        await task
 
     logger.error("Website has shutdown")
-
-    app.run()
-
-    reset()
 
 
 async def tweeter(timers: IdentifiableTimersCollection):
@@ -124,7 +129,10 @@ def main(configuration_location: Optional[Path] = DEFAULT_CONFIGURATION_FILE_LOC
     logger.info("Device turned on")
 
     try:
-        inner_main(configuration)
+        asyncio.run(inner_main(configuration))
+    except KeyboardInterrupt:
+        logger.info("Terminated by user")
+        sys.exit(0)
     except Exception as e:
         logger.exception(e)
         reset()
