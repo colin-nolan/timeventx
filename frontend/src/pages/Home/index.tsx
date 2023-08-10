@@ -2,6 +2,13 @@ import './style.css';
 import {useEffect, useState} from "preact/compat";
 
 
+import "ag-grid-community/styles/ag-grid.css";
+import "ag-grid-community/styles/ag-theme-alpine.css";
+import {Box, Button} from "@mui/joy";
+import Table from "@mui/joy/Table";
+import React from "react";
+
+
 const API_ROOT = "http://192.168.0.156:8080/api/v1"
 // const API_ROOT = "http://0.0.0.0:8080/api/v1"
 
@@ -12,6 +19,7 @@ interface DayTime {
 }
 
 interface Timer {
+	id?: number;
 	name: string;
 	start_time: DayTime;
 	duration_in_seconds: number
@@ -69,11 +77,47 @@ export function Home() {
 		<>
 			<div>Hello world x{timers.length}</div>
 
-			<div>
-				{timers.map((timer) => (
-					<div>{timer.name}</div>
-				))}
-			</div>
+
+			<Table aria-label="basic table" size="lg" stickyHeader hoverRow >
+                <thead>
+                    <tr>
+                        <th style={{width: '40%'}}>Dessert (100g serving)</th>
+                        <th>ID</th>
+						<th>Name</th>
+						<th>Start Time</th>
+						<th>Duration (s)</th>
+                        <th
+                            aria-label="last"
+                            style={{ width: 'var(--Table-lastColumnWidth)' }}
+                          />
+                    </tr>
+                </thead>
+                <tbody>
+					{timers.map((timer) => (
+						<tr>
+							<td>{timer.id}</td>
+							<td>{timer.name}</td>
+							<td>{timer.start_time}</td>
+							<td>{timer.duration_in_seconds}</td>
+							<td>
+								<Box sx={{ display: 'flex', gap: 1 }}>
+									<Button size="sm" variant="plain" color="neutral">
+										Edit
+									</Button>
+									<Button size="sm" variant="soft" color="danger">
+										Delete
+									</Button>
+								</Box>
+							</td>
+						</tr>
+					))}
+                </tbody>
+            </Table>
+
+
+
+
+
 			<div>
 				Name: <input type="text" onChange={event => setName(event.target.value)} value={name}/><br/>
 				Start Time: <input type="string" onChange={event => setStartTime(event.target.value)} value={startTime}/><br/>
