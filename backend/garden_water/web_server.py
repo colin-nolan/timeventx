@@ -99,6 +99,7 @@ async def get_timers(request: Request):
 
 @app.post(f"/api/{API_VERSION}/timer")
 async def post_timer(request: Request):
+    # TODO: make this into an annotation
     if request.content_type is None:
         # request.json is only available if content type is set (it assumes a lot of the client!)
         request.content_type = _ContentType.JSON
@@ -128,6 +129,22 @@ async def post_timer(request: Request):
     identifiable_timer = request.app.database.add(timer)
 
     return json.dumps(timer_to_json(identifiable_timer)), _HTTPStatus.OK, _create_content_type_header(_ContentType.JSON)
+
+
+@app.delete(f"/api/{API_VERSION}/timer")
+async def delete_timer(request: Request):
+    # TODO: make this into an annotation
+    if request.content_type is None:
+        # request.json is only available if content type is set (it assumes a lot of the client!)
+        request.content_type = _ContentType.JSON
+
+    timer_id = request.json
+    if not isinstance(timer_id, int):
+        abort(_HTTPStatus.BAD_REQUEST, "Timer ID expected as integer")
+        raise
+
+    removed = request.app.database.remove(timer_id)
+    return json.dumps(removed), _HTTPStatus.OK if removed else _HTTPStatus.NOT_FOUND, _create_content_type_header(_ContentType.JSON)
 
 
 @app.route(f"/api/{API_VERSION}/stats")
