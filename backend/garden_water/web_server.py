@@ -112,7 +112,7 @@ async def post_timer(request: Request):
         abort(_HTTPStatus.FORBIDDEN, f"Timer cannot be posted with an ID (it will be automatically assigned)")
         raise
     try:
-        start_time = deserialise_daytime(serialised_timer["start_time"])
+        start_time = deserialise_daytime(serialised_timer["startTime"])
     except (KeyError, ValueError, TypeError) as e:
         abort(_HTTPStatus.BAD_REQUEST, f"Invalid start_time: {e}")
         raise

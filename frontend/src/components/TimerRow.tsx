@@ -41,7 +41,7 @@ export function TimerRow(props: { timer: Timer; removeTimer: RemoveTimer }) {
                 <td>{props.timer.id}</td>
                 <td>{props.timer.name}</td>
                 <td>{props.timer.startTime}</td>
-                <td>{props.timer.durationInSeconds}</td>
+                <td>{props.timer.duration}</td>
                 <td>
                     {timerConfirmingRemoval ? (
                         <ButtonGroup spacing={1} buttonFlex={1} variant="soft">

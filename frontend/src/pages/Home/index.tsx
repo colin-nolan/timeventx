@@ -1,10 +1,11 @@
 import "./style.css";
 import { useEffect, useState } from "preact/compat";
 
-import { Button, Input, Table } from "@mui/joy";
+import { Table } from "@mui/joy";
 import React from "react";
 import { toast } from "sonner";
 import { TimerRow } from "../../components/TimerRow";
+import { TimerCreationRow } from "../../components/TimerCreationRow";
 
 // const API_ROOT = "http://192.168.0.156:8080/api/v1";
 const API_ROOT = "http://0.0.0.0:8080/api/v1";
@@ -12,28 +13,23 @@ const API_ROOT = "http://0.0.0.0:8080/api/v1";
 export function Home() {
     const [timers, setTimers] = useState<Timer[]>([]);
 
-    const [name, setName] = useState<string>("");
-    // FIXME: use DayTime
-    const [startTime, setStartTime] = useState<string>("00:00:00");
-    const [durationInSeconds, setDurationInSeconds] = useState<number>(1);
-
-    function addTimer() {
-        // TODO
-        // const [hours, minutes, seconds] = startTime.split(":")
-
+    function addTimer(timer: Timer, onSuccess: () => void, onFail: () => void) {
         fetch(`${API_ROOT}/timer`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
             },
-            body: JSON.stringify({
-                name: name,
-                start_time: startTime,
-                duration: durationInSeconds,
-            }),
+            body: JSON.stringify(timer),
         }).then(async (response) => {
-            const timer = await response.json();
-            setTimers([...timers, timer]);
+            if (!response.ok) {
+                console.error(`Server did not create timer`, response);
+                toast.error(`Problem creating timer (${response.status})`);
+                onFail();
+            } else {
+                const timer = await response.json();
+                setTimers([...timers, timer]);
+                onSuccess();
+            }
         });
     }
 
@@ -82,40 +78,7 @@ export function Home() {
                     </tr>
                 </thead>
                 <tbody>
-                    <tr>
-                        <td>
-                            <Input disabled value="Auto" />
-                        </td>
-                        <td>
-                            <Input
-                                type="string"
-                                onChange={(event) => setName(event.target.value)}
-                                value={name}
-                                placeholder="Name"
-                            />
-                        </td>
-                        <td>
-                            <Input
-                                type="time"
-                                onChange={(event) => setStartTime(event.target.value)}
-                                value={startTime}
-                                placeholder="12:00:00"
-                            />
-                        </td>
-                        <td>
-                            <Input
-                                type="number"
-                                onChange={(event) => setDurationInSeconds(Number(event.target.value))}
-                                value={durationInSeconds}
-                                slotProps={{ input: { min: 1, max: 60 * 60 * 24 } }}
-                            />
-                        </td>
-                        <td>
-                            <Button onClick={addTimer} style={{ width: "100%" }}>
-                                Add
-                            </Button>
-                        </td>
-                    </tr>
+                    <TimerCreationRow addTimer={addTimer} />
                     {timers
                         .sort((timer_1, timer_2) => timer_1.id - timer_2.id)
                         .map((timer) => {

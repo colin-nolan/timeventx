@@ -16,7 +16,7 @@ def timer_to_json(timer: Timer | IdentifiableTimer) -> dict:
     # Note: don't merge dicts using double splat operator as MicroPython does not like it
     return base | {
         "name": timer.name,
-        "start_time": serialise_daytime(timer.start_time),
+        "startTime": serialise_daytime(timer.start_time),
         "duration": timer.duration.total_seconds(),
     }
 
@@ -25,6 +25,6 @@ def json_to_identifiable_timer(timer_json: dict) -> IdentifiableTimer:
     return IdentifiableTimer(
         timer_id=TimerId(timer_json["id"]),
         name=timer_json["name"],
-        start_time=deserialise_daytime(timer_json["start_time"]),
+        start_time=deserialise_daytime(timer_json["startTime"]),
         duration=timedelta(seconds=timer_json["duration"]),
     )
