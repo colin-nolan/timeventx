@@ -5,7 +5,7 @@ import ReportIcon from "@mui/icons-material/Report";
 
 export type AddTimer = (timer: Timer, onSuccess: () => void, onFail: () => void) => void;
 
-export function TimerCreationRow(props: { addTimer: AddTimer; timer?: Timer; onClose: () => void }) {
+export function TimerCreationRow(props: { addTimer: AddTimer; timer?: Timer; onClose?: () => void }) {
     const [name, setName] = useState<string>(props.timer ? props.timer.name : "");
     const [startTime, setStartTime] = useState<string>(props.timer ? props.timer.startTime : "00:00:00");
     const [duration, setDuration] = useState<Second>(props.timer ? props.timer.duration : 1);
@@ -28,7 +28,9 @@ export function TimerCreationRow(props: { addTimer: AddTimer; timer?: Timer; onC
 
     function onSuccess() {
         setBeingCreated(false);
-        props.onClose();
+        if (props.onClose) {
+            props.onClose();
+        }
     }
 
     function onFail() {

@@ -1,7 +1,7 @@
 import "./style.css";
 import { useEffect, useState } from "preact/compat";
 
-import { Table } from "@mui/joy";
+import { Button, Table } from "@mui/joy";
 import React from "react";
 import { toast } from "sonner";
 import { TimerRow } from "../../components/TimerRow";
@@ -12,6 +12,7 @@ const API_ROOT = "http://0.0.0.0:8080/api/v1";
 
 export function Home() {
     const [timers, setTimers] = useState<Timer[]>([]);
+    const [creatingTimer, setCreatingTimer] = useState<boolean>(false);
 
     function addTimer(timer: Timer, onSuccess: () => void, onFail: () => void) {
         const updating_timer = Boolean(timer.id);
@@ -89,12 +90,20 @@ export function Home() {
                     </tr>
                 </thead>
                 <tbody>
-                    <TimerCreationRow addTimer={addTimer} />
                     {timers
                         .sort((timer_1, timer_2) => timer_1.id - timer_2.id)
                         .map((timer) => {
                             return <TimerRow timer={timer} removeTimer={removeTimer} addTimer={addTimer} />;
                         })}
+                    {creatingTimer ? (
+                        <TimerCreationRow addTimer={addTimer} onClose={() => setCreatingTimer(false)} />
+                    ) : (
+                        <tr>
+                            <td colSpan={5} style={{ textAlign: "center" }}>
+                                <Button onClick={() => setCreatingTimer(true)}>Create Timer</Button>
+                            </td>
+                        </tr>
+                    )}
                 </tbody>
             </Table>
         </>
