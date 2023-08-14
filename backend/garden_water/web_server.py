@@ -3,6 +3,7 @@ import json
 import os
 from datetime import timedelta
 from pathlib import Path
+from typing import TypeVar, Type
 
 from microdot_cors import CORS
 from microdot_asyncio import Microdot, Request, abort, send_file, Response
@@ -14,7 +15,8 @@ from garden_water._logging import (
 )
 from garden_water.configuration import Configuration, ConfigurationNotFoundError
 from garden_water.timers.serialisation import deserialise_daytime, timer_to_json
-from garden_water.timers.timers import Timer
+from garden_water.timers.timers import Timer, IdentifiableTimer, TimerId
+
 
 try:
     import asyncio
@@ -24,6 +26,7 @@ except ImportError:
 
 class _HTTPStatus:
     OK = 200
+    CREATED = 201
     ACCEPTED = 202
     BAD_REQUEST = 400
     NOT_FOUND = 404
@@ -99,7 +102,29 @@ async def get_timers(request: Request):
 
 @app.post(f"/api/{API_VERSION}/timer")
 async def post_timer(request: Request):
-    # TODO: make this into an annotation
+    timer = _create_timer_from_request(request)
+
+    if isinstance(timer, IdentifiableTimer):
+        abort(_HTTPStatus.FORBIDDEN, f"Timer cannot be posted with an ID (it will be automatically assigned)")
+        raise
+
+    identifiable_timer = request.app.database.add(timer)
+    return (
+        json.dumps(timer_to_json(identifiable_timer)),
+        _HTTPStatus.CREATED,
+        _create_content_type_header(_ContentType.JSON),
+    )
+
+
+@app.put(f"/api/{API_VERSION}/timer/<timer_id>")
+async def put_timer(request: Request, timer_id: TimerId):
+    timer = _create_timer_from_request(request)
+    request.app.database.remove(timer_id)
+    request.app.database.add(timer)
+    return json.dumps(timer_to_json(timer)), _HTTPStatus.CREATED, _create_content_type_header(_ContentType.JSON)
+
+
+def _create_timer_from_request(request: Request) -> Timer | IdentifiableTimer:
     if request.content_type is None:
         # request.json is only available if content type is set (it assumes a lot of the client!)
         request.content_type = _ContentType.JSON
@@ -108,27 +133,27 @@ async def post_timer(request: Request):
     if serialised_timer is None:
         abort(_HTTPStatus.BAD_REQUEST, f"Timer attributes must be set")
         raise
-    if serialised_timer.get("id") is not None:
-        abort(_HTTPStatus.FORBIDDEN, f"Timer cannot be posted with an ID (it will be automatically assigned)")
-        raise
     try:
         start_time = deserialise_daytime(serialised_timer["startTime"])
     except (KeyError, ValueError, TypeError) as e:
         abort(_HTTPStatus.BAD_REQUEST, f"Invalid start_time: {e}")
         raise
 
+    arguments = dict(
+        name=serialised_timer["name"],
+        start_time=start_time,
+        duration=timedelta(seconds=int(serialised_timer["duration"])),
+    )
+    timer_type = Timer
+    if serialised_timer.get("id") is not None:
+        arguments["timer_id"] = serialised_timer["id"]
+        timer_type = IdentifiableTimer
+
     try:
-        timer = Timer(
-            name=serialised_timer["name"],
-            start_time=start_time,
-            duration=timedelta(seconds=int(serialised_timer["duration"])),
-        )
+        return timer_type(**arguments)
     except (TypeError, KeyError, ValueError) as e:
         abort(_HTTPStatus.BAD_REQUEST, f"Invalid timer attributes: {e}")
         raise
-    identifiable_timer = request.app.database.add(timer)
-
-    return json.dumps(timer_to_json(identifiable_timer)), _HTTPStatus.OK, _create_content_type_header(_ContentType.JSON)
 
 
 @app.delete(f"/api/{API_VERSION}/timer")
@@ -144,7 +169,11 @@ async def delete_timer(request: Request):
         raise
 
     removed = request.app.database.remove(timer_id)
-    return json.dumps(removed), _HTTPStatus.OK if removed else _HTTPStatus.NOT_FOUND, _create_content_type_header(_ContentType.JSON)
+    return (
+        json.dumps(removed),
+        _HTTPStatus.OK if removed else _HTTPStatus.NOT_FOUND,
+        _create_content_type_header(_ContentType.JSON),
+    )
 
 
 @app.route(f"/api/{API_VERSION}/stats")

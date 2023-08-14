@@ -1,18 +1,22 @@
 import { useState } from "preact/compat";
-import { Button, Input } from "@mui/joy";
+import { Button, ButtonGroup, Input } from "@mui/joy";
 import React from "react";
+import ReportIcon from "@mui/icons-material/Report";
 
-type CreateTimer = (timer: Timer, onSuccess: () => void, onFail: () => void) => void;
+export type AddTimer = (timer: Timer, onSuccess: () => void, onFail: () => void) => void;
 
-export function TimerCreationRow(props: { addTimer: CreateTimer; timer?: Timer }) {
+export function TimerCreationRow(props: { addTimer: AddTimer; timer?: Timer; onClose: () => void }) {
     const [name, setName] = useState<string>(props.timer ? props.timer.name : "");
     const [startTime, setStartTime] = useState<string>(props.timer ? props.timer.startTime : "00:00:00");
     const [duration, setDuration] = useState<Second>(props.timer ? props.timer.duration : 1);
 
+    const [beingCreated, setBeingCreated] = useState<boolean>(false);
+
     function addTimer(event: Event) {
+        setBeingCreated(true);
         props.addTimer(
             {
-                id: null,
+                id: props.timer ? props.timer.id : null,
                 name: name,
                 startTime: startTime,
                 duration: duration,
@@ -22,9 +26,14 @@ export function TimerCreationRow(props: { addTimer: CreateTimer; timer?: Timer }
         );
     }
 
-    function onSuccess() {}
+    function onSuccess() {
+        setBeingCreated(false);
+        props.onClose();
+    }
 
-    function onFail() {}
+    function onFail() {
+        setBeingCreated(false);
+    }
 
     return (
         <tr>
@@ -56,9 +65,16 @@ export function TimerCreationRow(props: { addTimer: CreateTimer; timer?: Timer }
                 />
             </td>
             <td>
-                <Button onClick={addTimer} style={{ width: "100%" }}>
-                    Add
-                </Button>
+                <ButtonGroup spacing={1} buttonFlex={1} variant="solid">
+                    <Button style={{ width: "50%" }} onClick={addTimer} loading={beingCreated} color="success">
+                        {props.timer ? "Complete" : "Add"}
+                    </Button>
+                    {props.timer ? (
+                        <Button style={{ width: "50%" }} onClick={props.onClose} color="neutral">
+                            Cancel
+                        </Button>
+                    ) : null}
+                </ButtonGroup>
             </td>
         </tr>
     );
