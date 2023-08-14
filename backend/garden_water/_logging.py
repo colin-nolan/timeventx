@@ -108,8 +108,9 @@ def clear_logs():
     if _LOG_FILE_LOCATION is None:
         raise RuntimeError("Logging not setup yet")
 
-    with _LOG_FILE_LOCK:
-        _LOG_FILE_LOCATION.unlink()
+    if _LOG_FILE_LOCATION.exists():
+        with _LOG_FILE_LOCK:
+            _LOG_FILE_LOCATION.unlink()
 
 
 class LockableHandler(Handler):
@@ -126,6 +127,7 @@ class LockableHandler(Handler):
         self.wrapped_handler = wrapped_handler
         self._lock = lock
 
+    # FIXME: differences between MicroPython (requires __getattribute__) and CPython (requires __getattr__)
     def __getattr__(self, name: str) -> callable:
         attr = getattr(self.wrapped_handler if name != "emit" else self, name)
         return attr

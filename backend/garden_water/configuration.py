@@ -56,7 +56,7 @@ class Configuration:
         f"{ENVIRONMENT_VARIABLE_PREFIX}_LOG_LEVEL", "log.level", int, default=logging.INFO
     )
     LOG_FILE_LOCATION = ConfigurationDescription(
-        f"{ENVIRONMENT_VARIABLE_PREFIX}_LOG_FILE_LOCATION", "log.file_location", Path, default="main.log"
+        f"{ENVIRONMENT_VARIABLE_PREFIX}_LOG_FILE_LOCATION", "log.file_location", Path, default="/main.log"
     )
     TIMERS_DATABASE_LOCATION = ConfigurationDescription(
         f"{ENVIRONMENT_VARIABLE_PREFIX}_TIMERS_DATABASE_LOCATION", "database.location", Path, default="/data/timers"

@@ -4,6 +4,7 @@ import ReportIcon from "@mui/icons-material/Report";
 import WarningIcon from "@mui/icons-material/Warning";
 import React from "react";
 import { AddTimer, TimerCreationRow } from "./TimerCreationRow";
+import { Timer, TimerId } from "../lib/api-client";
 
 type RemoveTimer = (timerId: TimerId, onSuccess: () => void, onFail: () => void) => void;
 

@@ -12,6 +12,7 @@ from garden_water._common import RP2040_DETECTED, resolve_path
 from garden_water._logging import (
     get_logger,
     flush_file_logs,
+    clear_logs,
 )
 from garden_water.configuration import Configuration, ConfigurationNotFoundError
 from garden_water.timers.serialisation import deserialise_daytime, timer_to_json
@@ -116,7 +117,7 @@ async def post_timer(request: Request):
     )
 
 
-@app.put(f"/api/{API_VERSION}/timer/<timer_id>")
+@app.put(f"/api/{API_VERSION}/timer/<int:timer_id>")
 async def put_timer(request: Request, timer_id: TimerId):
     timer = _create_timer_from_request(request)
     request.app.database.remove(timer_id)
@@ -156,18 +157,8 @@ def _create_timer_from_request(request: Request) -> Timer | IdentifiableTimer:
         raise
 
 
-@app.delete(f"/api/{API_VERSION}/timer")
-async def delete_timer(request: Request):
-    # TODO: make this into an annotation
-    if request.content_type is None:
-        # request.json is only available if content type is set (it assumes a lot of the client!)
-        request.content_type = _ContentType.JSON
-
-    timer_id = request.json
-    if not isinstance(timer_id, int):
-        abort(_HTTPStatus.BAD_REQUEST, "Timer ID expected as integer")
-        raise
-
+@app.delete(f"/api/{API_VERSION}/timer/<int:timer_id>")
+async def delete_timer(request: Request, timer_id: TimerId):
     removed = request.app.database.remove(timer_id)
     return (
         json.dumps(removed),
@@ -181,26 +172,28 @@ async def get_stats(request: Request):
     if not RP2040_DETECTED:
         abort(_HTTPStatus.NOT_IMPLEMENTED, "Not implemented on non-RP2040 devices")
 
-    output = f"Memory: {_get_memory_usage()}<br>Storage: {_get_disk_usage()}"
+    output = f"Memory: {_get_memory_usage()}\nStorage: {_get_disk_usage()}"
 
-    return output, _HTTPStatus.OK, _create_content_type_header(_ContentType.HTML)
+    return output, _HTTPStatus.OK, _create_content_type_header(_ContentType.TEXT)
 
 
-# TODO: This should be a post
-@app.route(f"/api/{API_VERSION}/reset")
+@app.post(f"/api/{API_VERSION}/reset")
 async def get_reset(request: Request):
+    if not RP2040_DETECTED:
+        abort(_HTTPStatus.NOT_IMPLEMENTED, "Not implemented on non-RP2040 devices")
+        raise
+
     # Shutdown after a slight delay in order to allow the response to be returned
-    def delayed_shutdown():
-        import time
+    def reset_device():
+        import machine
 
-        time.sleep(1)
-        logger.info("Shutting down")
-        request.app.shutdown()
+        logger.info("Resetting device")
+        flush_file_logs()
+        machine.reset()
 
-    # Shutdown in another thread to allow response to return
-    _thread.start_new_thread(delayed_shutdown, ())
+    reset_device()
 
-    return "Resetting device", _HTTPStatus.ACCEPTED, _create_content_type_header(_ContentType.TEXT)
+    # TODO: schedule the reset to allow a 202 to be returned, instead of dropping the connection
 
 
 @app.route(f"/api/{API_VERSION}/logs")
@@ -211,7 +204,24 @@ async def get_logs(request: Request):
         abort(_HTTPStatus.NOT_IMPLEMENTED, "Logs not being saved to file")
         raise
     flush_file_logs()
-    return send_file(str(log_location), max_age=0, content_type=_ContentType.TEXT)
+
+    if log_location.exists():
+        return send_file(str(log_location), max_age=0, content_type=_ContentType.TEXT)
+    else:
+        return "", _HTTPStatus.OK, _create_content_type_header(_ContentType.TEXT)
+
+
+@app.delete(f"/api/{API_VERSION}/logs")
+async def delete_logs(request: Request):
+    try:
+        log_location = request.app.configuration[Configuration.LOG_FILE_LOCATION]
+    except ConfigurationNotFoundError:
+        abort(_HTTPStatus.NOT_IMPLEMENTED, "Logs not being saved to file")
+        raise
+
+    clear_logs()
+
+    return "", _HTTPStatus.OK, _create_content_type_header(_ContentType.TEXT)
 
 
 @app.route(f"/")

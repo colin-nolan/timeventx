@@ -1,4 +1,6 @@
 import { useLocation } from "preact-iso";
+import React from "react";
+import { Link } from "@mui/joy";
 
 export function Header() {
     const { url } = useLocation();
@@ -6,12 +8,10 @@ export function Header() {
     return (
         <header>
             <nav>
-                <a href="/" class={url == "/" && "active"}>
-                    Home
-                </a>
-                <a href="/404" class={url == "/404" && "active"}>
-                    404
-                </a>
+                <Link href="/">Home</Link>
+                <Link href="/logs">Logs</Link>
+                <Link href="/stats">Stats</Link>
+                <Link href="/reset">Reset</Link>
             </nav>
         </header>
     );

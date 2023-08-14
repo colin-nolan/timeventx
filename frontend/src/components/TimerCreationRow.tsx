@@ -1,7 +1,7 @@
 import { useState } from "preact/compat";
 import { Button, ButtonGroup, Input } from "@mui/joy";
 import React from "react";
-import ReportIcon from "@mui/icons-material/Report";
+import { Second, Timer } from "../lib/api-client";
 
 export type AddTimer = (timer: Timer, onSuccess: () => void, onFail: () => void) => void;
 
@@ -71,11 +71,9 @@ export function TimerCreationRow(props: { addTimer: AddTimer; timer?: Timer; onC
                     <Button style={{ width: "50%" }} onClick={addTimer} loading={beingCreated} color="success">
                         {props.timer ? "Complete" : "Add"}
                     </Button>
-                    {props.timer ? (
-                        <Button style={{ width: "50%" }} onClick={props.onClose} color="neutral">
-                            Cancel
-                        </Button>
-                    ) : null}
+                    <Button style={{ width: "50%" }} onClick={props.onClose} color="neutral">
+                        Cancel
+                    </Button>
                 </ButtonGroup>
             </td>
         </tr>
