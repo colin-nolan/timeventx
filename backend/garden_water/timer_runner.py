@@ -20,19 +20,19 @@ class TimerRunner:
 
     def __init__(
         self,
-        timers: IdentifiableTimersCollection,
+        timers: ListenableTimersCollection,
         on_action: Callable,
         off_action: Callable,
         current_time_getter: Callable[[], DayTime] = DayTime.now,
     ):
-        self.timers = ListenableTimersCollection(timers)
+        self.timers = timers
         self.on_action = on_action
         self.off_action = off_action
         self.current_time_getter = current_time_getter
         self._on_off_intervals = self._calculate_on_off_intervals()
 
         def on_timers_change(*args) -> None:
-            self._calculate_on_off_intervals()
+            self._on_off_intervals = self._calculate_on_off_intervals()
 
         self.timers.add_listener(Event.TIMER_ADDED, on_timers_change)
         self.timers.add_listener(Event.TIMER_REMOVED, on_timers_change)

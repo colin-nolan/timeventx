@@ -12,6 +12,11 @@ export interface Timer {
     duration: Second;
 }
 
+export interface Interval {
+    startTime: string;
+    endTime: string;
+}
+
 export class ApiClient {
     apiRootUrl: string;
     timers: TimersClient;
@@ -61,22 +66,33 @@ export class ApiClient {
 
     resetDevice(): Promise<void> {
         return new Promise<void>((resolve, reject) => {
-            wrappedFetch("resetting device", `${this.apiRootUrl}/reset`, { method: "POST" })
-                .then(async (response) => {
-                   let online = false;
-                    while (!online) {
-                        try {
-                            const response = await fetch(`${this.apiRootUrl}/healthcheck`);
-                            if (response.ok) {
-                                online = true;
-                            }
+            wrappedFetch("resetting device", `${this.apiRootUrl}/reset`, { method: "POST" }).then(async (response) => {
+                let online = false;
+                while (!online) {
+                    try {
+                        const response = await fetch(`${this.apiRootUrl}/healthcheck`);
+                        if (response.ok) {
+                            online = true;
                         }
-                        catch (error) {
-                            await new Promise(resolve => setTimeout(resolve, 250))
-                        }
+                    } catch (error) {
+                        await new Promise((resolve) => setTimeout(resolve, 250));
                     }
-                    resolve();
+                }
+                resolve();
+            });
+        });
+    }
+
+    getIntervals(): Promise<Interval[]> {
+        return new Promise<Interval[]>((resolve, reject) => {
+            wrappedFetch("get intervals", `${this.apiRootUrl}/intervals`)
+                .then(async (response) => {
+                    const intervals = await response.json();
+                    resolve(intervals);
                 })
+                .catch((error) => {
+                    reject(error);
+                });
         });
     }
 }

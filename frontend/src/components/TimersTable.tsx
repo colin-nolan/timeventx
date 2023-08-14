@@ -8,7 +8,7 @@ import { Add } from "@mui/icons-material";
 import { Timer, TimerId, TimersClient } from "../lib/api-client";
 import { toast } from "sonner";
 
-export function TimersTable(props: { apiRootUrl: string }) {
+export function TimersTable(props: { apiRootUrl: string; onTimersChange: (timers: Timer[]) => void }) {
     const [timers, setTimers] = useState<Timer[]>([]);
     const [creatingTimer, setCreatingTimer] = useState<boolean>(false);
 
@@ -31,6 +31,10 @@ export function TimersTable(props: { apiRootUrl: string }) {
                 toast.error(error);
             });
     }, [timersClient]);
+
+    useEffect(() => {
+        props.onTimersChange(timers);
+    }, [timers, props.onTimersChange]);
 
     function addTimer(timer: Timer, onSuccess: () => void, onFail: () => void) {
         const updatingTimer = Boolean(timer.id);
@@ -80,10 +84,11 @@ export function TimersTable(props: { apiRootUrl: string }) {
             </thead>
             <tbody>
                 {timers
-                    .sort((timer_1, timer_2) => timer_1.id - timer_2.id)
-                    .map((timer) => {
-                        return <TimerRow timer={timer} removeTimer={removeTimer} addTimer={addTimer} />;
-                    })}
+                    // TODO: consider sort by start time instead
+                    .sort((timer1, timer2) => timer1.id - timer2.id)
+                    .map((timer) => (
+                        <TimerRow timer={timer} removeTimer={removeTimer} addTimer={addTimer} />
+                    ))}
                 {creatingTimer ? (
                     <TimerCreationRow addTimer={addTimer} onClose={() => setCreatingTimer(false)} />
                 ) : (

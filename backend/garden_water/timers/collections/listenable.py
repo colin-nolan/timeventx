@@ -30,7 +30,7 @@ class ListenableTimersCollection(IdentifiableTimersCollection):
         :param timers_collection: timers collection to initialise with
         """
         self._timers_collection = timers_collection
-        self.listeners: dict[Event, list[AddListener | RemoveListener]] = defaultdict(list)
+        self.listeners: dict[str, list[AddListener | RemoveListener]] = defaultdict(list)
 
     def __len__(self) -> int:
         return len(self._timers_collection)
@@ -56,5 +56,5 @@ class ListenableTimersCollection(IdentifiableTimersCollection):
                 listener(timer_id)
         return removed
 
-    def add_listener(self, event: Event, listener: AddListener | RemoveListener):
+    def add_listener(self, event: str, listener: AddListener | RemoveListener):
         self.listeners[event].append(listener)

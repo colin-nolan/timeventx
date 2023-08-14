@@ -12,8 +12,8 @@ import { Stats } from "./pages/Stats";
 import { Reset } from "./pages/Reset";
 
 // TODO: configure
-const API_ROOT = "http://192.168.0.156:8080/api/v1";
-// const API_ROOT = "http://0.0.0.0:8080/api/v1";
+// const API_ROOT = "http://192.168.0.156:8080/api/v1";
+const API_ROOT = "http://0.0.0.0:8080/api/v1";
 
 export function App() {
     return (

@@ -15,7 +15,8 @@ from garden_water._logging import (
     clear_logs,
 )
 from garden_water.configuration import Configuration, ConfigurationNotFoundError
-from garden_water.timers.serialisation import deserialise_daytime, timer_to_json
+from garden_water.timers.intervals import TimeInterval
+from garden_water.timers.serialisation import deserialise_daytime, timer_to_json, serialise_daytime
 from garden_water.timers.timers import Timer, IdentifiableTimer, TimerId
 
 
@@ -167,7 +168,21 @@ async def delete_timer(request: Request, timer_id: TimerId):
     )
 
 
-@app.route(f"/api/{API_VERSION}/stats")
+@app.get(f"/api/{API_VERSION}/intervals")
+async def get_intervals(request: Request):
+    return (
+        json.dumps(
+            [
+                {"startTime": serialise_daytime(interval.start_time), "endTime": serialise_daytime(interval.end_time)}
+                for interval in request.app.timer_runner.on_off_intervals
+            ]
+        ),
+        _HTTPStatus.OK,
+        _create_content_type_header(_ContentType.JSON),
+    )
+
+
+@app.get(f"/api/{API_VERSION}/stats")
 async def get_stats(request: Request):
     if not RP2040_DETECTED:
         abort(_HTTPStatus.NOT_IMPLEMENTED, "Not implemented on non-RP2040 devices")
@@ -196,7 +211,7 @@ async def get_reset(request: Request):
     # TODO: schedule the reset to allow a 202 to be returned, instead of dropping the connection
 
 
-@app.route(f"/api/{API_VERSION}/logs")
+@app.get(f"/api/{API_VERSION}/logs")
 async def get_logs(request: Request):
     try:
         log_location = request.app.configuration[Configuration.LOG_FILE_LOCATION]
@@ -214,7 +229,7 @@ async def get_logs(request: Request):
 @app.delete(f"/api/{API_VERSION}/logs")
 async def delete_logs(request: Request):
     try:
-        log_location = request.app.configuration[Configuration.LOG_FILE_LOCATION]
+        request.app.configuration[Configuration.LOG_FILE_LOCATION]
     except ConfigurationNotFoundError:
         abort(_HTTPStatus.NOT_IMPLEMENTED, "Logs not being saved to file")
         raise
@@ -224,13 +239,13 @@ async def delete_logs(request: Request):
     return "", _HTTPStatus.OK, _create_content_type_header(_ContentType.TEXT)
 
 
-@app.route(f"/")
+@app.get(f"/")
 async def get_root(request: Request):
     return serve_ui(request, Path("index.html"))
 
 
 # This route MUST be defined last
-@app.route(f"/<re:.*:path>")
+@app.get(f"/<re:.*:path>")
 async def get(request: Request, path: str):
     return serve_ui(request, Path(path))
 

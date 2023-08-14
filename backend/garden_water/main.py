@@ -12,6 +12,7 @@ from garden_water.configuration import DEFAULT_CONFIGURATION_FILE_NAME, Configur
 from garden_water.timer_runner import TimerRunner
 from garden_water.timers.collections.abc import IdentifiableTimersCollection
 from garden_water.timers.collections.database import TimersDatabase
+from garden_water.timers.collections.listenable import ListenableTimersCollection
 from garden_water.web_server import app
 
 try:
@@ -74,16 +75,17 @@ async def inner_main(configuration: Configuration):
     setup_device(configuration)
 
     logger.info("Setting up database")
-    timers_database = TimersDatabase(configuration[Configuration.TIMERS_DATABASE_LOCATION])
+    timers_database = ListenableTimersCollection(TimersDatabase(configuration[Configuration.TIMERS_DATABASE_LOCATION]))
+
+    # TODO: setup on/off actions
+    timer_runner = TimerRunner(timers_database, lambda: None, lambda: None)
 
     tasks = []
-
-    # logger.info("Starting tweeter")
-    # tasks.append(asyncio.create_task(tweeter(timers_database)))
 
     logger.info("Starting web server")
     app.configuration = configuration
     app.database = timers_database
+    app.timer_runner = timer_runner
     tasks.append(
         asyncio.create_task(
             app.start_server(
@@ -94,20 +96,9 @@ async def inner_main(configuration: Configuration):
     )
 
     logger.info("Awaiting tasks")
-    # FIXME: detect failure of any task?
-    for task in tasks:
-        await task
+    await asyncio.gather(*tasks)
 
     logger.error("Website has shutdown")
-
-
-async def tweeter(timers: IdentifiableTimersCollection):
-    # FIXME: `IdentifiableTimersCollection` need to be iterable
-    timer_runner = TimerRunner(timers, lambda: None, lambda: None)
-
-    while True:
-        logger.info(timer_runner.on_off_intervals)
-        await asyncio.sleep(30)
 
 
 def reset(cooldown_time_in_seconds: int = 10):
