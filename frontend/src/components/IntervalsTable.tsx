@@ -1,17 +1,10 @@
 import { useEffect, useState } from "preact/compat";
 
-import { Button, Table } from "@mui/joy";
+import { Table } from "@mui/joy";
 import React from "react";
-import { TimerRow } from "./TimerRow";
-import { TimerCreationRow } from "./TimerCreationRow";
-import { Add } from "@mui/icons-material";
-import { ApiClient, Interval, Timer, TimerId, TimersClient } from "../lib/api-client";
+import { ApiClient, Interval, Timer } from "../lib/api-client";
 import { toast } from "sonner";
-
-function dayTimeToSeconds(dayTime: string): number {
-    const [hours, minutes, seconds] = dayTime.split(":").map((s) => parseInt(s));
-    return hours * 3600 + minutes * 60 + seconds;
-}
+import { hhmmssToSeconds } from "../lib/time-seralisation";
 
 export function IntervalsTable(props: { apiRootUrl: string; timers?: Timer[] }) {
     const [apiClient, setApiClient] = useState<ApiClient>(new ApiClient(props.apiRootUrl));
@@ -51,7 +44,7 @@ export function IntervalsTable(props: { apiRootUrl: string; timers?: Timer[] }) 
                 {intervals
                     .sort(
                         (interval1, interval2) =>
-                            dayTimeToSeconds(interval1.startTime) - dayTimeToSeconds(interval2.startTime),
+                            hhmmssToSeconds(interval1.startTime) - hhmmssToSeconds(interval2.startTime),
                     )
                     .map((interval) => (
                         <tr>

@@ -5,6 +5,7 @@ import WarningIcon from "@mui/icons-material/Warning";
 import React from "react";
 import { AddTimer, TimerCreationRow } from "./TimerCreationRow";
 import { Timer, TimerId } from "../lib/api-client";
+import { secondsToHoursAndMinutes } from "../lib/time-seralisation";
 
 type RemoveTimer = (timerId: TimerId, onSuccess: () => void, onFail: () => void) => void;
 
@@ -44,7 +45,7 @@ export function TimerRow(props: { timer: Timer; removeTimer: RemoveTimer; addTim
             <td>{props.timer.id}</td>
             <td>{props.timer.name}</td>
             <td>{props.timer.startTime}</td>
-            <td>{props.timer.duration}</td>
+            <td>{secondsToHoursAndMinutes(props.timer.duration)}</td>
             <td>
                 {timerConfirmingRemoval ? (
                     <ButtonGroup spacing={1} buttonFlex={1} variant="solid">

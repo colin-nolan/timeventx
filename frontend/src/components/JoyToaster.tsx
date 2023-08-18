@@ -1,7 +1,7 @@
+// Adapted from:
 // https://codesandbox.io/s/snackbar-joy-ui-feat-sonner-cs244m?from-embed=&file=/JoyToaster.tsx:0-1810
 
 import { Global, css } from "@emotion/react";
-import WarningIcon from "@mui/icons-material/Warning";
 import { useTheme } from "@mui/joy";
 import { Toaster as SonnerToaster, toast as sonnerToast } from "sonner";
 import type { FunctionComponent } from "react";

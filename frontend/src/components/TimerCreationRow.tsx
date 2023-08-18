@@ -2,6 +2,7 @@ import { useState } from "preact/compat";
 import { Button, ButtonGroup, Input } from "@mui/joy";
 import React from "react";
 import { Second, Timer } from "../lib/api-client";
+import { mmssToSeconds, secondsToHoursAndMinutes } from "../lib/time-seralisation";
 
 export type AddTimer = (timer: Timer, onSuccess: () => void, onFail: () => void) => void;
 
@@ -12,7 +13,7 @@ export function TimerCreationRow(props: { addTimer: AddTimer; timer?: Timer; onC
 
     const [beingCreated, setBeingCreated] = useState<boolean>(false);
 
-    function addTimer(event: Event) {
+    function addTimer() {
         setBeingCreated(true);
         props.addTimer(
             {
@@ -37,6 +38,7 @@ export function TimerCreationRow(props: { addTimer: AddTimer; timer?: Timer; onC
         setBeingCreated(false);
     }
 
+    // @ts-ignore
     return (
         <tr>
             <td>
@@ -60,10 +62,9 @@ export function TimerCreationRow(props: { addTimer: AddTimer; timer?: Timer; onC
             </td>
             <td>
                 <Input
-                    type="number"
-                    onChange={(event) => setDuration(Number(event.target.value))}
-                    value={duration}
-                    slotProps={{ input: { min: 1, max: 60 * 60 * 24 } }}
+                    type="time"
+                    onChange={(event) => setDuration(mmssToSeconds(event.target.value))}
+                    value={secondsToHoursAndMinutes(duration)}
                 />
             </td>
             <td>

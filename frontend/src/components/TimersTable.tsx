@@ -78,13 +78,12 @@ export function TimersTable(props: { apiRootUrl: string; onTimersChange: (timers
                     <th>ID</th>
                     <th>Name</th>
                     <th>Start Time</th>
-                    <th>Duration (s)</th>
+                    <th>Duration (mm:ss)</th>
                     <th aria-label="last" style={{ width: "var(--Table-lastColumnWidth)" }} />
                 </tr>
             </thead>
             <tbody>
                 {timers
-                    // TODO: consider sort by start time instead
                     .sort((timer1, timer2) => timer1.id - timer2.id)
                     .map((timer) => (
                         <TimerRow timer={timer} removeTimer={removeTimer} addTimer={addTimer} />
@@ -94,7 +93,7 @@ export function TimersTable(props: { apiRootUrl: string; onTimersChange: (timers
                 ) : (
                     <tr>
                         {/*
-                         * FIXME: CSS
+                         * FIXME: CSS class
                          */}
                         <td colSpan={5} style={{ textAlign: "center" }} class="no-hover-background-change">
                             <Button
