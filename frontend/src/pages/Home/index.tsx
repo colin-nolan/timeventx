@@ -1,10 +1,8 @@
-import "./style.css";
 import React from "react";
 import { TimersTable } from "../../components/TimersTable";
 import { IntervalsTable } from "../../components/IntervalsTable";
-import { useEffect, useState } from "preact/compat";
-import { ApiClient, Interval, Timer } from "../../lib/api-client";
-import { toast } from "sonner";
+import { useState } from "preact/compat";
+import { Timer } from "../../lib/api-client";
 
 export function Home(props: { apiRootUrl: string }) {
     const [timers, setTimers] = useState<Timer[]>([]);

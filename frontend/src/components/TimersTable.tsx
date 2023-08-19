@@ -1,12 +1,12 @@
 import { useEffect, useState } from "preact/compat";
 
 import { Button, Table } from "@mui/joy";
-import React from "react";
 import { TimerRow } from "./TimerRow";
 import { TimerCreationRow } from "./TimerCreationRow";
 import { Add } from "@mui/icons-material";
 import { Timer, TimerId, TimersClient } from "../lib/api-client";
 import { toast } from "sonner";
+import { css } from "@emotion/css";
 
 export function TimersTable(props: { apiRootUrl: string; onTimersChange: (timers: Timer[]) => void }) {
     const [timers, setTimers] = useState<Timer[]>([]);
@@ -95,7 +95,15 @@ export function TimersTable(props: { apiRootUrl: string; onTimersChange: (timers
                         {/*
                          * FIXME: CSS class
                          */}
-                        <td colSpan={5} style={{ textAlign: "center" }} class="no-hover-background-change">
+                        <td
+                            colSpan={5}
+                            className={css`
+                                text-align: center;
+                                &:hover {
+                                    background-color: white;
+                                }
+                            `}
+                        >
                             <Button
                                 startDecorator={<Add />}
                                 style={{ width: "75%" }}

@@ -4,7 +4,6 @@ import { LocationProvider, Router, Route } from "preact-iso";
 import { Header } from "./components/Header";
 import { Home } from "./pages/Home";
 import { NotFound } from "./pages/_404";
-import "./style.css";
 import React from "react";
 import { JoyToaster } from "./components/JoyToaster";
 import { Logs } from "./pages/Logs";
