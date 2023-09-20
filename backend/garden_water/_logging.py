@@ -1,14 +1,11 @@
 import logging
 import sys
 from _thread import LockType, allocate_lock
-from logging import FileHandler, Formatter, Logger, StreamHandler, Handler
+from logging import FileHandler, Formatter, Handler, Logger, StreamHandler
 from pathlib import Path
-from typing import Collection, Optional, Callable, Coroutine, TypeAlias, Union
+from typing import Any, Callable, Collection, Coroutine, Optional, TypeAlias, Union
 
-try:
-    from io import TextIOBase
-except ImportError:
-    from io import IOBase as TextIOBase
+from garden_water._common import RP2040_DETECTED
 
 try:
     import asyncio
@@ -49,7 +46,7 @@ def get_logger(name: str) -> Logger:
 logger = get_logger(__name__)
 
 
-def setup_logging(configuration: "Configuration"):
+def setup_logging(logger_level: int, log_file_location: Optional[str] = None):
     from garden_water.configuration import Configuration, ConfigurationNotFoundError
 
     global _LOGGER_LEVEL, logger, _LOGGER_HANDLERS, _LOG_FILE_LOCATION
@@ -59,19 +56,11 @@ def setup_logging(configuration: "Configuration"):
         return
 
     _LOGGER_HANDLERS = []
-
+    _LOGGER_LEVEL = logger_level
     formatter = Formatter("%(asctime)s\t%(name)s\t%(levelname)s\t%(message)s")
 
-    # Create a FileHandler for logging to a file
-    try:
-        _LOG_FILE_LOCATION = configuration[Configuration.LOG_FILE_LOCATION]
-        use_log_file = True
-    except ConfigurationNotFoundError:
-        use_log_file = False
-
-    _LOGGER_LEVEL = configuration.get_with_standard_default(Configuration.LOG_LEVEL)
-
-    if use_log_file:
+    if log_file_location is not None:
+        _LOG_FILE_LOCATION = log_file_location
         file_handler = LockableHandler(FileHandler(str(_LOG_FILE_LOCATION)), _LOG_FILE_LOCK)
         file_handler.setLevel(_LOGGER_LEVEL)
         file_handler.setFormatter(formatter)
@@ -127,8 +116,17 @@ class LockableHandler(Handler):
         self.wrapped_handler = wrapped_handler
         self._lock = lock
 
-    # FIXME: differences between MicroPython (requires __getattribute__) and CPython (requires __getattr__)
     def __getattr__(self, name: str) -> callable:
+        if RP2040_DETECTED:
+            # MicroPython uses `__getattribute__` instead
+            return super().__getattr__(name)
+        attr = getattr(self.wrapped_handler if name != "emit" else self, name)
+        return attr
+
+    def __getattribute__(self, name: str) -> Any:
+        if not RP2040_DETECTED:
+            # CPython uses __getattr__
+            return super().__getattribute__(__name)
         attr = getattr(self.wrapped_handler if name != "emit" else self, name)
         return attr
 

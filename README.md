@@ -2,6 +2,8 @@
 
 # Garden Water
 
+This system is designed to be ran on a RP2040 microcontroller, specifically a [Raspberry Pi Pico](https://www.raspberrypi.com/products/raspberry-pi-pico/).
+
 ## Setup
 The following must be available on the path:
 - Python 3.11+ (`python3`)

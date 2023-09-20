@@ -1,5 +1,5 @@
 from datetime import timedelta
-from typing import Any, cast, NewType
+from typing import Any, NewType, cast
 
 START_TIME_FORMAT = "%H:%M:%S"
 
@@ -7,8 +7,6 @@ TimerId = NewType("TimerId", int)
 
 
 # Not using `total_ordering` or `dataclass` because they are not available in MicroPython (or installable using `mip`)
-# @total_ordering
-# @dataclass(frozen=True)
 class DayTime:
     @staticmethod
     def now() -> "DayTime":

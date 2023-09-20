@@ -2,15 +2,15 @@ import os
 import sys
 from pathlib import Path
 
-from garden_water._logging import get_logger
-
 # XXX: it is likely this would need to be changed for a RP2040 that is not a Raspberry Pi Pico
 RP2040_DETECTED = sys.platform == "rp2"
 
-logger = get_logger(__name__)
-
 
 def noop_if_not_rp2040(wrappable: callable) -> callable:
+    from garden_water._logging import get_logger
+
+    logger = get_logger(__name__)
+
     def wrapped(*args, **kwargs):
         if not RP2040_DETECTED:
             logger.info(f"Skipping {wrappable.__name__} as not running on a RP2040")

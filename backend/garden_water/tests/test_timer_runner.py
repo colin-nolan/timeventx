@@ -6,6 +6,7 @@ import pytest
 
 from garden_water.tests._common import EXAMPLE_TIMERS, create_example_timer
 from garden_water.timer_runner import NoTimersError, TimerRunner
+from garden_water.timers.collections.listenable import ListenableTimersCollection
 from garden_water.timers.collections.memory import InMemoryIdentifiableTimersCollection
 from garden_water.timers.intervals import TimeInterval
 from garden_water.timers.serialisation import deserialise_daytime
@@ -34,7 +35,7 @@ def _create_timer_runner(
     current_time = MutableItem[DayTime](DayTime(0, 0, 0))
     return (
         TimerRunner(
-            InMemoryIdentifiableTimersCollection(timers),
+            ListenableTimersCollection(InMemoryIdentifiableTimersCollection(timers)),
             lambda: None,
             lambda: None,
             current_time_getter=lambda: current_time.value,

@@ -3,14 +3,13 @@ import os
 import sys
 import time
 from pathlib import Path
-from typing import Optional
 from time import sleep
+from typing import Optional
 
-from garden_water._common import noop_if_not_rp2040, RP2040_DETECTED
+from garden_water._common import RP2040_DETECTED, noop_if_not_rp2040
 from garden_water._logging import get_logger, setup_logging
 from garden_water.configuration import DEFAULT_CONFIGURATION_FILE_NAME, Configuration
 from garden_water.timer_runner import TimerRunner
-from garden_water.timers.collections.abc import IdentifiableTimersCollection
 from garden_water.timers.collections.database import TimersDatabase
 from garden_water.timers.collections.listenable import ListenableTimersCollection
 from garden_water.web_server import app
@@ -116,7 +115,10 @@ def reset(cooldown_time_in_seconds: int = 10):
 def main(configuration_location: Optional[Path] = DEFAULT_CONFIGURATION_FILE_LOCATION):
     configuration = Configuration(configuration_location if configuration_location.exists() else None)
 
-    setup_logging(configuration)
+    setup_logging(
+        configuration.get_with_standard_default(Configuration.LOG_LEVEL),
+        configuration.get(Configuration.LOG_FILE_LOCATION),
+    )
     logger.info("Device turned on")
 
     try:

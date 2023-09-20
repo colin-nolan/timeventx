@@ -1,7 +1,6 @@
 from datetime import timedelta
 from typing import Callable
 
-from garden_water.timers.collections.abc import IdentifiableTimersCollection
 from garden_water.timers.collections.listenable import Event, ListenableTimersCollection
 from garden_water.timers.intervals import TimeInterval, merge_and_sort_intervals
 from garden_water.timers.timers import DayTime
@@ -25,6 +24,9 @@ class TimerRunner:
         off_action: Callable,
         current_time_getter: Callable[[], DayTime] = DayTime.now,
     ):
+        if not issubclass(type(timers), ListenableTimersCollection):
+            raise TypeError(f"Timers must be a ListenableTimersCollection, got: {type(timers)}")
+
         self.timers = timers
         self.on_action = on_action
         self.off_action = off_action

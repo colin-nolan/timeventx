@@ -3,22 +3,21 @@ import json
 import os
 from datetime import timedelta
 from pathlib import Path
-from typing import TypeVar, Type
+from typing import Type, TypeVar
 
+from microdot_asyncio import Microdot, Request, Response, abort, send_file
 from microdot_cors import CORS
-from microdot_asyncio import Microdot, Request, abort, send_file, Response
 
 from garden_water._common import RP2040_DETECTED, resolve_path
-from garden_water._logging import (
-    get_logger,
-    flush_file_logs,
-    clear_logs,
-)
+from garden_water._logging import clear_logs, flush_file_logs, get_logger
 from garden_water.configuration import Configuration, ConfigurationNotFoundError
 from garden_water.timers.intervals import TimeInterval
-from garden_water.timers.serialisation import deserialise_daytime, timer_to_json, serialise_daytime
-from garden_water.timers.timers import Timer, IdentifiableTimer, TimerId
-
+from garden_water.timers.serialisation import (
+    deserialise_daytime,
+    serialise_daytime,
+    timer_to_json,
+)
+from garden_water.timers.timers import IdentifiableTimer, Timer, TimerId
 
 try:
     import asyncio
@@ -131,7 +130,11 @@ def _create_timer_from_request(request: Request) -> Timer | IdentifiableTimer:
         # request.json is only available if content type is set (it assumes a lot of the client!)
         request.content_type = _ContentType.JSON
 
-    serialised_timer = request.json
+    try:
+        serialised_timer = request.json
+    except json.JSONDecodeError:
+        abort(_HTTPStatus.BAD_REQUEST, f"Invalid JSON")
+        raise
     if serialised_timer is None:
         abort(_HTTPStatus.BAD_REQUEST, f"Timer attributes must be set")
         raise

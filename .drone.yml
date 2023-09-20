@@ -9,16 +9,16 @@ steps:
   - name: run Python tests
     image: python:3.11
     commands:
-      - cd backend
       - pip install poetry
+      - cd backend
       - poetry install
       - poetry run pytest
 
   - name: check Python format
     image: python:3.11
     commands:
-      - cd backend
       - pip install poetry
+      - cd backend
       - poetry install
       - poetry run black --check garden_water
       - poetry run isort --check garden_water

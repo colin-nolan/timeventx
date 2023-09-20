@@ -4,7 +4,6 @@ from typing import Callable, Iterator, TypeAlias
 from garden_water.timers.collections.abc import IdentifiableTimersCollection
 from garden_water.timers.timers import IdentifiableTimer, Timer, TimerId
 
-
 AddListener: TypeAlias = Callable[[IdentifiableTimer], None]
 RemoveListener: TypeAlias = Callable[[TimerId], None]
 
