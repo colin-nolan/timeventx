@@ -1,12 +1,11 @@
-import { useEffect, useState } from "preact/compat";
-
-import { Button, Table } from "@mui/joy";
-import { TimerRow } from "./TimerRow";
-import { TimerCreationRow } from "./TimerCreationRow";
+import { css } from "@emotion/react";
 import { Add } from "@mui/icons-material";
-import { Timer, TimerId, TimersClient } from "../lib/api-client";
+import { Button, Table } from "@mui/joy";
+import { useEffect, useState } from "preact/compat";
 import { toast } from "sonner";
-import { css } from "@emotion/css";
+import { Timer, TimerId, TimersClient } from "../lib/api-client";
+import { TimerCreationRow } from "./TimerCreationRow";
+import { TimerRow } from "./TimerRow";
 
 export function TimersTable(props: { apiRootUrl: string; onTimersChange: (timers: Timer[]) => void }) {
     const [timers, setTimers] = useState<Timer[]>([]);

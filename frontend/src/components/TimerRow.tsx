@@ -1,11 +1,10 @@
-import { useState } from "preact/compat";
-import { Button, ButtonGroup } from "@mui/joy";
 import ReportIcon from "@mui/icons-material/Report";
 import WarningIcon from "@mui/icons-material/Warning";
-import React from "react";
-import { AddTimer, TimerCreationRow } from "./TimerCreationRow";
+import { Button, ButtonGroup } from "@mui/joy";
+import { useState } from "preact/compat";
 import { Timer, TimerId } from "../lib/api-client";
 import { secondsToHoursAndMinutes } from "../lib/time-seralisation";
+import { AddTimer, TimerCreationRow } from "./TimerCreationRow";
 
 type RemoveTimer = (timerId: TimerId, onSuccess: () => void, onFail: () => void) => void;
 

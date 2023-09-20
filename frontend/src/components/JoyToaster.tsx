@@ -1,10 +1,12 @@
-// Adapted from:
-// https://codesandbox.io/s/snackbar-joy-ui-feat-sonner-cs244m?from-embed=&file=/JoyToaster.tsx:0-1810
+/**
+ * Based off example: https://codesandbox.io/s/snackbar-joy-ui-feat-sonner-cs244m?from-embed=&file=/JoyToaster.tsx:0-1810
+ * Provided by https://github.com/PupoSDC as an example on https://github.com/mui/material-ui/issues/36603
+ */
 
 import { Global, css } from "@emotion/react";
 import { useTheme } from "@mui/joy";
-import { Toaster as SonnerToaster, toast as sonnerToast } from "sonner";
 import type { FunctionComponent } from "react";
+import { Toaster as SonnerToaster, toast as sonnerToast } from "sonner";
 
 /**
  * A thin wrapper over Sonner Toaster component that applies a joy UI feeling

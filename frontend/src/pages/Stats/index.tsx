@@ -1,10 +1,9 @@
-import React from "react";
-import { useEffect, useState } from "preact/compat";
-import { Button, ButtonGroup, Textarea } from "@mui/joy";
-import { ApiClient } from "../../lib/api-client";
-import { toast } from "sonner";
 import RefreshIcon from "@mui/icons-material/Refresh";
-import WarningIcon from "@mui/icons-material/Warning";
+import { Button, ButtonGroup, Textarea } from "@mui/joy";
+import Typography from "@mui/joy/Typography";
+import { useEffect, useState } from "preact/compat";
+import { toast } from "sonner";
+import { ApiClient } from "../../lib/api-client";
 
 export function Stats(props: { apiRootUrl: string }) {
     const [stats, setStats] = useState<string>("");
@@ -39,7 +38,7 @@ export function Stats(props: { apiRootUrl: string }) {
 
     return (
         <>
-            <h1>Stats</h1>
+            <Typography level="h1">Stats</Typography>
             <ButtonGroup spacing={1} buttonFlex={1} variant="soft">
                 <Button startDecorator={<RefreshIcon />} onClick={refreshStats} loading={refreshingStats}>
                     Reload

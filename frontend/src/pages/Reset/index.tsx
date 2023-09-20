@@ -1,10 +1,9 @@
-import React from "react";
-import { useEffect, useState } from "preact/compat";
-import { Button, ButtonGroup, Textarea } from "@mui/joy";
-import { ApiClient } from "../../lib/api-client";
-import { toast } from "sonner";
-import RefreshIcon from "@mui/icons-material/Refresh";
 import WarningIcon from "@mui/icons-material/Warning";
+import { Button } from "@mui/joy";
+import Typography from "@mui/joy/Typography";
+import { useEffect, useState } from "preact/compat";
+import { toast } from "sonner";
+import { ApiClient } from "../../lib/api-client";
 
 export function Reset(props: { apiRootUrl: string }) {
     const [resetting, setResetting] = useState<boolean>(false);
@@ -23,6 +22,7 @@ export function Reset(props: { apiRootUrl: string }) {
             .resetDevice()
             .then(() => {
                 toast.success("Device reset");
+                O;
             })
             .catch((error) => {
                 toast.error("Failed to reset device");
@@ -34,7 +34,7 @@ export function Reset(props: { apiRootUrl: string }) {
 
     return (
         <>
-            <h1>Reset</h1>
+            <Typography level="h1">Reset</Typography>
             <Button color="danger" startDecorator={<WarningIcon />} onClick={reset} loading={resetting}>
                 Reset Device
             </Button>

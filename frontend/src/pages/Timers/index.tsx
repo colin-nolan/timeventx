@@ -1,18 +1,18 @@
-import React from "react";
-import { TimersTable } from "../../components/TimersTable";
-import { IntervalsTable } from "../../components/IntervalsTable";
+import Typography from "@mui/joy/Typography";
 import { useState } from "preact/compat";
+import { IntervalsTable } from "../../components/IntervalsTable";
+import { TimersTable } from "../../components/TimersTable";
 import { Timer } from "../../lib/api-client";
 
-export function Home(props: { apiRootUrl: string }) {
+export function Timers(props: { apiRootUrl: string }) {
     const [timers, setTimers] = useState<Timer[]>([]);
 
     return (
         <>
-            <h1>Timers</h1>
+            <Typography level="h1">Timers</Typography>
             <TimersTable apiRootUrl={props.apiRootUrl} onTimersChange={setTimers} />
 
-            <h1>Intervals</h1>
+            <Typography level="h1">Intervals</Typography>
             <IntervalsTable apiRootUrl={props.apiRootUrl} timers={timers} />
         </>
     );

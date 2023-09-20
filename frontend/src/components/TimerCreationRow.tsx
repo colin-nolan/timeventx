@@ -1,6 +1,5 @@
-import { useState } from "preact/compat";
 import { Button, ButtonGroup, Input } from "@mui/joy";
-import React from "react";
+import { useState } from "preact/compat";
 import { Second, Timer } from "../lib/api-client";
 import { mmssToSeconds, secondsToHoursAndMinutes } from "../lib/time-seralisation";
 

@@ -20,6 +20,7 @@ export interface Interval {
 export class ApiClient {
     apiRootUrl: string;
     timers: TimersClient;
+    O;
 
     constructor(apiRootUrl: string) {
         this.apiRootUrl = apiRootUrl;
