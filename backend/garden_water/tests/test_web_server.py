@@ -1,6 +1,5 @@
 import logging
 from copy import deepcopy
-from pathlib import Path
 from socket import socket
 
 import pytest

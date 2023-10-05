@@ -2,12 +2,10 @@
 
 kind: pipeline
 name: backend
-platform:
-  arch: arm64
 
 steps:
   - name: run Python tests
-    image: python:3.11
+    image: python:3.12
     commands:
       - pip install poetry
       - cd backend
@@ -15,7 +13,7 @@ steps:
       - poetry run pytest
 
   - name: check Python format
-    image: python:3.11
+    image: python:3.12
     commands:
       - pip install poetry
       - cd backend
@@ -27,5 +25,10 @@ steps:
 
 kind: pipeline
 name: frontend
-platform:
-  arch: arm64
+
+steps:
+  - name: build frontend
+    image: node:20-alpine
+    commands:
+      - cd frontend
+      - yarn build
