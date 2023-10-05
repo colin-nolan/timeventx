@@ -31,4 +31,5 @@ steps:
     image: node:20-alpine
     commands:
       - cd frontend
+      - yarn install
       - yarn build
