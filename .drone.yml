@@ -10,6 +10,7 @@ steps:
   - name: run tests
     image: python:3.11-alpine
     commands:
+      - apk add --no-cache gcc libffi-dev musl-dev
       - pip install poetry
       - apk add --no-cache bash make
       - cd backend && poetry install --no-root --without=dist,deploy && cd -
@@ -19,8 +20,8 @@ steps:
   - name: check format
     image: python:3-alpine
     commands:
+      - apk add --no-cache bash gcc libffi-dev make musl-dev
       - pip install poetry
-      - apk add --no-cache bash make
       - cd backend && poetry install --no-root --only=dev && cd -
       - make format-backend CHECK=true
     depends_on: []
