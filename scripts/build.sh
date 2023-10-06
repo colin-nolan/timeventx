@@ -15,10 +15,10 @@ rm -rf "${build_directory}"
 mkdir -p "${build_directory}"
 
 >&2 echo "Building backend..."
-"${script_directory}/build-backend.sh" "${build_directory}" "${architecture}"
+"${script_directory}/build-backend.sh" "${architecture}" "${build_directory}"
 
 >&2 echo "Building frontend..."
-"${script_directory}/build-frontend.sh" "${build_directory}" "${backend_api_root}"
+"${script_directory}/build-frontend.sh" "${backend_api_root}" "${build_directory}"
 
 pushd "${dist_directory}" > /dev/null
 

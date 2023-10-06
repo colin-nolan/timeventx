@@ -1,19 +1,20 @@
 #!/usr/bin/env bash
 
-# Not setting -f as deliberately globbing
+# Note:  deliberately not setting -f as globbing
 set -eu -o pipefail
-
-build_directory="$1"
-architecture="${2:-any}"
 
 script_directory="$(cd "$(dirname "${BASH_SOURCE[0]}")" > /dev/null 2>&1 && pwd)"
 project_directory="$(cd "${script_directory}/.." > /dev/null 2>&1 && pwd)"
+
+architecture="${1:-any}"
+build_directory="${2:-"${project_directory}/build/backend"}"
+
 backend_directory="${project_directory}/backend"
 dist_directory="${build_directory}/dist"
 packaged_libs_directory="${dist_directory}/libs/packaged"
 stdlib_libs_directory="${dist_directory}/libs/stdlib"
 
-mkdir -p "${packaged_libs_directory}" "${stdlib_libs_directory}"
+mkdir -p "${build_directory}" "${packaged_libs_directory}" "${stdlib_libs_directory}"
 
 pushd "${backend_directory}" > /dev/null
 

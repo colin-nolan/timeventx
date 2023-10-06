@@ -16,7 +16,8 @@ LIBRARIES_TO_INSTALL = (
     "collections-defaultdict",
     "contextlib",
     (
-        # PR against micropython-lib to add `configparser` module
+        # Fork of PR against micropython-lib to add `configparser` module:
+        # https://github.com/micropython/micropython-lib/pull/265
         "github:colin-nolan/micropython-lib/configparser/ConfigParser.py",
         dict(version="mika64-master"),
         lambda source, mips_kwargs: os.rename(

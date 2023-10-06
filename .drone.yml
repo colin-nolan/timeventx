@@ -8,21 +8,34 @@ platform:
 
 steps:
   - name: run Python tests
+    # Note: not using alpine as `mpy-cross` is not supported on that platform
     image: python:3.12
     commands:
-      - pip install poetry
-      - cd backend
-      - poetry install
-      - poetry run pytest
+      - &common_python_setup |-
+        pip install poetry
+        cd backend
+        poetry install --no-root
+        cd -
+      - make test-backend
 
   - name: check Python format
     image: python:3.12
     commands:
-      - pip install poetry
-      - cd backend
-      - poetry install
-      - poetry run black --check garden_water
-      - poetry run isort --check garden_water
+      - *common_python_setup
+      - make format-backend CHECK=true
+
+  - name: check build
+    image: python:3.12
+    commands:
+      - *common_python_setup
+      - |-
+          MICROPYTHON_VERSION=1.21.0
+          curl -sL "https://github.com/micropython/micropython/releases/download/v$${MICROPYTHON_VERSION}/micropython-$${MICROPYTHON_VERSION}.tar.xz" | tar -xJ -C /usr/local/src
+          cd "/usr/local/src/micropython-$${MICROPYTHON_VERSION}/ports/unix"
+          make
+          make install
+          cd -
+      - GARDEN_WATER_WIFI_SSID=example-ssid GARDEN_WATER_WIFI_PASSWORD=example-password make build-backend
 
 ---
 
@@ -33,9 +46,22 @@ platform:
   arch: arm64
 
 steps:
-  - name: build frontend
+  - name: check build
     image: node:20-alpine
     commands:
-      - cd frontend
-      - yarn install
-      - yarn build
+      - apk add --no-cache bash make
+      - make build-frontend API_SERVER_LOCATION=http://localhost:8000
+
+---
+
+kind: pipeline
+name: general
+type: docker
+
+steps:
+  - name: check markdown
+    image: python:3-alpine
+    commands:
+      - apk add --no-cache bash make
+      - pip install mdformat-gfm
+      - make format-markdown CHECK=true
