@@ -21,7 +21,6 @@ device="${2:-/dev/ttyACM0}"
 script_directory="$(cd "$(dirname "${BASH_SOURCE[0]}")" > /dev/null 2>&1 && pwd)"
 project_directory="$(cd "${script_directory}/.." > /dev/null 2>&1 && pwd)"
 build_directory="${project_directory}/build/${architecture}"
-
 dist_directory="${build_directory}/dist"
 
 

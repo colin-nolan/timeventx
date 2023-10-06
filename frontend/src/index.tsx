@@ -9,10 +9,7 @@ import { Logs } from "./pages/Logs";
 import { Reset } from "./pages/Reset";
 import { Stats } from "./pages/Stats";
 import { NotFound } from "./pages/_404";
-
-// TODO: configure
-// const API_ROOT = "http://192.168.0.156:8080/api/v1";
-const API_ROOT = "http://0.0.0.0:8080/api/v1";
+import { BACKEND_API_ROOT } from "./config";
 
 export function App() {
     return (
@@ -27,10 +24,10 @@ export function App() {
 
                     <main style={{ margin: "20px 20px 0 20px" }}>
                         <Router>
-                            <Route default path="/" component={Timers} apiRootUrl={API_ROOT} />
-                            <Route path="/logs" component={Logs} apiRootUrl={API_ROOT} />
-                            <Route path="/stats" component={Stats} apiRootUrl={API_ROOT} />
-                            <Route path="/reset" component={Reset} apiRootUrl={API_ROOT} />
+                            <Route default path="/" component={Timers} apiRootUrl={BACKEND_API_ROOT} />
+                            <Route path="/logs" component={Logs} apiRootUrl={BACKEND_API_ROOT} />
+                            <Route path="/stats" component={Stats} apiRootUrl={BACKEND_API_ROOT} />
+                            <Route path="/reset" component={Reset} apiRootUrl={BACKEND_API_ROOT} />
                             <Route default component={NotFound} />
                         </Router>
                     </main>
