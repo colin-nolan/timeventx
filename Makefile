@@ -18,15 +18,20 @@ build: .must_have_api_server_location
 	@# XXX: it would be more idomatic if build was composed of `build-frontend` and `build-backend`
 	./scripts/build.sh $(API_SERVER_LOCATION) $(ARCH)
 
-build-frontend: .must_have_api_server_location
-	./scripts/build-frontend.sh $(API_SERVER_LOCATION)
-
 build-backend:
 	./scripts/build-backend.sh $(ARCH)
 
+build-frontend: .must_have_api_server_location
+	./scripts/build-frontend.sh $(API_SERVER_LOCATION)
+
 fmt: format
 
-format: format-backend	
+format: format-frontend format-backend	
+
+format-frontend:
+	prettier_check_flag=$(if $(filter true,$(CHECK)),--check,--write); \
+	cd frontend; \
+	yarn run prettier $${prettier_check_flag} .
 
 format-backend:
 	poetry_check_flag=$(if $(filter true,$(CHECK)),--check,); \
