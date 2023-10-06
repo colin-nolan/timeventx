@@ -7,27 +7,29 @@ platform:
   arch: arm64
 
 steps:
-  - name: run Python tests
-    # Note: not using alpine as `mpy-cross` is not supported on that platform
-    image: python:3.12
+  - name: run tests
+    image: python:3.11-alpine
     commands:
-      - &common_python_setup |-
-        pip install poetry
-        cd backend
-        poetry install --no-root
-        cd -
+      - pip install poetry
+      - apk add --no-cache bash make
+      - cd backend && poetry install --no-root --without=dist,deploy && cd -
       - make test-backend
 
-  - name: check Python format
-    image: python:3.12
+  - name: check format
+    image: python:3-alpine
     commands:
-      - *common_python_setup
+      - pip install poetry
+      - apk add --no-cache bash make
+      - cd backend && poetry install --no-root --only=dev && cd -
       - make format-backend CHECK=true
 
   - name: check build
-    image: python:3.12
+    # Note: not using alpine as `mpy-cross` is not supported on that platform
+    image: python:3.11
     commands:
-      - *common_python_setup
+      - pip install poetry
+      - git config --global --add safe.directory "$${PWD}"
+      - cd backend && poetry install --no-root --only=dist && cd -
       - |-
           MICROPYTHON_VERSION=1.21.0
           curl -sL "https://github.com/micropython/micropython/releases/download/v$${MICROPYTHON_VERSION}/micropython-$${MICROPYTHON_VERSION}.tar.xz" | tar -xJ -C /usr/local/src

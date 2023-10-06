@@ -31,10 +31,6 @@ rm "${packaged_libs_directory}/microdot_test_client.py"
 >&2 echo "Downloading mip requirements..."
 micropython mips-requirements.py "${stdlib_libs_directory}"
 
-# FIXME: sort
->&2 echo "Applying custom MicroPython module patches..."
-find "${backend_directory}/micropython" -type f -name "*.diff" -exec patch -d "${stdlib_libs_directory}" -i {} \;
-
 project_name="$(poetry version | cut -d ' ' -f 1)"
 python_module_name="${project_name/-/_}"
 >&2 echo "Creating entrypoint..."

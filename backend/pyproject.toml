@@ -16,9 +16,13 @@ pytest = "^7.4.0"
 requests = "^2.31.0"
 black = "^23.3.0"
 isort = "^5.12.0"
-mpremote = "^1.20.0"
-mpy-cross = "^1.20.0"
 pytest-asyncio = "^0.21.1"
+
+[tool.poetry.group.dist.dependencies]
+mpy-cross = "^1.20.0"
+
+[tool.poetry.group.deploy.dependencies]
+mpremote = "^1.20.0"
 
 [build-system]
 requires = ["poetry-core"]
