@@ -59,7 +59,7 @@ steps:
   - name: publish-coverage
     image: alpine
     commands:
-      - build/third-party/codecov
+      - build/third-party/codecov -f backend/.coverage
     environment:
       CODECOV_TOKEN:
         from_secret: codecov_token
