@@ -1,5 +1,6 @@
 from pathlib import Path
 from tempfile import TemporaryDirectory
+from garden_water.timers.collections.listenable import ListenableTimersCollection
 
 import pytest
 
@@ -21,12 +22,16 @@ def timers_database() -> TimersDatabase:
         yield TimersDatabase(Path(tmpdir) / "test.db")
 
 
-def in_memory_collection() -> InMemoryIdentifiableTimersCollection:
+def in_memory_timers_collection() -> InMemoryIdentifiableTimersCollection:
     yield InMemoryIdentifiableTimersCollection()
 
 
-@pytest.fixture(params=[timers_database, in_memory_collection])
-def timers_collection(request):
+def listenable_timers_collection() -> ListenableTimersCollection:
+    yield ListenableTimersCollection(InMemoryIdentifiableTimersCollection())
+
+
+@pytest.fixture(params=[timers_database, in_memory_timers_collection, listenable_timers_collection])
+def timers_collection(request: pytest.FixtureRequest):
     yield from request.param()
 
 
