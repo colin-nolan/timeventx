@@ -1,6 +1,5 @@
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from garden_water.timers.collections.listenable import ListenableTimersCollection
 
 import pytest
 
@@ -12,6 +11,7 @@ from garden_water.tests._common import (
 )
 from garden_water.timers.collections.abc import IdentifiableTimersCollection
 from garden_water.timers.collections.database import TimersDatabase
+from garden_water.timers.collections.listenable import ListenableTimersCollection
 from garden_water.timers.collections.memory import InMemoryIdentifiableTimersCollection
 from garden_water.timers.timers import IdentifiableTimer, TimerId
 

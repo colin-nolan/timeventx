@@ -7,7 +7,7 @@ platform:
   arch: arm64
 
 steps:
-  - name: run tests
+  - name: run-tests
     image: python:3.11-alpine
     commands:
       - apk add --no-cache gcc libffi-dev musl-dev
@@ -17,7 +17,7 @@ steps:
       - make test-backend
     depends_on: []
 
-  - name: check format
+  - name: check-format
     image: python:3-alpine
     commands:
       - apk add --no-cache bash gcc libffi-dev make musl-dev
@@ -26,7 +26,7 @@ steps:
       - make format-backend CHECK=true
     depends_on: []
 
-  - name: check build
+  - name: check-build
     # Note: not using alpine as `mpy-cross` is not supported on that platform
     image: python:3.11
     commands:
@@ -42,6 +42,30 @@ steps:
           cd -
       - GARDEN_WATER_WIFI_SSID=example-ssid GARDEN_WATER_WIFI_PASSWORD=example-password make build-backend
     depends_on: []
+
+  - name: build-codecov
+    image: node:16-alpine
+    commands:
+      - |-
+          apk add --update-cache curl git
+          repository_directory="$${PWD}"
+          git clone --depth=1 --branch=main https://github.com/codecov/uploader.git /tmp/uploader
+          cd /tmp/uploader
+          npm install
+          npm run build
+          npx pkg . --targets alpine --output "$${repository_directory}/build/third-party/codecov"
+    depends_on: []
+
+  - name: publish-coverage
+    image: alpine
+    commands:
+      - build/third-party/codecov -f backend/.coverage
+    environment:
+      CODECOV_TOKEN:
+        from_secret: codecov_token
+    depends_on:
+      - build-codecov
+      - run-tests
 
 ---
 
