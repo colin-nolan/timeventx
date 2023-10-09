@@ -35,6 +35,11 @@ def timers_collection(request: pytest.FixtureRequest):
     yield from request.param()
 
 
+@pytest.fixture
+def listenable() -> ListenableTimersCollection:
+    return listenable_timers_collection()
+
+
 class TestIdentifiableTimersCollection:
     def test_len_when_zero(self, timers_collection: IdentifiableTimersCollection):
         assert len(timers_collection) == 0
@@ -98,3 +103,9 @@ class TestIdentifiableTimersCollection:
 
     def test_contains_when_not_exists(self, timers_collection: IdentifiableTimersCollection):
         assert TimerId(123) not in timers_collection
+
+
+class TestListenableTimersCollection:
+    def test_add_listener(self, listenable: ListenableTimersCollection):
+        pass
+        # listenable.add_listener()

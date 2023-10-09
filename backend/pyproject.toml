@@ -18,6 +18,7 @@ black = "^23.3.0"
 isort = "^5.12.0"
 pytest-asyncio = "^0.21.1"
 pytest-cov = "^4.1.0"
+coverage = "^7.3.2"
 
 [tool.poetry.group.dist.dependencies]
 mpy-cross = "^1.20.0"
@@ -43,4 +44,5 @@ profile = "black"
 [tool.coverage.run]
 omit = [
     "garden_water/tests/*",
+    "*.pyc",
 ]
