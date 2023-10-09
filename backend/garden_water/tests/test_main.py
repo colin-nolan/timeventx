@@ -48,9 +48,8 @@ def service(tmp_path: Path) -> ServiceLocation:
     service_process = Process(target=main, args=(config_location,))
     service_process.start()
     url = f"http://localhost:{port}"
-    print(url)
 
-    while True:
+    while service_process.is_alive():
         try:
             requests.head(url)
             break
