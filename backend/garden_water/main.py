@@ -7,7 +7,7 @@ from time import sleep
 from typing import Optional
 
 from garden_water._common import RP2040_DETECTED, noop_if_not_rp2040
-from garden_water._logging import get_logger, setup_logging
+from garden_water._logging import flush_file_logs, get_logger, setup_logging
 from garden_water.configuration import DEFAULT_CONFIGURATION_FILE_NAME, Configuration
 from garden_water.timer_runner import TimerRunner
 from garden_water.timers.collections.database import TimersDatabase
@@ -90,6 +90,8 @@ async def inner_main(configuration: Configuration):
             app.start_server(
                 host=configuration.get_with_standard_default(Configuration.BACKEND_HOST),
                 port=configuration.get_with_standard_default(Configuration.BACKEND_PORT),
+                # TODO: debug
+                debug=True,
             )
         )
     )

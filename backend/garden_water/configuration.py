@@ -1,3 +1,4 @@
+import json
 import logging
 import os
 from configparser import ConfigParser
@@ -22,13 +23,13 @@ class ConfigurationDescription:
         self,
         environment_variable_name: str,
         ini_name: str,
-        parser: callable,
+        deserialiser: callable,
         default: Any = None,
         allow_none: bool = True,
     ):
         self.environment_variable_name = environment_variable_name
         self.ini_name = ini_name
-        self.parser = parser
+        self.deserialiser = deserialiser
         self.default = default
         self.allow_none = allow_none
 
@@ -78,7 +79,10 @@ class Configuration:
         f"{ENVIRONMENT_VARIABLE_PREFIX}_BACKEND_INTERFACE", "backend.interface", str, default="0.0.0.0"
     )
     RESTART_ON_ERROR = ConfigurationDescription(
-        f"{ENVIRONMENT_VARIABLE_PREFIX}_RESTART_ON_ERROR", "restart.on_error", bool, default=True
+        f"{ENVIRONMENT_VARIABLE_PREFIX}_RESTART_ON_ERROR",
+        "restart.on_error",
+        lambda value: True if value.lower() == "true" else False,
+        default=True,
     )
 
     @staticmethod
@@ -136,7 +140,6 @@ class Configuration:
                 + f"{configuration_description.environment_variable_name}"
             )
             value = os.environ[configuration_description.environment_variable_name]
-            logger.debug(f"{configuration_description.name} read from the environment: {value}")
         except (KeyError, AttributeError, OSError):
             try:
                 if self._config_file_location is None:
@@ -151,11 +154,10 @@ class Configuration:
                 value = self._configuration_parser.get(
                     configuration_description.get_ini_section(), configuration_description.get_ini_option()
                 )
-                logger.debug(f"{configuration_description.name} read from file: {value}")
             except Exception as e:
                 raise ConfigurationNotFoundError(configuration_description) from e
 
-        parsed_value = configuration_description.parser(value)
+        parsed_value = configuration_description.deserialiser(value)
         logger.debug(f'Got value for "{configuration_description.ini_name}": {parsed_value}')
         return parsed_value
 

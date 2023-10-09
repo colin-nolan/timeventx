@@ -1,3 +1,4 @@
+import logging
 import os
 import socket
 from multiprocessing import Process
@@ -16,9 +17,9 @@ ServiceLocation: TypeAlias = str
 
 
 def _get_free_port() -> int:
-    sock = socket.socket()
-    sock.bind(("", 0))
-    return sock.getsockname()[1]
+    with socket.socket() as sock:
+        sock.bind(("", 0))
+        return sock.getsockname()[1]
 
 
 @pytest.fixture()
@@ -31,16 +32,17 @@ def service(tmp_path: Path) -> ServiceLocation:
     with patch.dict(
         os.environ,
         {
-            key.environment_variable_name: value
+            key.environment_variable_name: str(value)
             for key, value in {
                 Configuration.WIFI_SSID: "example-ssid",
                 Configuration.WIFI_PASSWORD: "example-password",
-                Configuration.FRONTEND_ROOT_DIRECTORY: str(frontend_path),
-                Configuration.TIMERS_DATABASE_LOCATION: str(tmp_path / "timers.sqlite"),
-                Configuration.LOG_FILE_LOCATION: str(tmp_path / "log.txt"),
-                Configuration.BACKEND_PORT: str(port),
-                Configuration.BACKEND_HOST: "localhost",
+                Configuration.FRONTEND_ROOT_DIRECTORY: frontend_path,
+                Configuration.TIMERS_DATABASE_LOCATION: tmp_path / "timers.sqlite",
+                Configuration.LOG_FILE_LOCATION: tmp_path / "log.txt",
+                Configuration.BACKEND_PORT: port,
+                Configuration.BACKEND_HOST: "0.0.0.0",
                 Configuration.RESTART_ON_ERROR: False,
+                Configuration.LOG_LEVEL: logging.DEBUG,
             }.items()
         },
     ):
@@ -57,6 +59,11 @@ def service(tmp_path: Path) -> ServiceLocation:
         except requests.exceptions.ConnectionError:
             pass
         sleep(0.1)
+
+    if not service_process.is_alive():
+        service_process.join()
+        raise Exception(open(Path(tmp_path, "log.txt"), "r").read())
+        raise RuntimeError(f"Service exited with code {service_process.exitcode}")
 
     yield url
 
