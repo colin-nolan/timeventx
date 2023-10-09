@@ -47,7 +47,7 @@ test: test-backend
 
 test-backend:
 	cd backend; \
-	poetry run pytest --cov=garden_water; \
+	coverage run --concurrency=multiprocessing -m pytest; \
 	coverage combine; \
 	coverage xml
 

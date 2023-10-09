@@ -58,7 +58,7 @@ steps:
   - name: publish-coverage
     image: alpine
     commands:
-      - build/third-party/codecov
+      - build/third-party/codecov -F backend
     environment:
       CODECOV_TOKEN:
         from_secret: codecov_token
@@ -75,7 +75,7 @@ platform:
   arch: arm64
 
 steps:
-  - name: check build
+  - name: check-build
     image: node:20-alpine
     commands:
       - apk add --no-cache bash make
@@ -83,7 +83,7 @@ steps:
       - make build-frontend API_SERVER_LOCATION=http://localhost:8000
     depends_on: []
 
-  - name: check format
+  - name: check-format
     image: node:20-alpine
     commands:
       - apk add --no-cache bash make
@@ -97,7 +97,7 @@ name: general
 type: docker
 
 steps:
-  - name: check markdown
+  - name: check-markdown
     image: python:3-alpine
     commands:
       - apk add --no-cache bash make
