@@ -119,7 +119,6 @@ class TestListenableTimersCollection:
         listener.assert_called_once()
         assert listener.call_args.args[0].name == EXAMPLE_TIMER_1.name
 
-
     def test_timer_remove_listener(self, listenable: ListenableTimersCollection):
         listener = MagicMock()
         other_listener = MagicMock()

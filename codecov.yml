@@ -1,4 +1,4 @@
 flags:
-  backend:  
+  backend:
     paths:
-      - backend
+      - backend/

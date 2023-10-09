@@ -24,7 +24,7 @@ class InMemoryIdentifiableTimersCollection(IdentifiableTimersCollection):
             self._timers[timer.id] = timer
             return timer
         else:
-            timer_id = self._get_timer_id()
+            timer_id = self.create_timer_id()
             identifiable_timer = IdentifiableTimer.from_timer(timer, timer_id)
             return self.add(identifiable_timer)
 
@@ -35,9 +35,11 @@ class InMemoryIdentifiableTimersCollection(IdentifiableTimersCollection):
         except KeyError:
             return False
 
-    def _get_timer_id(self) -> TimerId:
+    def create_timer_id(self) -> TimerId:
         timer_ids = sorted(timer.id for timer in self)
+        if len(timer_ids) == 0:
+            return TimerId(0)
         for i in range(len(timer_ids)):
             if timer_ids[i] != i:
                 return TimerId(i)
-        return TimerId(0)
+        return TimerId(i + 1)
