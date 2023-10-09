@@ -133,6 +133,7 @@ class Configuration:
                 + f"{configuration_description.environment_variable_name}"
             )
             value = os.environ[configuration_description.environment_variable_name]
+            logger.debug(f"{configuration_description.name} read from the environment: {value}")
         except (KeyError, AttributeError, OSError):
             try:
                 if self._config_file_location is None:
@@ -147,6 +148,7 @@ class Configuration:
                 value = self._configuration_parser.get(
                     configuration_description.get_ini_section(), configuration_description.get_ini_option()
                 )
+                logger.debug(f"{configuration_description.name} read from file: {value}")
             except Exception as e:
                 raise ConfigurationNotFoundError(configuration_description) from e
 
