@@ -40,3 +40,4 @@ class InMemoryIdentifiableTimersCollection(IdentifiableTimersCollection):
         for i in range(len(timer_ids)):
             if timer_ids[i] != i:
                 return TimerId(i)
+        return TimerId(0)

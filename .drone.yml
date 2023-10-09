@@ -11,7 +11,7 @@ steps:
     image: python:3.11-alpine
     commands:
       - apk add --no-cache bash gcc libffi-dev make musl-dev
-      - pip install poetry && poetry config virtualenvs.create false
+      - &poetryInstall pip install poetry && poetry config virtualenvs.create false
       - cd backend && poetry install --no-root --without=dist,deploy && cd -
       - make test-backend
     depends_on: []
@@ -20,7 +20,7 @@ steps:
     image: python:3-alpine
     commands:
       - apk add --no-cache bash gcc libffi-dev make musl-dev
-      - pip install poetry && poetry config virtualenvs.create false
+      - *poetryInstall
       - cd backend && poetry install --no-root --only=dev && cd -
       - make format-backend CHECK=true
     depends_on: []
@@ -29,7 +29,7 @@ steps:
     # Note: not using alpine as `mpy-cross` is not supported on that platform
     image: python:3.11
     commands:
-      - pip install poetry && poetry config virtualenvs.create false
+      - *poetryInstall
       - git config --global --add safe.directory "$${PWD}"
       - cd backend && poetry install --no-root --only=dist && cd -
       - |-

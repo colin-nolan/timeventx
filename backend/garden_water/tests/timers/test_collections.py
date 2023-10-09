@@ -1,5 +1,6 @@
 from pathlib import Path
 from tempfile import TemporaryDirectory
+from unittest.mock import MagicMock
 
 import pytest
 
@@ -11,7 +12,7 @@ from garden_water.tests._common import (
 )
 from garden_water.timers.collections.abc import IdentifiableTimersCollection
 from garden_water.timers.collections.database import TimersDatabase
-from garden_water.timers.collections.listenable import ListenableTimersCollection
+from garden_water.timers.collections.listenable import Event, ListenableTimersCollection
 from garden_water.timers.collections.memory import InMemoryIdentifiableTimersCollection
 from garden_water.timers.timers import IdentifiableTimer, TimerId
 
@@ -37,7 +38,7 @@ def timers_collection(request: pytest.FixtureRequest):
 
 @pytest.fixture
 def listenable() -> ListenableTimersCollection:
-    return listenable_timers_collection()
+    return next(listenable_timers_collection())
 
 
 class TestIdentifiableTimersCollection:
@@ -106,6 +107,28 @@ class TestIdentifiableTimersCollection:
 
 
 class TestListenableTimersCollection:
-    def test_add_listener(self, listenable: ListenableTimersCollection):
-        pass
-        # listenable.add_listener()
+    def test_timer_add_listener(self, listenable: ListenableTimersCollection):
+        listener = MagicMock()
+        other_listener = MagicMock()
+
+        listenable.add_listener(Event.TIMER_ADDED, listener)
+        listenable.add_listener(Event.TIMER_REMOVED, other_listener)
+        listenable.add(EXAMPLE_TIMER_1)
+
+        other_listener.assert_not_called()
+        listener.assert_called_once()
+        assert listener.call_args.args[0].name == EXAMPLE_TIMER_1.name
+
+
+    def test_timer_remove_listener(self, listenable: ListenableTimersCollection):
+        listener = MagicMock()
+        other_listener = MagicMock()
+
+        listenable.add_listener(Event.TIMER_REMOVED, listener)
+        added_timer = listenable.add(EXAMPLE_TIMER_1)
+        listenable.add_listener(Event.TIMER_ADDED, other_listener)
+        listenable.remove(added_timer.id)
+
+        other_listener.assert_not_called()
+        listener.assert_called_once()
+        assert listener.call_args.args[0] == added_timer.id

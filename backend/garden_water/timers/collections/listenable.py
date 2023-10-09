@@ -1,17 +1,18 @@
 from collections import defaultdict
-from typing import Callable, Iterator, TypeAlias
+from typing import Callable, Iterator, TypeAlias, Literal
 
 from garden_water.timers.collections.abc import IdentifiableTimersCollection
 from garden_water.timers.timers import IdentifiableTimer, Timer, TimerId
 
 AddListener: TypeAlias = Callable[[IdentifiableTimer], None]
 RemoveListener: TypeAlias = Callable[[TimerId], None]
+EventEnum: TypeAlias = str
 
 
 # Not using enum because it is not available in MicroPython (or installable using `mip`)
 class Event:
-    TIMER_ADDED = "added"
-    TIMER_REMOVED = "removed"
+    TIMER_ADDED: EventEnum = "added"
+    TIMER_REMOVED: EventEnum = "removed"
 
 
 class ListenableTimersCollection(IdentifiableTimersCollection):
@@ -55,5 +56,5 @@ class ListenableTimersCollection(IdentifiableTimersCollection):
                 listener(timer_id)
         return removed
 
-    def add_listener(self, event: str, listener: AddListener | RemoveListener):
+    def add_listener(self, event: EventEnum, listener: AddListener | RemoveListener):
         self.listeners[event].append(listener)
