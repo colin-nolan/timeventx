@@ -40,6 +40,7 @@ def service(tmp_path: Path) -> ServiceLocation:
                 Configuration.LOG_FILE_LOCATION: str(tmp_path / "log.txt"),
                 Configuration.BACKEND_PORT: str(port),
                 Configuration.BACKEND_HOST: "localhost",
+                Configuration.RESTART_ON_ERROR: False,
             }.items()
         },
     ):

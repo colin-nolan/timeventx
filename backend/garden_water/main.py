@@ -128,7 +128,10 @@ def main(configuration_location: Optional[Path] = DEFAULT_CONFIGURATION_FILE_LOC
         sys.exit(0)
     except Exception as e:
         logger.exception(e)
-        reset()
+        if configuration.get_with_standard_default(Configuration.RESTART_ON_ERROR):
+            reset()
+        else:
+            raise
 
 
 if __name__ == "__main__":

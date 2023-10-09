@@ -77,6 +77,9 @@ class Configuration:
     BACKEND_HOST = ConfigurationDescription(
         f"{ENVIRONMENT_VARIABLE_PREFIX}_BACKEND_INTERFACE", "backend.interface", str, default="0.0.0.0"
     )
+    RESTART_ON_ERROR = ConfigurationDescription(
+        f"{ENVIRONMENT_VARIABLE_PREFIX}_RESTART_ON_ERROR", "restart.on_error", bool, default=True
+    )
 
     @staticmethod
     def write_env_to_config_file(config_file_location: Path):
