@@ -60,14 +60,10 @@ def service(tmp_path: Path) -> ServiceLocation:
             pass
         sleep(0.1)
 
-    if not service_process.is_alive():
-        service_process.join()
-        raise Exception(open(Path(tmp_path, "log.txt"), "r").read())
-        raise RuntimeError(f"Service exited with code {service_process.exitcode}")
-
     yield url
 
-    service_process.terminate()
+    response = requests.post(f"{url}/api/v1/shutdown")
+    assert response.status_code == 202
     service_process.join()
 
 

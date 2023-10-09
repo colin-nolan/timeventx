@@ -48,6 +48,7 @@ test: test-backend
 test-backend:
 	cd backend; \
 	poetry run pytest --cov=garden_water; \
+	coverage combine; \
 	coverage xml
 
 .PHONY: all build build-frontend build-backend fmt format format-backend format-markdown test test-backend

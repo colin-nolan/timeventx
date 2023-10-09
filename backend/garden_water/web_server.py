@@ -201,7 +201,6 @@ async def get_reset(request: Request):
         abort(_HTTPStatus.NOT_IMPLEMENTED, "Not implemented on non-RP2040 devices")
         raise
 
-    # Shutdown after a slight delay in order to allow the response to be returned
     def reset_device():
         import machine
 
@@ -240,6 +239,16 @@ async def delete_logs(request: Request):
     clear_logs()
 
     return "", _HTTPStatus.OK, _create_content_type_header(_ContentType.TEXT)
+
+
+# FIXME: secure!
+@app.post(f"/api/{API_VERSION}/shutdown")
+async def shutdown(request):
+    logger.info("Server shutting down")
+    flush_file_logs()
+    # TODO: delay shutdown to allow a 202 to be returned, instead of dropping the connection
+    request.app.shutdown()
+    return "Shutting down...", _HTTPStatus.ACCEPTED
 
 
 @app.get(f"/")

@@ -46,3 +46,8 @@ omit = [
     "garden_water/tests/*",
     "*.pyc",
 ]
+branch = true
+concurrency = [
+    "multiprocessing"
+]
+parallel = true

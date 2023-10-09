@@ -19,6 +19,7 @@ try:
 except ImportError:
     import uasyncio as asyncio
 
+
 DEFAULT_CONFIGURATION_FILE_LOCATION = Path("/") / DEFAULT_CONFIGURATION_FILE_NAME
 WIFI_CONNECTION_CHECK_PERIOD = 0.5
 
