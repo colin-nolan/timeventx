@@ -43,7 +43,7 @@ format-markdown:
 	mdformat_check_flag=$(if $(filter true,$(CHECK)),--check,); \
 	mdformat $${mdformat_check_flag} $(MARKDOWN_FILES)
 
-test: test-backend
+test: test-backend test-frontend
 
 test-backend:
 	cd backend; \
@@ -51,4 +51,8 @@ test-backend:
 	coverage combine; \
 	coverage xml
 
-.PHONY: all build build-frontend build-backend fmt format format-backend format-markdown test test-backend
+test-frontend:
+	cd backend; \
+	yarn playwright test
+
+.PHONY: all build build-frontend build-backend fmt format format-backend format-markdown test test-backend test-frontend

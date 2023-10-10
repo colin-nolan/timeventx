@@ -78,17 +78,24 @@ steps:
   - name: check-build
     image: node:20-alpine
     commands:
-      - apk add --no-cache bash make
-      - cd frontend && yarn install && cd -
+      - &commonFrontendSetup |- 
+          apk add --no-cache bash make
+          cd frontend && yarn install && cd -
       - make build-frontend API_SERVER_LOCATION=http://localhost:8000
     depends_on: []
 
   - name: check-format
     image: node:20-alpine
     commands:
-      - apk add --no-cache bash make
-      - cd frontend && yarn install && cd -
+      - *commonFrontendSetup
       - make format-frontend CHECK=true
+
+  - name: run-tests
+    image: node:20-alpine
+    commands:
+      - *commonFrontendSetup
+      - make test-frontend
+    depends_on: []
 
 ---
 
