@@ -103,7 +103,6 @@ async def post_timer(request: Request):
 
     if isinstance(timer, IdentifiableTimer):
         abort(_HTTPStatus.FORBIDDEN, f"Timer cannot be posted with an ID (it will be automatically assigned)")
-        raise
 
     identifiable_timer = request.app.database.add(timer)
     return (
@@ -130,15 +129,12 @@ def _create_timer_from_request(request: Request) -> Timer | IdentifiableTimer:
         serialised_timer = request.json
     except json.JSONDecodeError:
         abort(_HTTPStatus.BAD_REQUEST, f"Invalid JSON")
-        raise
     if serialised_timer is None:
         abort(_HTTPStatus.BAD_REQUEST, f"Timer attributes must be set")
-        raise
     try:
         start_time = deserialise_daytime(serialised_timer["startTime"])
     except (KeyError, ValueError, TypeError) as e:
         abort(_HTTPStatus.BAD_REQUEST, f"Invalid start_time: {e}")
-        raise
 
     arguments = dict(
         name=serialised_timer["name"],
@@ -154,7 +150,6 @@ def _create_timer_from_request(request: Request) -> Timer | IdentifiableTimer:
         return timer_type(**arguments)
     except (TypeError, KeyError, ValueError) as e:
         abort(_HTTPStatus.BAD_REQUEST, f"Invalid timer attributes: {e}")
-        raise
 
 
 @app.delete(f"/api/{API_VERSION}/timer/<int:timer_id>")
@@ -195,7 +190,6 @@ async def get_stats(request: Request):
 async def post_reset(request: Request):
     if not RP2040_DETECTED:
         abort(_HTTPStatus.NOT_IMPLEMENTED, "Not implemented on non-RP2040 devices")
-        raise
 
     def reset_device():
         import machine
@@ -215,7 +209,6 @@ async def get_logs(request: Request):
         log_location = request.app.configuration[Configuration.LOG_FILE_LOCATION]
     except ConfigurationNotFoundError:
         abort(_HTTPStatus.NOT_IMPLEMENTED, "Logs not being saved to file")
-        raise
     flush_file_logs()
 
     if log_location.exists():
@@ -230,7 +223,6 @@ async def delete_logs(request: Request):
         request.app.configuration[Configuration.LOG_FILE_LOCATION]
     except ConfigurationNotFoundError:
         abort(_HTTPStatus.NOT_IMPLEMENTED, "Logs not being saved to file")
-        raise
 
     clear_logs()
 
@@ -261,8 +253,7 @@ async def get_file(request: Request, path: str):
 def serve_ui(request: Request, path: Path):
     # MicroPython `pathlib` implementation does not support `is_absolute`
     if str(path).startswith("/"):
-        abort(_HTTPStatus.NOT_FOUND)
-        raise
+        raise ValueError("Absolute paths not allowed")
 
     try:
         frontend_location = request.app.configuration[Configuration.FRONTEND_ROOT_DIRECTORY]
@@ -276,7 +267,6 @@ def serve_ui(request: Request, path: Path):
         full_path = resolve_path(Path(f"{frontend_location}/{path}"))
     except OSError:
         abort(_HTTPStatus.NOT_FOUND)
-        raise
 
     if (
         not str(full_path).startswith(str(frontend_location))
@@ -285,7 +275,6 @@ def serve_ui(request: Request, path: Path):
         or not full_path.is_file()
     ):
         abort(_HTTPStatus.NOT_FOUND)
-        raise
 
     content_type = _get_content_type(full_path)
 
