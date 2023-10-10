@@ -196,7 +196,7 @@ async def get_stats(request: Request):
 
 
 @app.post(f"/api/{API_VERSION}/reset")
-async def get_reset(request: Request):
+async def post_reset(request: Request):
     if not RP2040_DETECTED:
         abort(_HTTPStatus.NOT_IMPLEMENTED, "Not implemented on non-RP2040 devices")
         raise
@@ -243,7 +243,7 @@ async def delete_logs(request: Request):
 
 # FIXME: secure!
 @app.post(f"/api/{API_VERSION}/shutdown")
-async def shutdown(request):
+async def post_shutdown(request):
     logger.info("Server shutting down")
     flush_file_logs()
     # TODO: delay shutdown to allow a 202 to be returned, instead of dropping the connection
@@ -258,7 +258,7 @@ async def get_root(request: Request):
 
 # This route MUST be defined last
 @app.get(f"/<re:.*:path>")
-async def get(request: Request, path: str):
+async def get_file(request: Request, path: str):
     return serve_ui(request, Path(path))
 
 

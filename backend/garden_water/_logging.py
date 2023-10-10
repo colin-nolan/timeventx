@@ -46,10 +46,10 @@ def get_logger(name: str) -> Logger:
 logger = get_logger(__name__)
 
 
-def setup_logging(logger_level: int, log_file_location: Optional[str] = None):
+def setup_logging(logger_level: int, log_file_location: Optional[Path] = None):
     from garden_water.configuration import Configuration, ConfigurationNotFoundError
 
-    global _LOGGER_LEVEL, logger, _LOGGER_HANDLERS, _LOG_FILE_LOCATION
+    global _LOGGER_LEVEL, _LOGGER_HANDLERS, _LOG_FILE_LOCATION
 
     if _LOGGER_LEVEL is not None:
         logger.info("Logging already setup")
@@ -73,10 +73,17 @@ def setup_logging(logger_level: int, log_file_location: Optional[str] = None):
     _LOGGER_HANDLERS.append(stream_handler)
 
     while len(_LOGGERS_TO_SETUP) > 0:
-        logger = _LOGGERS_TO_SETUP.pop()
-        logger.setLevel(_LOGGER_LEVEL)
+        setting_up_logger = _LOGGERS_TO_SETUP.pop()
+        setting_up_logger.setLevel(_LOGGER_LEVEL)
         for handler in _LOGGER_HANDLERS:
-            logger.addHandler(handler)
+            setting_up_logger.addHandler(handler)
+
+
+def reset_logging():
+    global _LOGGER_LEVEL, _LOGGER_HANDLERS, _LOG_FILE_LOCATION
+    _LOGGER_LEVEL = None
+    _LOGGER_HANDLERS = None
+    _LOG_FILE_LOCATION = None
 
 
 def flush_file_logs():
@@ -114,22 +121,21 @@ class LockableHandler(Handler):
     def __init__(self, wrapped_handler: Handler, lock: LockType, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.wrapped_handler = wrapped_handler
-        self._lock = lock
+        # Do NOT use the property `lock`, as the CPython implementation already uses this property
+        self.custom_lock = lock
 
     def __getattr__(self, name: str) -> callable:
         if RP2040_DETECTED:
             # MicroPython uses `__getattribute__` instead
             return super().__getattr__(name)
-        attr = getattr(self.wrapped_handler if name != "emit" else self, name)
-        return attr
+        return getattr(self.wrapped_handler if name != "emit" else self, name)
 
     def __getattribute__(self, name: str) -> Any:
         if not RP2040_DETECTED:
-            # CPython uses __getattr__
+            # CPython uses `__getattr__` instead
             return super().__getattribute__(name)
-        attr = getattr(self.wrapped_handler if name != "emit" else self, name)
-        return attr
+        return getattr(self.wrapped_handler if name != "emit" else self, name)
 
     def emit(self, *args, **kwargs):
-        with self._lock:
+        with self.custom_lock:
             self.wrapped_handler.emit(*args, **kwargs)

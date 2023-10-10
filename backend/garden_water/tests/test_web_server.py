@@ -7,7 +7,6 @@ from socket import socket
 from unittest.mock import patch
 
 import pytest
-import requests
 from microdot_asyncio_test_client import TestClient
 
 from garden_water._logging import get_logger, setup_logging
