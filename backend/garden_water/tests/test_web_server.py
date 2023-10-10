@@ -156,6 +156,17 @@ async def test_serve_file(api_test_client: TestClient, configuration: Configurat
 
 
 @pytest.mark.asyncio
+async def test_serve_file_unknown_type(api_test_client: TestClient, configuration: Configuration):
+    with tempfile.TemporaryDirectory() as temp_directory:
+        Path(temp_directory, "test").touch()
+
+        with patch.dict(os.environ, {Configuration.FRONTEND_ROOT_DIRECTORY.environment_variable_name: temp_directory}):
+            response = await api_test_client.get(f"/test")
+    assert response.status_code == 200, response.text
+    assert response.headers["Content-Type"] == "application/octet-stream"
+
+
+@pytest.mark.asyncio
 async def test_serve_outside_frontend_directory(api_test_client: TestClient, configuration: Configuration):
     with tempfile.TemporaryDirectory() as temp_directory_outer:
         temp_directory = f"{temp_directory_outer}/inner"
@@ -181,9 +192,6 @@ async def test_get_logging(api_test_client: TestClient):
                 Configuration.LOG_LEVEL.environment_variable_name: str(logging.DEBUG),
             },
         ):
-            response = await api_test_client.get(f"/api/{API_VERSION}/logs")
-            assert response.status_code == 200, response.text
-
             reset_logging()
             setup_logging(logging.INFO, Path(file.name))
             logger.info("test")

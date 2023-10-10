@@ -21,7 +21,7 @@ from garden_water.timers.serialisation import (
 from garden_water.timers.timers import IdentifiableTimer, Timer, TimerId
 
 
-class _HTTPStatus:
+class HTTPStatus:
     OK = 200
     CREATED = 201
     ACCEPTED = 202
@@ -31,7 +31,7 @@ class _HTTPStatus:
     NOT_IMPLEMENTED = 501
 
 
-class _ContentType:
+class ContentType:
     CSS = "text/css"
     HTML = "text/html"
     JAVASCRIPT = "application/javascript"
@@ -40,17 +40,18 @@ class _ContentType:
     SVG = "image/svg+xml"
     TEXT = "text/plain"
     JPG = "image/jpeg"
+    OCTET_STREAM = "application/octet-stream"
 
 
-_FILE_EXTENSION_TO_CONTENT_TYPE = {
-    ".css": _ContentType.CSS,
-    ".html": _ContentType.HTML,
-    ".js": _ContentType.JAVASCRIPT,
-    ".json": _ContentType.JSON,
-    ".png": _ContentType.PNG,
-    ".svg": _ContentType.SVG,
-    ".txt": _ContentType.TEXT,
-    ".jpg": _ContentType.JPG,
+FILE_EXTENSION_TO_CONTENT_TYPE = {
+    ".css": ContentType.CSS,
+    ".html": ContentType.HTML,
+    ".js": ContentType.JAVASCRIPT,
+    ".json": ContentType.JSON,
+    ".png": ContentType.PNG,
+    ".svg": ContentType.SVG,
+    ".txt": ContentType.TEXT,
+    ".jpg": ContentType.JPG,
 }
 
 API_VERSION = "v1"
@@ -85,15 +86,15 @@ def _after_error_request(request: Request, response: Response):
 # TODO: return type
 @app.get(f"/api/{API_VERSION}/healthcheck")
 async def get_healthcheck(request: Request):
-    return json.dumps(True), _HTTPStatus.OK, _create_content_type_header(_ContentType.JSON)
+    return json.dumps(True), HTTPStatus.OK, _create_content_type_header(ContentType.JSON)
 
 
 @app.get(f"/api/{API_VERSION}/timers")
 async def get_timers(request: Request):
     return (
         json.dumps([timer_to_json(timer) for timer in request.app.database]),
-        _HTTPStatus.OK,
-        _create_content_type_header(_ContentType.JSON),
+        HTTPStatus.OK,
+        _create_content_type_header(ContentType.JSON),
     )
 
 
@@ -102,13 +103,13 @@ async def post_timer(request: Request):
     timer = _create_timer_from_request(request)
 
     if isinstance(timer, IdentifiableTimer):
-        abort(_HTTPStatus.FORBIDDEN, f"Timer cannot be posted with an ID (it will be automatically assigned)")
+        abort(HTTPStatus.FORBIDDEN, f"Timer cannot be posted with an ID (it will be automatically assigned)")
 
     identifiable_timer = request.app.database.add(timer)
     return (
         json.dumps(timer_to_json(identifiable_timer)),
-        _HTTPStatus.CREATED,
-        _create_content_type_header(_ContentType.JSON),
+        HTTPStatus.CREATED,
+        _create_content_type_header(ContentType.JSON),
     )
 
 
@@ -117,24 +118,24 @@ async def put_timer(request: Request, timer_id: TimerId):
     timer = _create_timer_from_request(request)
     request.app.database.remove(timer_id)
     request.app.database.add(timer)
-    return json.dumps(timer_to_json(timer)), _HTTPStatus.CREATED, _create_content_type_header(_ContentType.JSON)
+    return json.dumps(timer_to_json(timer)), HTTPStatus.CREATED, _create_content_type_header(ContentType.JSON)
 
 
 def _create_timer_from_request(request: Request) -> Timer | IdentifiableTimer:
     if request.content_type is None:
         # request.json is only available if content type is set (it assumes a lot of the client!)
-        request.content_type = _ContentType.JSON
+        request.content_type = ContentType.JSON
 
     try:
         serialised_timer = request.json
     except json.JSONDecodeError:
-        abort(_HTTPStatus.BAD_REQUEST, f"Invalid JSON")
+        abort(HTTPStatus.BAD_REQUEST, f"Invalid JSON")
     if serialised_timer is None:
-        abort(_HTTPStatus.BAD_REQUEST, f"Timer attributes must be set")
+        abort(HTTPStatus.BAD_REQUEST, f"Timer attributes must be set")
     try:
         start_time = deserialise_daytime(serialised_timer["startTime"])
     except (KeyError, ValueError, TypeError) as e:
-        abort(_HTTPStatus.BAD_REQUEST, f"Invalid start_time: {e}")
+        abort(HTTPStatus.BAD_REQUEST, f"Invalid start_time: {e}")
 
     arguments = dict(
         name=serialised_timer["name"],
@@ -149,7 +150,7 @@ def _create_timer_from_request(request: Request) -> Timer | IdentifiableTimer:
     try:
         return timer_type(**arguments)
     except (TypeError, KeyError, ValueError) as e:
-        abort(_HTTPStatus.BAD_REQUEST, f"Invalid timer attributes: {e}")
+        abort(HTTPStatus.BAD_REQUEST, f"Invalid timer attributes: {e}")
 
 
 @app.delete(f"/api/{API_VERSION}/timer/<int:timer_id>")
@@ -157,8 +158,8 @@ async def delete_timer(request: Request, timer_id: TimerId):
     removed = request.app.database.remove(timer_id)
     return (
         json.dumps(removed),
-        _HTTPStatus.OK if removed else _HTTPStatus.NOT_FOUND,
-        _create_content_type_header(_ContentType.JSON),
+        HTTPStatus.OK if removed else HTTPStatus.NOT_FOUND,
+        _create_content_type_header(ContentType.JSON),
     )
 
 
@@ -171,25 +172,25 @@ async def get_intervals(request: Request):
                 for interval in request.app.timer_runner.on_off_intervals
             ]
         ),
-        _HTTPStatus.OK,
-        _create_content_type_header(_ContentType.JSON),
+        HTTPStatus.OK,
+        _create_content_type_header(ContentType.JSON),
     )
 
 
 @app.get(f"/api/{API_VERSION}/stats")
 async def get_stats(request: Request):
     if not RP2040_DETECTED:
-        abort(_HTTPStatus.NOT_IMPLEMENTED, "Not implemented on non-RP2040 devices")
+        abort(HTTPStatus.NOT_IMPLEMENTED, "Not implemented on non-RP2040 devices")
 
     output = f"Memory: {get_memory_usage()}\nStorage: {get_disk_usage()}"
 
-    return output, _HTTPStatus.OK, _create_content_type_header(_ContentType.TEXT)
+    return output, HTTPStatus.OK, _create_content_type_header(ContentType.TEXT)
 
 
 @app.post(f"/api/{API_VERSION}/reset")
 async def post_reset(request: Request):
     if not RP2040_DETECTED:
-        abort(_HTTPStatus.NOT_IMPLEMENTED, "Not implemented on non-RP2040 devices")
+        abort(HTTPStatus.NOT_IMPLEMENTED, "Not implemented on non-RP2040 devices")
 
     def reset_device():
         import machine
@@ -208,13 +209,13 @@ async def get_logs(request: Request):
     try:
         log_location = request.app.configuration[Configuration.LOG_FILE_LOCATION]
     except ConfigurationNotFoundError:
-        abort(_HTTPStatus.NOT_IMPLEMENTED, "Logs not being saved to file")
+        abort(HTTPStatus.NOT_IMPLEMENTED, "Logs not being saved to file")
     flush_file_logs()
 
     if log_location.exists():
-        return send_file(str(log_location), max_age=0, content_type=_ContentType.TEXT)
+        return send_file(str(log_location), max_age=0, content_type=ContentType.TEXT)
     else:
-        return "", _HTTPStatus.OK, _create_content_type_header(_ContentType.TEXT)
+        return "", HTTPStatus.OK, _create_content_type_header(ContentType.TEXT)
 
 
 @app.delete(f"/api/{API_VERSION}/logs")
@@ -222,11 +223,11 @@ async def delete_logs(request: Request):
     try:
         request.app.configuration[Configuration.LOG_FILE_LOCATION]
     except ConfigurationNotFoundError:
-        abort(_HTTPStatus.NOT_IMPLEMENTED, "Logs not being saved to file")
+        abort(HTTPStatus.NOT_IMPLEMENTED, "Logs not being saved to file")
 
     clear_logs()
 
-    return "", _HTTPStatus.OK, _create_content_type_header(_ContentType.TEXT)
+    return "", HTTPStatus.OK, _create_content_type_header(ContentType.TEXT)
 
 
 # FIXME: secure!
@@ -236,7 +237,7 @@ async def post_shutdown(request):
     flush_file_logs()
     # TODO: delay shutdown to allow a 202 to be returned, instead of dropping the connection
     request.app.shutdown()
-    return "Shutting down...", _HTTPStatus.ACCEPTED
+    return "Shutting down...", HTTPStatus.ACCEPTED
 
 
 @app.get(f"/")
@@ -266,7 +267,7 @@ def serve_ui(request: Request, path: Path):
         # `Path.__truediv__` is not implemented in `pathlib` module in use with MicroPython
         full_path = resolve_path(Path(f"{frontend_location}/{path}"))
     except OSError:
-        abort(_HTTPStatus.NOT_FOUND)
+        abort(HTTPStatus.NOT_FOUND)
 
     if (
         not str(full_path).startswith(str(frontend_location))
@@ -274,7 +275,7 @@ def serve_ui(request: Request, path: Path):
         or not full_path.exists()
         or not full_path.is_file()
     ):
-        abort(_HTTPStatus.NOT_FOUND)
+        abort(HTTPStatus.NOT_FOUND)
 
     content_type = _get_content_type(full_path)
 
@@ -285,6 +286,6 @@ def serve_ui(request: Request, path: Path):
 # mimetypes module does not exist for MicroPython
 def _get_content_type(path: Path) -> str:
     try:
-        return _FILE_EXTENSION_TO_CONTENT_TYPE[path.suffix]
+        return FILE_EXTENSION_TO_CONTENT_TYPE[path.suffix]
     except KeyError:
-        return "application/octet-stream"
+        return ContentType.OCTET_STREAM
