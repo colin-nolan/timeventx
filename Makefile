@@ -53,6 +53,7 @@ test-backend:
 
 test-frontend:
 	cd frontend; \
-	yarn playwright test
+	yarn run test-with-coverage; \
+	yarn nyc report --reporter=lcov
 
 .PHONY: all build build-frontend build-backend fmt format format-backend format-markdown test test-backend test-frontend

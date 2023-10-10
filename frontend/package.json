@@ -5,7 +5,9 @@
     "scripts": {
         "dev": "vite",
         "build": "vite build",
-        "preview": "vite preview"
+        "preview": "vite preview",
+        "test": "playwright test",
+        "test-with-coverage": "nyc yarn run test"
     },
     "dependencies": {
         "@emotion/react": "^11.11.1",
@@ -21,6 +23,7 @@
         "sonner": "^0.6.2"
     },
     "devDependencies": {
+        "@istanbuljs/nyc-config-typescript": "^1.0.2",
         "@playwright/test": "^1.38.1",
         "@preact/preset-vite": "^2.5.0",
         "@types/node": "^20.8.4",
@@ -29,9 +32,12 @@
         "eslint": "^8.47.0",
         "eslint-config-preact": "^1.2.0",
         "eslint-config-prettier": "^9.0.0",
+        "nyc": "^15.1.0",
+        "playwright-test-coverage": "^1.2.12",
         "prettier": "3.0.1",
         "typescript": "^5.1.6",
-        "vite": "^4.3.2"
+        "vite": "^4.3.2",
+        "vite-plugin-istanbul": "^5.0.0"
     },
     "eslintConfig": {
         "extends": "preact"
