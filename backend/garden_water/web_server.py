@@ -11,6 +11,7 @@ from microdot_cors import CORS
 from garden_water._common import RP2040_DETECTED, resolve_path
 from garden_water._logging import clear_logs, flush_file_logs, get_logger
 from garden_water.configuration import Configuration, ConfigurationNotFoundError
+from garden_water.stats import get_disk_usage, get_memory_usage
 from garden_water.timers.intervals import TimeInterval
 from garden_water.timers.serialisation import (
     deserialise_daytime,
@@ -18,11 +19,6 @@ from garden_water.timers.serialisation import (
     timer_to_json,
 )
 from garden_water.timers.timers import IdentifiableTimer, Timer, TimerId
-
-try:
-    import asyncio
-except ImportError:
-    import uasyncio as asyncio
 
 
 class _HTTPStatus:
@@ -190,7 +186,7 @@ async def get_stats(request: Request):
     if not RP2040_DETECTED:
         abort(_HTTPStatus.NOT_IMPLEMENTED, "Not implemented on non-RP2040 devices")
 
-    output = f"Memory: {_get_memory_usage()}\nStorage: {_get_disk_usage()}"
+    output = f"Memory: {get_memory_usage()}\nStorage: {get_disk_usage()}"
 
     return output, _HTTPStatus.OK, _create_content_type_header(_ContentType.TEXT)
 
@@ -295,28 +291,6 @@ def serve_ui(request: Request, path: Path):
 
     logger.info(f"Serving {full_path}")
     return send_file(str(full_path), max_age=0, content_type=content_type)
-
-
-def _get_memory_usage() -> str:
-    import gc
-
-    # MicroPython only calls the GC when it runs low on memory so collect needs to be called before getting a reading of
-    # non-garbaged memory usage
-    gc.collect()
-    allocated_memory = gc.mem_alloc()
-    free_memory = gc.mem_free()
-    total_memory = allocated_memory + free_memory
-
-    return f"{allocated_memory} / {total_memory} bytes ({(allocated_memory / total_memory) * 100}%), {free_memory} bytes free"
-
-
-def _get_disk_usage() -> str:
-    storage = os.statvfs("/")
-    free_kb = storage[0] * storage[3] / 1024
-    total_kb = storage[0] * storage[2] / 1024
-    used_kb = total_kb - free_kb
-
-    return f"{used_kb} / {total_kb} KB ({used_kb / total_kb * 100}%), {free_kb} KB free"
 
 
 # mimetypes module does not exist for MicroPython

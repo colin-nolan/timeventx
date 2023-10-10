@@ -17,17 +17,7 @@ from garden_water._logging import (
     reset_logging,
     setup_logging,
 )
-
-_TEST_LOCK = Lock()
-
-
-# To be used for tests that interact with logging globals, and hence cannot be ran in parallel
-def _non_parallel_test(wrappable: callable):
-    def wrapper(*args, **kwargs):
-        with _TEST_LOCK:
-            return wrappable(*args, **kwargs)
-
-    return wrapper
+from garden_water.tests._common import changes_logging_test
 
 
 @pytest.fixture()
@@ -37,27 +27,25 @@ def handler() -> LockableHandler:
     return LockableHandler(wrapped_handler, lock)
 
 
-@_non_parallel_test
+@changes_logging_test
 def test_setup_logging():
-    reset_logging()
     logger = get_logger(f"{__name__}.example")
 
     with NamedTemporaryFile(mode="r") as file:
-        setup_logging(logging.INFO, Path(file.name))
+        assert setup_logging(logging.INFO, Path(file.name))
         logger.error("hello")
         flush_file_logs()
 
         assert file.read().strip() == "hello"
 
 
-@_non_parallel_test
+@changes_logging_test
 def test_clear_logs():
-    reset_logging()
     logger = get_logger(f"{__name__}.example2")
 
     with NamedTemporaryFile(mode="r", delete=False) as file:
         file_path = Path(file.name)
-        setup_logging(logging.INFO, file_path)
+        assert setup_logging(logging.INFO, file_path)
         logger.error("hello")
         flush_file_logs()
 

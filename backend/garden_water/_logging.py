@@ -46,14 +46,14 @@ def get_logger(name: str) -> Logger:
 logger = get_logger(__name__)
 
 
-def setup_logging(logger_level: int, log_file_location: Optional[Path] = None):
+def setup_logging(logger_level: int, log_file_location: Optional[Path] = None) -> bool:
     from garden_water.configuration import Configuration, ConfigurationNotFoundError
 
     global _LOGGER_LEVEL, _LOGGER_HANDLERS, _LOG_FILE_LOCATION
 
     if _LOGGER_LEVEL is not None:
         logger.info("Logging already setup")
-        return
+        return False
 
     _LOGGER_HANDLERS = []
     _LOGGER_LEVEL = logger_level
@@ -78,12 +78,15 @@ def setup_logging(logger_level: int, log_file_location: Optional[Path] = None):
         for handler in _LOGGER_HANDLERS:
             setting_up_logger.addHandler(handler)
 
+    return True
+
 
 def reset_logging():
     global _LOGGER_LEVEL, _LOGGER_HANDLERS, _LOG_FILE_LOCATION
     _LOGGER_LEVEL = None
     _LOGGER_HANDLERS = None
     _LOG_FILE_LOCATION = None
+    _LOGGERS_TO_SETUP = _LOGGERS
 
 
 def flush_file_logs():

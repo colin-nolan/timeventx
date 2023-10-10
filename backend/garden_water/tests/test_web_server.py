@@ -3,13 +3,18 @@ import os
 import tempfile
 from copy import deepcopy
 from pathlib import Path
-from socket import socket
+from tempfile import NamedTemporaryFile
 from unittest.mock import patch
 
 import pytest
 from microdot_asyncio_test_client import TestClient
 
-from garden_water._logging import get_logger, setup_logging
+from garden_water._logging import (
+    flush_file_logs,
+    get_logger,
+    reset_logging,
+    setup_logging,
+)
 from garden_water.configuration import Configuration
 from garden_water.tests._common import (
     EXAMPLE_IDENTIFIABLE_TIMER_1,
@@ -22,15 +27,10 @@ from garden_water.timers.collections.memory import InMemoryIdentifiableTimersCol
 from garden_water.timers.serialisation import timer_to_json
 from garden_water.web_server import API_VERSION, app
 
-# Logs are written to `pytest.log`
-setup_logging(logging.DEBUG)
-# logger = get_logger(__name__)
+logger = get_logger(__name__)
 
-
-def _get_free_port() -> int:
-    with socket() as s:
-        s.bind(("", 0))
-        return s.getsockname()[1]
+# Keep for debugging whilst writing tests
+# setup_logging(logging.DEBUG)
 
 
 @pytest.fixture
@@ -168,3 +168,43 @@ async def test_serve_outside_frontend_directory(api_test_client: TestClient, con
         with patch.dict(os.environ, {Configuration.FRONTEND_ROOT_DIRECTORY.environment_variable_name: temp_directory}):
             response = await api_test_client.get(f"/{relative_secret_path}")
     assert response.status_code == 404, response.text
+
+
+# TODO: cannot run in parallel with tests against `_logging`
+@pytest.mark.asyncio
+async def test_get_logging(api_test_client: TestClient):
+    with NamedTemporaryFile(mode="r") as file:
+        with patch.dict(
+            os.environ,
+            {
+                Configuration.LOG_FILE_LOCATION.environment_variable_name: file.name,
+                Configuration.LOG_LEVEL.environment_variable_name: str(logging.DEBUG),
+            },
+        ):
+            response = await api_test_client.get(f"/api/{API_VERSION}/logs")
+            assert response.status_code == 200, response.text
+
+            reset_logging()
+            setup_logging(logging.INFO, Path(file.name))
+            logger.info("test")
+
+            response = await api_test_client.get(f"/api/{API_VERSION}/logs")
+            assert response.status_code == 200, response.text
+
+
+# TODO: cannot run in parallel with tests against `_logging`
+@pytest.mark.asyncio
+async def test_delete_logs(api_test_client: TestClient):
+    with NamedTemporaryFile(mode="r", delete=False) as file:
+        with patch.dict(
+            os.environ,
+            {
+                Configuration.LOG_FILE_LOCATION.environment_variable_name: file.name,
+                Configuration.LOG_LEVEL.environment_variable_name: str(logging.DEBUG),
+            },
+        ):
+            reset_logging()
+            setup_logging(logging.INFO, Path(file.name))
+
+            response = await api_test_client.delete(f"/api/{API_VERSION}/logs")
+            assert response.status_code == 200, response.text
