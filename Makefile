@@ -52,7 +52,7 @@ test-backend:
 	coverage xml
 
 test-frontend:
-	cd backend; \
+	cd frontend; \
 	yarn playwright test
 
 .PHONY: all build build-frontend build-backend fmt format format-backend format-markdown test test-backend test-frontend

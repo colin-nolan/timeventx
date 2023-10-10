@@ -91,9 +91,14 @@ steps:
       - make format-frontend CHECK=true
 
   - name: run-tests
-    image: node:20-alpine
+    image: node:20
     commands:
-      - *commonFrontendSetup
+      - |- 
+          cd frontend
+          yarn install
+          yarn playwright install
+          yarn playwright install-deps 
+          cd -
       - make test-frontend
     depends_on: []
 
