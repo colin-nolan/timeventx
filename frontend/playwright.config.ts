@@ -77,6 +77,7 @@ export default defineConfig({
         },
         {
             command:
+                // FIXME: make temp!
                 "GARDEN_WATER_TIMERS_DATABASE_LOCATION=/tmp/test.db " +
                 "GARDEN_WATER_BACKEND_PORT=3004 " +
                 "GARDEN_WATER_INTERFACE=127.0.0.1 " +
