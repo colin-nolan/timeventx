@@ -1,9 +1,6 @@
-import _thread
 import json
-import os
 from datetime import timedelta
 from pathlib import Path
-from typing import Type, TypeVar
 
 from microdot_asyncio import Microdot, Request, Response, abort, send_file
 from microdot_cors import CORS
@@ -11,8 +8,7 @@ from microdot_cors import CORS
 from garden_water._common import RP2040_DETECTED, resolve_path
 from garden_water._logging import clear_logs, flush_file_logs, get_logger
 from garden_water.configuration import Configuration, ConfigurationNotFoundError
-from garden_water.stats import get_disk_usage, get_memory_usage
-from garden_water.timers.intervals import TimeInterval
+from garden_water.rp2040 import get_disk_usage, get_memory_usage
 from garden_water.timers.serialisation import (
     deserialise_daytime,
     serialise_daytime,

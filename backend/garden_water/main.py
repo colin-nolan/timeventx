@@ -1,14 +1,13 @@
-import math
 import os
 import sys
-import time
 from pathlib import Path
 from time import sleep
 from typing import Optional
 
-from garden_water._common import RP2040_DETECTED, noop_if_not_rp2040
-from garden_water._logging import flush_file_logs, get_logger, setup_logging
+from garden_water._common import RP2040_DETECTED
+from garden_water._logging import get_logger, setup_logging
 from garden_water.configuration import DEFAULT_CONFIGURATION_FILE_NAME, Configuration
+from garden_water.rp2040 import setup_device
 from garden_water.timer_runner import TimerRunner
 from garden_water.timers.collections.database import TimersDatabase
 from garden_water.timers.collections.listenable import ListenableTimersCollection
@@ -21,54 +20,9 @@ except ImportError:
 
 
 DEFAULT_CONFIGURATION_FILE_LOCATION = Path("/") / DEFAULT_CONFIGURATION_FILE_NAME
-WIFI_CONNECTION_CHECK_PERIOD = 0.5
 
 
 logger = get_logger(__name__)
-
-
-def connect_to_wifi(ssid: str, password: str, retries: int = math.inf, wait_for_connection_time_in_seconds: float = 60):
-    # Deferring import to allow testing using MicroPython without a network module
-    import network
-
-    wlan = network.WLAN(network.STA_IF)
-    wlan.active(True)
-
-    retries_remaining = retries
-    while not wlan.isconnected() and retries_remaining > 0:
-        retries_remaining -= 1
-        wlan.disconnect()
-        wlan.connect(ssid, password)
-        # Using inaccurate measure of wait time to avoid using functions from the `time` module
-        waited_for = 0
-        while not wlan.isconnected() and waited_for <= wait_for_connection_time_in_seconds:
-            time.sleep(WIFI_CONNECTION_CHECK_PERIOD)
-            waited_for += WIFI_CONNECTION_CHECK_PERIOD
-
-    if not wlan.isconnected():
-        raise RuntimeError("Failed to connect to WiFi")
-
-
-@noop_if_not_rp2040
-def sync_time():
-    # Deferring import to allow testing using MicroPython without a network module
-    import ntptime
-
-    # FIXME: harden against network failures
-    ntptime.settime()
-
-
-@noop_if_not_rp2040
-def setup_device(configuration: Configuration):
-    wifi_ssid = configuration[Configuration.WIFI_SSID]
-    wifi_password = configuration[Configuration.WIFI_PASSWORD]
-    logger.info(f"Connecting to WiFi: {wifi_ssid}")
-    connect_to_wifi(wifi_ssid, wifi_password)
-
-    logger.info("Synchronising time")
-    sync_time()
-    formatted_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(time.time()))
-    logger.info(f"Time synchronised: {formatted_time}")
 
 
 async def inner_main(configuration: Configuration):
