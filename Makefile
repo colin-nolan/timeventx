@@ -1,4 +1,4 @@
-MARKDOWN_FILES := $(shell find . -type f -name '*.md' ! -path '*/site-packages/*' ! -path '*build/*' ! -path '*/node_modules/*')
+MARKDOWN_FILES := $(shell find . -type f -name '*.md' ! -path '*/site-packages/*' ! -path '*build/*' ! -path '*/node_modules/*' ! -path '*/.venv/*' ! -path '*/.pytest_cache/*')
 
 ARCH ?= any
 
@@ -26,7 +26,7 @@ build-frontend: .must_have_api_server_location
 
 fmt: format
 
-format: format-frontend format-backend	
+format: format-frontend format-backend format-markdown
 
 format-frontend:
 	prettier_check_flag=$(if $(filter true,$(CHECK)),--check,--write); \
