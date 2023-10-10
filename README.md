@@ -2,11 +2,11 @@
 
 This system is designed to be ran on a RP2040 microcontroller, specifically a [Raspberry Pi Pico](https://www.raspberrypi.com/products/raspberry-pi-pico/).
 
-| Area             | Status                                                                                                                                                                                          |
-| ---------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Build Status     | [![Build Status](https://ci.colinnolan.uk/api/badges/colin-nolan/garden-watering/status.svg)](https://ci.colinnolan.uk/colin-nolan/garden-watering)                                             |
-| Backend Coverage | [![Backend Coverage](https://codecov.io/gh/colin-nolan/garden-watering/graph/badge.svg?token=UKCB5SVPED&flag=backend)](https://app.codecov.io/gh/colin-nolan/garden-watering/tree/main/backend) |
-|                  |                                                                                                                                                                                                 |
+| Area              | Status                                                                                                                                                                                             |
+| ----------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Build Status      | [![Build Status](https://ci.colinnolan.uk/api/badges/colin-nolan/garden-watering/status.svg)](https://ci.colinnolan.uk/colin-nolan/garden-watering)                                                |
+| Backend Coverage  | [![Backend Coverage](https://codecov.io/gh/colin-nolan/garden-watering/graph/badge.svg?token=UKCB5SVPED&flag=backend)](https://app.codecov.io/gh/colin-nolan/garden-watering/tree/main/backend)    |
+| Frontend Coverage | [![Frontend Coverage](https://codecov.io/gh/colin-nolan/garden-watering/graph/badge.svg?token=UKCB5SVPED&flag=frontend)](https://app.codecov.io/gh/colin-nolan/garden-watering/tree/main/frontend) |
 
 ## Usage
 
