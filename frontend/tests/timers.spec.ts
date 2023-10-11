@@ -1,5 +1,7 @@
 import { test, expect } from "playwright-test-coverage";
 
+test.describe.configure({ mode: "serial" });
+
 test("create timer", async ({ page }) => {
     await page.goto("/");
     const originalRowCount = await page.locator(".timerRow").count();
