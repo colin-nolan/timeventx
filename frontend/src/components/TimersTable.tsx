@@ -108,6 +108,7 @@ export function TimersTable(props: { apiRootUrl: string; onTimersChange: (timers
                                 style={{ width: "75%" }}
                                 variant="outlined"
                                 onClick={() => setCreatingTimer(true)}
+                                data-testid="timer-create-button"
                             >
                                 Create Timer
                             </Button>

@@ -40,6 +40,7 @@ export function TimerRow(props: { timer: Timer; removeTimer: RemoveTimer; addTim
             style={{
                 backgroundColor: timerConfirmingRemoval ? "var(--joy-palette-danger-50, #FEF6F6)" : null,
             }}
+            className="timerRow"
         >
             <td>{props.timer.id}</td>
             <td>{props.timer.name}</td>

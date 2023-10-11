@@ -37,7 +37,6 @@ export function TimerCreationRow(props: { addTimer: AddTimer; timer?: Timer; onC
         setBeingCreated(false);
     }
 
-    // @ts-ignore
     return (
         <tr>
             <td>
@@ -49,6 +48,11 @@ export function TimerCreationRow(props: { addTimer: AddTimer; timer?: Timer; onC
                     onChange={(event) => setName(event.target.value)}
                     value={name}
                     placeholder="Name"
+                    slotProps={{
+                        input: {
+                            "data-testid": "timer-name"
+                        }
+                    }}
                 />
             </td>
             <td>
@@ -57,6 +61,11 @@ export function TimerCreationRow(props: { addTimer: AddTimer; timer?: Timer; onC
                     onChange={(event) => setStartTime(event.target.value)}
                     value={startTime}
                     placeholder="12:00:00"
+                    slotProps={{
+                        input: {
+                            "data-testid": "timer-start-time"
+                        }
+                    }}
                 />
             </td>
             <td>
@@ -64,14 +73,30 @@ export function TimerCreationRow(props: { addTimer: AddTimer; timer?: Timer; onC
                     type="time"
                     onChange={(event) => setDuration(mmssToSeconds(event.target.value))}
                     value={secondsToHoursAndMinutes(duration)}
+                    slotProps={{
+                        input: {
+                            "data-testid": "timer-duration"
+                        }
+                    }}
                 />
             </td>
             <td>
                 <ButtonGroup spacing={1} buttonFlex={1} variant="solid">
-                    <Button style={{ width: "50%" }} onClick={addTimer} loading={beingCreated} color="success">
+                    <Button
+                        style={{ width: "50%" }}
+                        onClick={addTimer}
+                        loading={beingCreated}
+                        color="success"
+                        data-testid="timer-add-button"
+                    >
                         {props.timer ? "Complete" : "Add"}
                     </Button>
-                    <Button style={{ width: "50%" }} onClick={props.onClose} color="neutral">
+                    <Button
+                        style={{ width: "50%" }}
+                        onClick={props.onClose}
+                        color="neutral"
+                        data-testid="timer-create-cancel-button"
+                    >
                         Cancel
                     </Button>
                 </ButtonGroup>
