@@ -1,4 +1,12 @@
 import { defineConfig, devices } from "@playwright/test";
+import { temporaryDirectory } from "tempy";
+
+// XXX: it would be better if these were set to random free ports
+const FRONTEND_PORT = 3003;
+const BACKEND_PORT = 3004;
+
+const DATABASE_DIRECTORY = temporaryDirectory();
+const LOG_LOCATION = `${temporaryDirectory()}/log.txt`;
 
 /**
  * Read environment variables from file.
@@ -24,7 +32,7 @@ export default defineConfig({
     /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
     use: {
         /* Base URL to use in actions like `await page.goto('/')`. */
-        baseURL: "http://127.0.0.1:3003",
+        baseURL: `http://127.0.0.1:${FRONTEND_PORT}`,
 
         /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
         trace: "on-first-retry",
@@ -69,29 +77,31 @@ export default defineConfig({
     ],
 
     metadata: {
-        // FIXME; repeating
-        apiServer: "http://127.0.0.1:3004",
+        apiServer: `http://127.0.0.1:${BACKEND_PORT}`,
     },
 
     /* Run your local dev server before starting the tests */
     webServer: [
         {
-            command: "VITE_BACKEND_API_ROOT=http://127.0.0.1:3004/api/v1 yarn run dev --port 3003",
-            url: "http://127.0.0.1:3003",
+            command: `VITE_BACKEND_API_ROOT=http://127.0.0.1:${BACKEND_PORT}/api/v1 yarn run dev --port ${FRONTEND_PORT}`,
+            url: `http://127.0.0.1:${FRONTEND_PORT}`,
             reuseExistingServer: !process.env.CI,
         },
         {
             command:
-                // FIXME: make temp!
-                "GARDEN_WATER_TIMERS_DATABASE_LOCATION=/tmp/test.db " +
-                "GARDEN_WATER_BACKEND_PORT=3004 " +
+                `GARDEN_WATER_TIMERS_DATABASE_LOCATION=${DATABASE_DIRECTORY} ` +
+                `GARDEN_WATER_LOG_FILE_LOCATION=${LOG_LOCATION} ` +
+                `GARDEN_WATER_BACKEND_PORT=${BACKEND_PORT} ` +
                 "GARDEN_WATER_INTERFACE=127.0.0.1 " +
                 "GARDEN_WATER_RESTART_ON_ERROR=false " +
                 "GARDEN_WATER_LOG_LEVEL=10 " +
                 "PYTHONPATH=../backend " +
                 "python ../backend/garden_water/main.py",
-            url: "http://127.0.0.1:3004/api/v1/healthcheck",
+            url: `http://127.0.0.1:${BACKEND_PORT}/api/v1/healthcheck`,
             reuseExistingServer: !process.env.CI,
+            // Comment out for logs
+            stdout: "ignore",
+            stderr: "ignore",
         },
     ],
 });

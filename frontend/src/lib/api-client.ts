@@ -66,20 +66,24 @@ export class ApiClient {
 
     resetDevice(): Promise<void> {
         return new Promise<void>((resolve, reject) => {
-            wrappedFetch("resetting device", `${this.apiRootUrl}/reset`, { method: "POST" }).then(async (response) => {
-                let online = false;
-                while (!online) {
-                    try {
-                        const response = await fetch(`${this.apiRootUrl}/healthcheck`);
-                        if (response.ok) {
-                            online = true;
+            wrappedFetch("resetting device", `${this.apiRootUrl}/reset`, { method: "POST" })
+                .then(async (response) => {
+                    let online = false;
+                    while (!online) {
+                        try {
+                            const response = await fetch(`${this.apiRootUrl}/healthcheck`);
+                            if (response.ok) {
+                                online = true;
+                            }
+                        } catch (error) {
+                            await new Promise((resolve) => setTimeout(resolve, 250));
                         }
-                    } catch (error) {
-                        await new Promise((resolve) => setTimeout(resolve, 250));
                     }
-                }
-                resolve();
-            });
+                    resolve();
+                })
+                .catch((error) => {
+                    reject(error);
+                });
         });
     }
 
