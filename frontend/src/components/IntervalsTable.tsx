@@ -2,11 +2,7 @@ import { Table } from "@mui/joy";
 import { useEffect, useState } from "preact/compat";
 import { toast } from "sonner";
 import { ApiClient, Interval, Timer } from "../lib/api-client";
-
-function dayTimeToSeconds(dayTime: string): number {
-    const [hours, minutes, seconds] = dayTime.split(":").map((s) => parseInt(s));
-    return hours * 3600 + minutes * 60 + seconds;
-}
+import { hhmmssToSeconds } from "../lib/time-seralisation";
 
 export function IntervalsTable(props: { apiRootUrl: string; timers?: Timer[] }) {
     const [apiClient, setApiClient] = useState<ApiClient>(new ApiClient(props.apiRootUrl));
