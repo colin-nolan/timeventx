@@ -47,7 +47,7 @@ steps:
     commands:
       - apk add --no-cache curl
       - curl -fL https://uploader.codecov.io/v0.6.3/aarch64/codecov > /usr/local/bin/codecov && chmod +x /usr/local/bin/codecov
-      - codecov -F backend
+      - codecov
     environment:
       CODECOV_TOKEN:
         from_secret: codecov_token
@@ -103,7 +103,7 @@ steps:
     commands:
       - apk add --no-cache curl
       - curl -fL https://uploader.codecov.io/v0.6.3/aarch64/codecov > /usr/local/bin/codecov && chmod +x /usr/local/bin/codecov
-      - codecov -F frontend
+      - codecov
     environment:
       CODECOV_TOKEN:
         from_secret: codecov_token
