@@ -33,6 +33,7 @@ test("cancel timer creation", async ({ page }) => {
 
 test("delete timers", async ({ page }) => {
     await page.goto("/");
+
     for (let i = 0; i < 3; i++) {
         await createTimer(page);
     }
@@ -45,4 +46,16 @@ test("delete timers", async ({ page }) => {
     }
 
     expect(page.locator(".timerRow")).toHaveCount(0);
+});
+
+test("cancel timer deletion", async ({ page }) => {
+    await page.goto("/");
+
+    await createTimer(page);
+    const originalRowCount = await page.locator(".timerRow").count();
+
+    await page.getByText("Delete").nth(0).click();
+    await page.getByText("Cancel").click();
+
+    expect(page.locator(".timerRow")).toHaveCount(originalRowCount);
 });
