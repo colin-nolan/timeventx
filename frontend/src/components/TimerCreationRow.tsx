@@ -50,8 +50,8 @@ export function TimerCreationRow(props: { addTimer: AddTimer; timer?: Timer; onC
                     placeholder="Name"
                     slotProps={{
                         input: {
-                            "data-testid": "timer-name"
-                        }
+                            "data-testid": "timer-name",
+                        },
                     }}
                 />
             </td>
@@ -63,8 +63,8 @@ export function TimerCreationRow(props: { addTimer: AddTimer; timer?: Timer; onC
                     placeholder="12:00:00"
                     slotProps={{
                         input: {
-                            "data-testid": "timer-start-time"
-                        }
+                            "data-testid": "timer-start-time",
+                        },
                     }}
                 />
             </td>
@@ -75,8 +75,8 @@ export function TimerCreationRow(props: { addTimer: AddTimer; timer?: Timer; onC
                     value={secondsToHoursAndMinutes(duration)}
                     slotProps={{
                         input: {
-                            "data-testid": "timer-duration"
-                        }
+                            "data-testid": "timer-duration",
+                        },
                     }}
                 />
             </td>
