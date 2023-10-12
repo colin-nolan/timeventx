@@ -63,39 +63,51 @@ platform:
   arch: arm64
 
 steps:
-  - name: check-build
-    image: node:20-alpine
-    commands:
-      - &commonFrontendSetup |- 
-          apk add --no-cache bash make
-          cd frontend && yarn install && cd -
-      - make build-frontend API_SERVER_LOCATION=http://localhost:8000
-    depends_on: []
-
-  - name: check-format
-    image: node:20-alpine
-    commands:
-      - *commonFrontendSetup
-      - make format-frontend CHECK=true
-    depends_on: []
-
-  - name: run-tests
+  - name: run-tests-unit
     image: node:20
     commands:
-      - |-
+      - &installBackend |-
           apt-get update
           apt-get install -y --no-install-recommends python-is-python3 python3 python3-poetry
           poetry config virtualenvs.create false
+          poetry self add coverage
           cd backend
           poetry install --no-root --only=main
           cd -
+      - |-
+          cd frontend
+          yarn install
+          cd -
+      - make test-frontend-unit
+    depends_on: []
+
+  - name: run-tests-system
+    image: node:20
+    commands:
+      - *installBackend
       - |- 
           cd frontend
           yarn install
           yarn playwright install
           yarn playwright install-deps 
           cd -
-      - make test-frontend
+      - make test-frontend-system
+    depends_on: []
+
+  - name: check-format
+    image: node:20-alpine
+    commands:
+      - &commonFrontendSetup |- 
+          apk add --no-cache bash make
+          cd frontend && yarn install && cd -
+      - make format-frontend CHECK=true
+    depends_on: []
+
+  - name: check-build
+    image: node:20-alpine
+    commands:
+      - *commonFrontendSetup
+      - make build-frontend API_SERVER_LOCATION=http://localhost:8000
     depends_on: []
 
   - name: publish-coverage
@@ -108,7 +120,8 @@ steps:
       CODECOV_TOKEN:
         from_secret: codecov_token
     depends_on:
-      - run-tests
+      - run-tests-unit
+      - run-tests-system
 
 ---
 

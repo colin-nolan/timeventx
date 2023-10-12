@@ -51,9 +51,15 @@ test-backend:
 	coverage combine; \
 	coverage xml
 
-test-frontend:
+test-frontend: test-frontend-unit test-frontend-system
+
+test-frontend-unit:
 	cd frontend; \
-	yarn run test-with-coverage; \
+	yarn run test-unit
+
+test-frontend-system:
+	cd frontend; \
+	yarn run test-system; \
 	yarn nyc report --reporter=lcov
 
-.PHONY: all build build-frontend build-backend fmt format format-backend format-markdown test test-backend test-frontend
+.PHONY: all build build-frontend build-backend fmt format format-backend format-markdown test test-backend test-frontend test-frontend-unit test-frontend-system

@@ -1,5 +1,7 @@
 import { defineConfig, devices } from "@playwright/test";
 import { temporaryDirectory } from "tempy";
+import { dirname } from "path";
+import { fileURLToPath } from "url";
 
 // XXX: it would be better if these were set to random free ports
 const FRONTEND_PORT = 3003;
@@ -18,7 +20,7 @@ const LOG_LOCATION = `${temporaryDirectory()}/log.txt`;
  * See https://playwright.dev/docs/test-configuration.
  */
 export default defineConfig({
-    testDir: "./tests",
+    testDir: "./tests/system",
     /* Run tests in files in parallel */
     fullyParallel: true,
     /* Fail the build on CI if you accidentally left test.only in the source code. */
@@ -88,15 +90,7 @@ export default defineConfig({
             reuseExistingServer: !process.env.CI,
         },
         {
-            command:
-                `GARDEN_WATER_TIMERS_DATABASE_LOCATION=${DATABASE_DIRECTORY} ` +
-                `GARDEN_WATER_LOG_FILE_LOCATION=${LOG_LOCATION} ` +
-                `GARDEN_WATER_BACKEND_PORT=${BACKEND_PORT} ` +
-                "GARDEN_WATER_INTERFACE=127.0.0.1 " +
-                "GARDEN_WATER_RESTART_ON_ERROR=false " +
-                "GARDEN_WATER_LOG_LEVEL=10 " +
-                "PYTHONPATH=../backend " +
-                "python ../backend/garden_water/main.py",
+            command: `${dirname(fileURLToPath(import.meta.url))}/../scripts/run-test-backend-server.sh ${BACKEND_PORT}`,
             url: `http://127.0.0.1:${BACKEND_PORT}/api/v1/healthcheck`,
             reuseExistingServer: !process.env.CI,
             // Comment out for logs
