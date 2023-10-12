@@ -45,11 +45,11 @@ format-markdown:
 
 test: test-backend test-frontend
 
-test-backend:
+test-backend: test-backend-unit
+
+test-backend-unit:
 	cd backend; \
-	coverage run --concurrency=multiprocessing -m pytest; \
-	coverage combine; \
-	coverage xml
+	coverage run --concurrency=multiprocessing -m pytest
 
 test-frontend: test-frontend-unit test-frontend-system
 
@@ -62,4 +62,4 @@ test-frontend-system:
 	yarn run test-system; \
 	yarn nyc report --reporter=lcov
 
-.PHONY: all build build-frontend build-backend fmt format format-backend format-markdown test test-backend test-frontend test-frontend-unit test-frontend-system
+.PHONY: all build build-frontend build-backend fmt format format-backend format-markdown test test-backend test-backend-unit test-frontend test-frontend-unit test-frontend-system
