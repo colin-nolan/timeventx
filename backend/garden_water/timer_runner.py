@@ -1,6 +1,6 @@
 from datetime import timedelta
 from time import sleep
-from typing import Callable
+from typing import Callable, Optional
 
 from garden_water._logging import flush_file_logs, get_logger
 from garden_water.timers.collections.listenable import Event, ListenableTimersCollection
@@ -44,11 +44,11 @@ class TimerRunner:
         self._turned_on = False
         self._current_time_getter = current_time_getter
         self._on_off_intervals = self._calculate_on_off_intervals()
-        self._timers_change_event = asyncio.Event()
+        self.timers_change_event = asyncio.Event()
 
         def on_timers_change(*args) -> None:
             self._on_off_intervals = self._calculate_on_off_intervals()
-            self._timers_change_event.set()
+            self.timers_change_event.set()
 
         self.timers.add_listener(Event.TIMER_ADDED, on_timers_change)
         self.timers.add_listener(Event.TIMER_REMOVED, on_timers_change)
@@ -77,19 +77,22 @@ class TimerRunner:
                     return interval, False
         return self._on_off_intervals[0], False
 
-    async def run(self):
-        while True:
+    async def run(self, stop_event: Optional[asyncio.Event] = None):
+        while stop_event is None or not stop_event.is_set():
             while len(self.timers) == 0:
                 if self._turned_on:
                     self.do_off_action()
 
-                logger.debug(f"Waiting for timers change event, currently: {self._timers_change_event.is_set()}")
+                logger.debug(f"Waiting for timers change event, currently: {self.timers_change_event.is_set()}")
                 # Wait for timers to change
-                await self._timers_change_event.wait()
+                await self.timers_change_event.wait()
                 # FIXME: need to lock before doing this as it's possible length has changed in the meantime!
-                self._timers_change_event.clear()
+                self.timers_change_event.clear()
 
-            self._timers_change_event.clear()
+                if stop_event is not None and stop_event.is_set():
+                    return
+
+            self.timers_change_event.clear()
 
             try:
                 next_interval, on_now = self.next_interval()
@@ -107,6 +110,8 @@ class TimerRunner:
                 logger.info(f"Waiting for next interval start time: {next_interval.start_time}")
 
                 def on_time_missed_condition(current_time: DayTime) -> bool:
+                    if stop_event.is_set():
+                        return
                     # `True` when the start time has been missed and we've "gone around the clock"
                     return (
                         False
@@ -115,13 +120,15 @@ class TimerRunner:
                         < TimeInterval(current_time, next_interval.start_time).duration
                     )
 
-                timers_changed = await self.wait_for_time(
+                timers_changed = await self._wait_for_time(
                     next_interval.start_time, on_time_missed_condition, "on action"
                 )
                 if timers_changed:
                     continue
 
             def off_time_missed_condition(current_time: DayTime) -> bool:
+                if stop_event.is_set():
+                    return
                 # `True` when the end time has been missed and we've "gone around the clock"
                 return (
                     False
@@ -138,7 +145,7 @@ class TimerRunner:
                 self.do_on_action()
 
             logger.debug(f"Waiting for interval end time: {next_interval.end_time}")
-            timers_changed = await self.wait_for_time(next_interval.end_time, off_time_missed_condition, "off action")
+            timers_changed = await self._wait_for_time(next_interval.end_time, off_time_missed_condition, "off action")
             if timers_changed:
                 continue
 
@@ -154,7 +161,7 @@ class TimerRunner:
         self.on_action()
         self._turned_on = False
 
-    async def wait_for_time(
+    async def _wait_for_time(
         self, waiting_for: DayTime, early_exit_condition: callable, wait_description: str = "wait time"
     ) -> bool:
         """
@@ -177,7 +184,7 @@ class TimerRunner:
             if difference_in_seconds <= 0:
                 return False
 
-            if self._timers_change_event.is_set():
+            if self.timers_change_event.is_set():
                 logger.debug(f"Timers changed whilst waiting for {wait_description}")
                 return True
 

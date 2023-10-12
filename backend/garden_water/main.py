@@ -31,28 +31,31 @@ async def inner_main(configuration: Configuration):
     logger.info("Setting up database")
     timers_database = ListenableTimersCollection(TimersDatabase(configuration[Configuration.TIMERS_DATABASE_LOCATION]))
 
-    tasks = []
-
     logger.info("Starting task runner")
-    timer_runner = TimerRunner(timers_database, lambda: None, lambda: None)
     # TODO: setup on/off actions
-    tasks.append(asyncio.create_task(timer_runner.run()))
+    on_action = lambda: None
+    off_action = lambda: None
+    timer_runner = TimerRunner(timers_database, on_action, off_action)
+    timer_runner_stop_event = asyncio.Event()
+    timer_runner_task = asyncio.create_task(timer_runner.run(timer_runner_stop_event))
 
     logger.info("Starting web server")
     app.configuration = configuration
     app.database = timers_database
     app.timer_runner = timer_runner
-    tasks.append(
-        asyncio.create_task(
-            app.start_server(
-                host=configuration.get_with_standard_default(Configuration.BACKEND_HOST),
-                port=configuration.get_with_standard_default(Configuration.BACKEND_PORT),
-            )
+    server_task = asyncio.create_task(
+        app.start_server(
+            host=configuration.get_with_standard_default(Configuration.BACKEND_HOST),
+            port=configuration.get_with_standard_default(Configuration.BACKEND_PORT),
         )
     )
 
     logger.info("Awaiting tasks")
-    await asyncio.gather(*tasks)
+    await server_task
+
+    timer_runner_stop_event.set()
+    timer_runner.timers_change_event.set()
+    await timer_runner_task
 
     logger.error("Website has shutdown")
 
