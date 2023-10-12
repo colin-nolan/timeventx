@@ -31,10 +31,12 @@ async def inner_main(configuration: Configuration):
     logger.info("Setting up database")
     timers_database = ListenableTimersCollection(TimersDatabase(configuration[Configuration.TIMERS_DATABASE_LOCATION]))
 
-    # TODO: setup on/off actions
-    timer_runner = TimerRunner(timers_database, lambda: None, lambda: None)
-
     tasks = []
+
+    logger.info("Starting task runner")
+    timer_runner = TimerRunner(timers_database, lambda: None, lambda: None)
+    # TODO: setup on/off actions
+    tasks.append(asyncio.create_task(timer_runner.run()))
 
     logger.info("Starting web server")
     app.configuration = configuration
@@ -45,8 +47,6 @@ async def inner_main(configuration: Configuration):
             app.start_server(
                 host=configuration.get_with_standard_default(Configuration.BACKEND_HOST),
                 port=configuration.get_with_standard_default(Configuration.BACKEND_PORT),
-                # TODO: debug
-                debug=True,
             )
         )
     )

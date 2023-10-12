@@ -1,6 +1,12 @@
 import os
 import sys
+from _thread import LockType
 from pathlib import Path
+
+try:
+    import asyncio
+except ImportError:
+    import uasyncio as asyncio
 
 # XXX: it is likely this would need to be changed for a RP2040 that is not a Raspberry Pi Pico
 RP2040_DETECTED = sys.platform == "rp2"

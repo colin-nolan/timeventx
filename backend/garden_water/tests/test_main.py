@@ -40,7 +40,7 @@ def service(tmp_path: Path) -> ServiceLocation:
                 Configuration.TIMERS_DATABASE_LOCATION: tmp_path / "timers.sqlite",
                 Configuration.LOG_FILE_LOCATION: tmp_path / "log.txt",
                 Configuration.BACKEND_PORT: port,
-                Configuration.BACKEND_HOST: "0.0.0.0",
+                Configuration.BACKEND_HOST: "127.0.0.1",
                 Configuration.RESTART_ON_ERROR: False,
                 Configuration.LOG_LEVEL: logging.DEBUG,
             }.items()

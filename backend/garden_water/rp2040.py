@@ -3,13 +3,9 @@ import os
 import time
 
 from garden_water._common import noop_if_not_rp2040
-from garden_water._logging import get_logger
 from garden_water.configuration import Configuration
 
 WIFI_CONNECTION_CHECK_PERIOD = 0.5
-
-
-logger = get_logger(__name__)
 
 
 def connect_to_wifi(ssid: str, password: str, retries: int = math.inf, wait_for_connection_time_in_seconds: float = 60):
@@ -45,6 +41,10 @@ def sync_time():
 
 @noop_if_not_rp2040
 def setup_device(configuration: Configuration):
+    from garden_water._logging import get_logger
+
+    logger = get_logger(__name__)
+
     wifi_ssid = configuration[Configuration.WIFI_SSID]
     wifi_password = configuration[Configuration.WIFI_PASSWORD]
     logger.info(f"Connecting to WiFi: {wifi_ssid}")

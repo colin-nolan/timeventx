@@ -3,7 +3,7 @@ import WarningIcon from "@mui/icons-material/Warning";
 import { Button, ButtonGroup } from "@mui/joy";
 import { useState } from "preact/compat";
 import { Timer, TimerId } from "../lib/api-client";
-import { secondsToHoursAndMinutes } from "../lib/time-seralisation";
+import { secondsToHhmmss } from "../lib/time-seralisation";
 import { AddTimer, TimerCreationRow } from "./TimerCreationRow";
 
 type RemoveTimer = (timerId: TimerId, onSuccess: () => void, onFail: () => void) => void;
@@ -45,7 +45,7 @@ export function TimerRow(props: { timer: Timer; removeTimer: RemoveTimer; addTim
             <td>{props.timer.id}</td>
             <td>{props.timer.name}</td>
             <td>{props.timer.startTime}</td>
-            <td>{secondsToHoursAndMinutes(props.timer.duration)}</td>
+            <td>{secondsToHhmmss(props.timer.duration)}</td>
             <td>
                 {timerConfirmingRemoval ? (
                     <ButtonGroup spacing={1} buttonFlex={1} variant="solid">

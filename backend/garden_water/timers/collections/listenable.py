@@ -1,5 +1,5 @@
 from collections import defaultdict
-from typing import Callable, Iterator, Literal, TypeAlias
+from typing import Callable, Iterator, TypeAlias
 
 from garden_water.timers.collections.abc import IdentifiableTimersCollection
 from garden_water.timers.timers import IdentifiableTimer, Timer, TimerId

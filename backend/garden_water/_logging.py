@@ -7,12 +7,6 @@ from typing import Any, Callable, Collection, Coroutine, Optional, TypeAlias, Un
 
 from garden_water._common import RP2040_DETECTED
 
-try:
-    import asyncio
-except ImportError:
-    import uasyncio as asyncio
-
-
 SyncLogListener: TypeAlias = Callable[[str], None]
 AsyncLogListener: TypeAlias = Coroutine
 LogListener: TypeAlias = Union[SyncLogListener, AsyncLogListener]
@@ -23,6 +17,7 @@ _LOGGER_LEVEL: Optional[int] = None
 _LOGGER_HANDLERS: Optional[Collection[FileHandler]] = None
 _LOGGERS: list[Logger] = []
 _LOG_FILE_LOCATION: Optional[Path] = None
+# FIXME: does allocate_lock work with asyncio?
 _LOG_FILE_LOCK = allocate_lock()
 
 
@@ -82,7 +77,7 @@ def setup_logging(logger_level: int, log_file_location: Optional[Path] = None) -
 
 
 def reset_logging():
-    global _LOGGER_LEVEL, _LOGGER_HANDLERS, _LOG_FILE_LOCATION
+    global _LOGGER_LEVEL, _LOGGER_HANDLERS, _LOG_FILE_LOCATION, _LOGGERS_TO_SETUP
     _LOGGER_LEVEL = None
     _LOGGER_HANDLERS = None
     _LOG_FILE_LOCATION = None

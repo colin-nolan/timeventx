@@ -1,9 +1,20 @@
 from datetime import timedelta
+from time import sleep
 from typing import Callable
 
+from garden_water._logging import flush_file_logs, get_logger
 from garden_water.timers.collections.listenable import Event, ListenableTimersCollection
 from garden_water.timers.intervals import TimeInterval, merge_and_sort_intervals
 from garden_water.timers.timers import DayTime
+
+try:
+    import asyncio
+except ImportError:
+    import uasyncio as asyncio
+
+logger = get_logger(__name__)
+
+_NO_TIMEOUT = -1
 
 
 class NoTimersError(RuntimeError):
@@ -30,11 +41,14 @@ class TimerRunner:
         self.timers = timers
         self.on_action = on_action
         self.off_action = off_action
-        self.current_time_getter = current_time_getter
+        self._turned_on = False
+        self._current_time_getter = current_time_getter
         self._on_off_intervals = self._calculate_on_off_intervals()
+        self._timers_change_event = asyncio.Event()
 
         def on_timers_change(*args) -> None:
             self._on_off_intervals = self._calculate_on_off_intervals()
+            self._timers_change_event.set()
 
         self.timers.add_listener(Event.TIMER_ADDED, on_timers_change)
         self.timers.add_listener(Event.TIMER_REMOVED, on_timers_change)
@@ -49,7 +63,7 @@ class TimerRunner:
         if len(self._on_off_intervals) == 0:
             raise NoTimersError("No timers")
 
-        now = self.current_time_getter()
+        now = self._current_time_getter()
         now_interval = TimeInterval(now, now + timedelta(seconds=1))
 
         for i, interval in enumerate(self._on_off_intervals):
@@ -63,8 +77,114 @@ class TimerRunner:
                     return interval, False
         return self._on_off_intervals[0], False
 
-    def run(self):
-        pass
+    async def run(self):
+        while True:
+            while len(self.timers) == 0:
+                if self._turned_on:
+                    self.do_off_action()
+
+                logger.debug(f"Waiting for timers change event, currently: {self._timers_change_event.is_set()}")
+                # Wait for timers to change
+                await self._timers_change_event.wait()
+                # FIXME: need to lock before doing this as it's possible length has changed in the meantime!
+                self._timers_change_event.clear()
+
+            self._timers_change_event.clear()
+
+            try:
+                next_interval, on_now = self.next_interval()
+            except NoTimersError:
+                # Since getting the lock it is possible that the timers have been updated!
+                continue
+
+            first_encounter_time = self._current_time_getter()
+            logger.debug(f"Got next interval at {first_encounter_time}: {next_interval}")
+
+            if not on_now:
+                if self._turned_on:
+                    self.do_off_action()
+
+                logger.info(f"Waiting for next interval start time: {next_interval.start_time}")
+
+                def on_time_missed_condition(current_time: DayTime) -> bool:
+                    # `True` when the start time has been missed and we've "gone around the clock"
+                    return (
+                        False
+                        if current_time == first_encounter_time
+                        else TimeInterval(current_time, first_encounter_time).duration
+                        < TimeInterval(current_time, next_interval.start_time).duration
+                    )
+
+                timers_changed = await self.wait_for_time(
+                    next_interval.start_time, on_time_missed_condition, "on action"
+                )
+                if timers_changed:
+                    continue
+
+            def off_time_missed_condition(current_time: DayTime) -> bool:
+                # `True` when the end time has been missed and we've "gone around the clock"
+                return (
+                    False
+                    if current_time == first_encounter_time
+                    else TimeInterval(current_time, first_encounter_time).duration
+                    < TimeInterval(current_time, next_interval.end_time).duration
+                )
+
+            if off_time_missed_condition(self._current_time_getter()):
+                logger.warning(f"Timer window has been missed, skipping: {next_interval}")
+                continue
+
+            if not self._turned_on:
+                self.do_on_action()
+
+            logger.debug(f"Waiting for interval end time: {next_interval.end_time}")
+            timers_changed = await self.wait_for_time(next_interval.end_time, off_time_missed_condition, "off action")
+            if timers_changed:
+                continue
+
+            self.do_off_action()
+
+    def do_on_action(self):
+        logger.info("Performing on action!")
+        self.on_action()
+        self._turned_on = True
+
+    def do_off_action(self):
+        logger.info("Performing off action!")
+        self.on_action()
+        self._turned_on = False
+
+    async def wait_for_time(
+        self, waiting_for: DayTime, early_exit_condition: callable, wait_description: str = "wait time"
+    ) -> bool:
+        """
+        Waits until the specified time is reached, returning early if the timers collection changes.
+        :param waiting_for: the time to wait for
+        :param early_exit_condition: exit early if condition ever returns `True`. Passed current time as first and only arg
+        :param wait_description: description of the wait for logging purposes
+        :returns: `True` if the timers have changed and subsequently exited early
+        """
+        # Unfortunately, timeouts aren't implemented on asyncio events:
+        # https://docs.micropython.org/en/v1.14/library/uasyncio.html#class-lock
+        # Therefore, the implementation polls the event every second until the time is reached or the event is triggered
+        while True:
+            current_time = self._current_time_getter()
+            difference_in_seconds = (
+                0 if current_time == waiting_for else TimeInterval(current_time, waiting_for).duration.seconds
+            )
+            logger.debug(f"Seconds to {wait_description}: {difference_in_seconds} ({current_time} => {waiting_for})")
+
+            if difference_in_seconds <= 0:
+                return False
+
+            if self._timers_change_event.is_set():
+                logger.debug(f"Timers changed whilst waiting for {wait_description}")
+                return True
+
+            if early_exit_condition(current_time):
+                return False
+
+            await asyncio.sleep(1)
 
     def _calculate_on_off_intervals(self) -> tuple[TimeInterval, ...]:
         return merge_and_sort_intervals(tuple(map(lambda timer: timer.interval, self.timers)))

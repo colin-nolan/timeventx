@@ -1,7 +1,7 @@
 import { Button, ButtonGroup, Input } from "@mui/joy";
 import { useState } from "preact/compat";
 import { Second, Timer } from "../lib/api-client";
-import { mmssToSeconds, secondsToHoursAndMinutes } from "../lib/time-seralisation";
+import { hhmmssToSeconds, mmssToSeconds, secondsToHhmmss } from "../lib/time-seralisation";
 
 export type AddTimer = (timer: Timer, onSuccess: () => void, onFail: () => void) => void;
 
@@ -71,8 +71,8 @@ export function TimerCreationRow(props: { addTimer: AddTimer; timer?: Timer; onC
             <td>
                 <Input
                     type="time"
-                    onChange={(event) => setDuration(mmssToSeconds(event.target.value))}
-                    value={secondsToHoursAndMinutes(duration)}
+                    onChange={(event) => setDuration(hhmmssToSeconds(event.target.value))}
+                    value={secondsToHhmmss(duration)}
                     slotProps={{
                         input: {
                             "data-testid": "timer-duration",

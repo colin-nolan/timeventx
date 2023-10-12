@@ -14,7 +14,6 @@ from garden_water._logging import (
     clear_logs,
     flush_file_logs,
     get_logger,
-    reset_logging,
     setup_logging,
 )
 from garden_water.tests._common import changes_logging_test
@@ -33,7 +32,7 @@ def test_setup_logging():
 
     with NamedTemporaryFile(mode="r") as file:
         assert setup_logging(logging.INFO, Path(file.name))
-        logger.error("hello")
+        logger.info("hello")
         flush_file_logs()
 
         assert file.read().strip() == "hello"
@@ -46,7 +45,7 @@ def test_clear_logs():
     with NamedTemporaryFile(mode="r", delete=False) as file:
         file_path = Path(file.name)
         assert setup_logging(logging.INFO, file_path)
-        logger.error("hello")
+        logger.info("hello")
         flush_file_logs()
 
         clear_logs()

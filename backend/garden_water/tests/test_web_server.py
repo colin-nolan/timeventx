@@ -9,12 +9,7 @@ from unittest.mock import patch
 import pytest
 from microdot_asyncio_test_client import TestClient
 
-from garden_water._logging import (
-    flush_file_logs,
-    get_logger,
-    reset_logging,
-    setup_logging,
-)
+from garden_water._logging import get_logger, reset_logging, setup_logging
 from garden_water.configuration import Configuration
 from garden_water.tests._common import (
     EXAMPLE_IDENTIFIABLE_TIMER_1,

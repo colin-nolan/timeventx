@@ -1,3 +1,4 @@
+import time
 from datetime import timedelta
 from typing import Any, NewType, cast
 
@@ -10,8 +11,9 @@ TimerId = NewType("TimerId", int)
 class DayTime:
     @staticmethod
     def now() -> "DayTime":
-        # FIXME: implement
-        return DayTime(0, 0, 0)
+        # Use of `tuple` aligns CPython format to MicroPython, without affecting the latter
+        current_time = tuple(time.localtime())
+        return DayTime(current_time[3], current_time[4], current_time[5])
 
     def __init__(self, hour: int, minute: int, second: int):
         if second < 0 or second >= 60:

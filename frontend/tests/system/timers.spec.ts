@@ -7,7 +7,7 @@ async function createTimer(page: Page) {
     await page.getByTestId("timer-create-button").click();
     await page.getByTestId("timer-name").fill("example");
     await page.getByTestId("timer-start-time").fill("15:00:00");
-    await page.getByTestId("timer-duration").fill("10:00");
+    await page.getByTestId("timer-duration").fill("00:10:00");
     await page.getByTestId("timer-add-button").click();
 }
 

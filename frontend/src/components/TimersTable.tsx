@@ -77,7 +77,7 @@ export function TimersTable(props: { apiRootUrl: string; onTimersChange: (timers
                     <th>ID</th>
                     <th>Name</th>
                     <th>Start Time</th>
-                    <th>Duration (mm:ss)</th>
+                    <th>Duration (hh:mm:ss)</th>
                     <th aria-label="last" style={{ width: "var(--Table-lastColumnWidth)" }} />
                 </tr>
             </thead>
