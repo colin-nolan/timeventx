@@ -3,8 +3,6 @@
 kind: pipeline
 type: docker
 name: backend
-platform:
-  arch: arm64
 
 steps:
   - name: run-tests
@@ -60,6 +58,7 @@ kind: pipeline
 name: frontend
 type: docker
 platform:
+  # Targetting arm64 as more powerful CI machine
   arch: arm64
 
 steps:
