@@ -76,7 +76,7 @@ steps:
           cd -
       - |-
           cd frontend
-          yarn install --network-timeout 1000000000
+          yarn install --network-timeout 3600000
           cd -
       - make test-frontend-unit
     depends_on: []
@@ -87,7 +87,7 @@ steps:
       - *installBackend
       - |- 
           cd frontend
-          yarn install --network-timeout 1000000000
+          yarn install --network-timeout 3600000
           yarn playwright install
           yarn playwright install-deps 
           cd -
@@ -99,7 +99,7 @@ steps:
     commands:
       - &commonFrontendSetup |- 
           apk add --no-cache bash make
-          cd frontend && yarn install --network-timeout 1000000000 && cd -
+          cd frontend && yarn install --network-timeout 3600000 && cd -
       - make format-frontend CHECK=true
     depends_on: []
 
