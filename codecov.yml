@@ -2,6 +2,8 @@ flags:
   frontend:
     paths:
       - frontend/
+    carryforward: true
   backend:
     paths:
       - backend/
+    carryforward: true
