@@ -4,7 +4,7 @@ from uuid import uuid4
 
 from garden_water._logging import reset_logging
 from garden_water.timers.serialisation import deserialise_daytime
-from garden_water.timers.timers import IdentifiableTimer, Timer, TimerId
+from garden_water.timers.timers import DayTime, IdentifiableTimer, Timer, TimerId
 
 EXAMPLE_TIMER_1 = Timer("test-1", deserialise_daytime("00:01:02"), timedelta(minutes=10))
 EXAMPLE_IDENTIFIABLE_TIMER_1 = IdentifiableTimer(
@@ -26,8 +26,13 @@ EXAMPLE_TIMERS = (EXAMPLE_TIMER_1, EXAMPLE_TIMER_2, EXAMPLE_IDENTIFIABLE_TIMER_1
 _TEST_LOCK = Lock()
 
 
-def create_example_timer(start_time: str, duration: timedelta) -> IdentifiableTimer:
-    return IdentifiableTimer(TimerId(uuid4().int), "test", deserialise_daytime(start_time), duration)
+def create_example_timer(start_time: str | DayTime, duration: timedelta) -> IdentifiableTimer:
+    return IdentifiableTimer(
+        TimerId(uuid4().int),
+        "test",
+        deserialise_daytime(start_time) if not isinstance(start_time, DayTime) else start_time,
+        duration,
+    )
 
 
 # To be used for tests that interact with logging globals, and hence cannot be ran in parallel
