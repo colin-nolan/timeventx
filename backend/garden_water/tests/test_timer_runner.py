@@ -144,7 +144,7 @@ class TestTimerRunner:
                     task.cancel()
 
     @pytest.mark.asyncio
-    async def test_run_when_top_flag_set(self):
+    async def test_run_when_stop_flag_set(self):
         timer_runner, *_ = _create_timer_runner()
         timer_runner.run_stop_event.set()
         with pytest.raises(RuntimeError):
@@ -184,10 +184,15 @@ class TestTimerRunner:
         async def actions_during_run(
             timer_runner: TimerRunner, time_setter: TimeSetter, on_action: MagicMock, off_action: MagicMock
         ):
-            await short_sleep()
             off_event = asyncio.Event()
             off_action.side_effect = off_event.set
-            time_setter.value = DayTime(0, 0, 3)
+
+            # It's not ideal but the setup does not provide a good way to block until the on_action is called
+            # before changing the time to the end
+            await short_sleep()
+            on_action.assert_called_once()
+            time_setter.value = DayTime(0, 0, 1)
+
             await off_event.wait()
 
         def action_assertions(on_action: MagicMock, off_action: MagicMock):
