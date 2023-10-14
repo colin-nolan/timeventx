@@ -80,6 +80,9 @@ class TimerRunner:
     async def run(
         self, stop_event: Optional[asyncio.Event] = None, min_time_accuracy: timedelta = timedelta(seconds=1)
     ):
+        # TODO: only one invocation allowed
+        # TODO: consider moving properties to instance?
+
         while stop_event is None or not stop_event.is_set():
             while len(self.timers) == 0:
                 if self._turned_on:

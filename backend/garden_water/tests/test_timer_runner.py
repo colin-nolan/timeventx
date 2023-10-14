@@ -198,7 +198,7 @@ class TestTimerRunner:
 
             off_event = asyncio.Event()
             off_action.side_effect = off_event.set
-            time_setter.value = DayTime(0, 0, 3)
+            time_setter.value = DayTime(0, 0, 2)
             await off_event.wait()
 
         await self._test_run(
@@ -232,7 +232,7 @@ class TestTimerRunner:
         )
 
     @pytest.mark.asyncio
-    async def test_run_timer_replaced_when_on(self):
+    async def test_run_timer_on_replaced_with_on(self):
         start_time = DayTime(0, 0, 0)
 
         async def actions_during_run(
@@ -246,12 +246,43 @@ class TestTimerRunner:
 
             replacement_timer = create_example_timer(start_time, timedelta(seconds=5))
             timer_runner.timers.add(replacement_timer)
-            timer_runner.timers.remove(timer)
+            timer_runner.timers.remove(timer.id)
             await short_sleep()
             off_action.assert_not_called()
 
         await self._test_run(
             actions_during_run=actions_during_run,
+            start_time=start_time,
+        )
+
+    @pytest.mark.asyncio
+    async def test_run_timer_on_replaced_with_off(self):
+        start_time = DayTime(0, 0, 0)
+
+        async def actions_during_run(
+            timer_runner: TimerRunner, _: TimeSetter, on_action: MagicMock, off_action: MagicMock
+        ):
+            on_event = asyncio.Event()
+            on_action.side_effect = on_event.set
+            off_event = asyncio.Event()
+            off_action.side_effect = off_event.set
+
+            timer = create_example_timer(start_time, timedelta(seconds=10))
+            timer_runner.timers.add(timer)
+            await on_event.wait()
+
+            replacement_timer = create_example_timer(timer.end_time + timedelta(seconds=1), timedelta(seconds=1))
+            timer_runner.timers.add(replacement_timer)
+            timer_runner.timers.remove(timer.id)
+            await off_event.wait()
+
+        def action_assertions(on_action: MagicMock, off_action: MagicMock):
+            on_action.assert_called_once()
+            off_action.assert_called_once()
+
+        await self._test_run(
+            actions_during_run=actions_during_run,
+            action_assertions=action_assertions,
             start_time=start_time,
         )
 
