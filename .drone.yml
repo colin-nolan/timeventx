@@ -84,9 +84,25 @@ steps:
           cd backend
           poetry install --no-root --only=main
           cd -
-      - |-
+      - &installYarnPackages |- 
           cd frontend
-          yarn install --network-timeout 3600000
+          max_retries=3
+          success=false
+          for i in $(seq 3); do
+              yarn install --network-timeout 3600000  \
+                  && {
+                      success=true
+                      break;
+                  } \
+                  || {
+                      >&2 echo "Package install with Yarn failed - retrying ($$i / $${max_retries})"
+                      sleep 5;
+                  }
+          done
+          if ! $${success}; then
+              >&2 echo "Failed to install packages with Yarn" 
+              exit 1
+          fi
           cd -
       - make test-frontend-unit
     depends_on: []
@@ -95,9 +111,9 @@ steps:
     image: node:20
     commands:
       - *installBackend
+      - *installYarnPackages
       - |-
           cd frontend
-          yarn install --network-timeout 3600000
           yarn playwright install
           yarn playwright install-deps 
           cd -
@@ -107,16 +123,16 @@ steps:
   - name: check-format
     image: node:20-alpine
     commands:
-      - &commonFrontendSetup |- 
-          apk add --no-cache bash make
-          cd frontend && yarn install --network-timeout 3600000 && cd -
+      - apk add --no-cache bash make
+      - *installYarnPackages
       - make format-frontend CHECK=true
     depends_on: []
 
   - name: check-build
     image: node:20-alpine
     commands:
-      - *commonFrontendSetup
+      - apk add --no-cache bash make
+      - *installYarnPackages
       - make build-frontend API_SERVER_LOCATION=http://localhost:8000
     depends_on: []
 
