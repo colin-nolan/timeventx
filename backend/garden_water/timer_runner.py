@@ -77,7 +77,9 @@ class TimerRunner:
                     return interval, False
         return self._on_off_intervals[0], False
 
-    async def run(self, stop_event: Optional[asyncio.Event] = None):
+    async def run(
+        self, stop_event: Optional[asyncio.Event] = None, min_time_accuracy: timedelta = timedelta(seconds=1)
+    ):
         while stop_event is None or not stop_event.is_set():
             while len(self.timers) == 0:
                 if self._turned_on:
@@ -145,7 +147,9 @@ class TimerRunner:
                 self.do_on_action()
 
             logger.debug(f"Waiting for interval end time: {next_interval.end_time}")
-            timers_changed = await self._wait_for_time(next_interval.end_time, off_time_missed_condition, "off action")
+            timers_changed = await self._wait_for_time(
+                next_interval.end_time, off_time_missed_condition, "off action", min_time_accuracy
+            )
             if timers_changed:
                 continue
 
@@ -158,17 +162,22 @@ class TimerRunner:
 
     def do_off_action(self):
         logger.info("Performing off action!")
-        self.on_action()
+        self.off_action()
         self._turned_on = False
 
     async def _wait_for_time(
-        self, waiting_for: DayTime, early_exit_condition: callable, wait_description: str = "wait time"
+        self,
+        waiting_for: DayTime,
+        early_exit_condition: callable,
+        wait_description: str = "wait time",
+        min_time_accuracy: timedelta = timedelta(seconds=1),
     ) -> bool:
         """
         Waits until the specified time is reached, returning early if the timers collection changes.
         :param waiting_for: the time to wait for
         :param early_exit_condition: exit early if condition ever returns `True`. Passed current time as first and only arg
         :param wait_description: description of the wait for logging purposes
+        :param min_time_accuracy: minimum time accuracy
         :returns: `True` if the timers have changed and subsequently exited early
         """
         # Unfortunately, timeouts aren't implemented on asyncio events:
@@ -191,7 +200,7 @@ class TimerRunner:
             if early_exit_condition(current_time):
                 return False
 
-            await asyncio.sleep(1)
+            await asyncio.sleep(min_time_accuracy.total_seconds())
 
     def _calculate_on_off_intervals(self) -> tuple[TimeInterval, ...]:
         return merge_and_sort_intervals(tuple(map(lambda timer: timer.interval, self.timers)))
