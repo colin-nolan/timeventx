@@ -202,15 +202,67 @@ class TestTimerRunner:
             await off_event.wait()
 
         await self._test_run(
-            (),
-            actions_during_run,
+            actions_during_run=actions_during_run,
+            start_time=start_time,
+        )
+
+    @pytest.mark.asyncio
+    async def test_run_timer_removed_when_on(self):
+        start_time = DayTime(0, 0, 0)
+
+        async def actions_during_run(
+            timer_runner: TimerRunner, _: TimeSetter, on_action: MagicMock, off_action: MagicMock
+        ):
+            timer = create_example_timer(start_time, timedelta(seconds=1))
+            timer_runner.timers.add(timer)
+
+            on_event = asyncio.Event()
+            on_action.side_effect = on_event.set
+            await on_event.wait()
+
+            # Expect off event without timer change when timer is removed
+            off_event = asyncio.Event()
+            off_action.side_effect = off_event.set
+            timer_runner.timers.remove(timer.id)
+            await off_event.wait()
+
+        await self._test_run(
+            actions_during_run=actions_during_run,
+            start_time=start_time,
+        )
+
+    @pytest.mark.asyncio
+    async def test_run_timer_replaced_when_on(self):
+        start_time = DayTime(0, 0, 0)
+
+        async def actions_during_run(
+            timer_runner: TimerRunner, time_setter: TimeSetter, on_action: MagicMock, off_action: MagicMock
+        ):
+            timer = create_example_timer(start_time, timedelta(seconds=10))
+            timer_runner.timers.add(timer)
+
+            on_event = asyncio.Event()
+            on_action.side_effect = on_event.set
+            time_setter.value = DayTime(0, 0, 2)
+            await on_event.wait()
+
+            replacement_timer = create_example_timer(start_time + timedelta(seconds=1), timedelta(seconds=5))
+            timer_runner.timers.add(replacement_timer)
+            timer_runner.timers.remove(timer)
+            await short_sleep()
+            off_action.assert_not_called()
+
+        await self._test_run(
+            actions_during_run=actions_during_run,
             start_time=start_time,
         )
 
     async def _test_run(
         self,
-        start_duration_pairs: StartDurationPairsIterable,
-        actions_during_run: Callable[[TimerRunner, TimeSetter, MagicMock, MagicMock], Awaitable[None]],
+        start_duration_pairs: StartDurationPairsIterable = (),
+        actions_during_run: Callable[
+            [TimerRunner, TimeSetter, MagicMock, MagicMock], Awaitable[None]
+        ] = lambda *_: None,
         action_assertions: Callable[[MagicMock, MagicMock], None] = lambda *_: None,
         start_time: DayTime = DayTime(0, 0, 0),
     ):
