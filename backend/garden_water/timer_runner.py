@@ -91,13 +91,10 @@ class TimerRunner:
 
         while not self.run_stop_event.is_set():
             while len(self.timers) == 0:
-                if self._turned_on:
-                    self._do_off_action()
+                self._set_off()
 
                 logger.debug(f"Waiting for timers change event, currently: {self.timers_change_event.is_set()}")
-                # Wait for timers to change
                 await self.timers_change_event.wait()
-                # FIXME: need to lock before doing this as it's possible length has changed in the meantime?
                 self.timers_change_event.clear()
 
                 if self.run_stop_event.is_set():
@@ -115,14 +112,11 @@ class TimerRunner:
             logger.debug(f"Got next interval at {first_encounter_time}: {next_interval}")
 
             if not on_now:
-                if self._turned_on:
-                    self._do_off_action()
+                self._set_off()
 
                 logger.info(f"Waiting for next interval start time: {next_interval.start_time}")
 
                 def on_time_missed_condition(current_time: DayTime) -> bool:
-                    if self.run_stop_event.is_set():
-                        return
                     # `True` when the start time has been missed and we've "gone around the clock"
                     return (
                         False
@@ -131,15 +125,13 @@ class TimerRunner:
                         < TimeInterval(current_time, next_interval.start_time).duration
                     )
 
-                timers_changed = await self._wait_for_time(
+                wait_completed = await self._wait_for_time(
                     next_interval.start_time, on_time_missed_condition, "on action"
                 )
-                if timers_changed:
+                if not wait_completed:
                     continue
 
             def off_time_missed_condition(current_time: DayTime) -> bool:
-                if self.run_stop_event.is_set():
-                    return
                 # `True` when the end time has been missed and we've "gone around the clock"
                 return (
                     False
@@ -152,27 +144,30 @@ class TimerRunner:
                 logger.warning(f"Timer window has been missed, skipping: {next_interval}")
                 continue
 
-            if not self._turned_on:
-                self._do_on_action()
+            self._set_on()
 
             logger.debug(f"Waiting for interval end time: {next_interval.end_time}")
-            timers_changed = await self._wait_for_time(next_interval.end_time, off_time_missed_condition, "off action")
-            if timers_changed:
+            wait_completed = await self._wait_for_time(next_interval.end_time, off_time_missed_condition, "off action")
+            if not wait_completed:
                 continue
 
-            self._do_off_action()
+            self._set_off()
 
         self._running = False
+        # Default to off state
+        self._set_off()
 
     async def _wait_for_time(
-        self, waiting_for: DayTime, early_exit_condition: callable, wait_description: str = "wait time"
+        self, waiting_for: DayTime, exit_condition: callable, wait_description: str = "wait time"
     ) -> bool:
         """
-        Waits until the specified time is reached, returning early if the timers collection changes.
+        Waits until the specified time is reached, returning early if the wait was interrupted by a change in the timers
+        or the run stop event being set.
         :param waiting_for: the time to wait for
-        :param early_exit_condition: exit early if condition ever returns `True`. Passed current time as first and only arg
+        :param exit_condition: exit as wait completed if condition ever returns `True`. Passed current time as first
+                               and only argument
         :param wait_description: description of the wait for logging purposes
-        :returns: `True` if the timers have changed and subsequently exited early
+        :returns: `True` if the wait was completed
         """
         # Unfortunately, timeouts aren't implemented on asyncio events:
         # https://docs.micropython.org/en/v1.14/library/uasyncio.html#class-lock
@@ -185,13 +180,16 @@ class TimerRunner:
             logger.debug(f"Seconds to {wait_description}: {difference_in_seconds} ({current_time} => {waiting_for})")
 
             if difference_in_seconds <= 0:
-                return False
+                return True
 
             if self.timers_change_event.is_set():
                 logger.debug(f"Timers changed whilst waiting for {wait_description}")
+                return False
+
+            if exit_condition(current_time):
                 return True
 
-            if early_exit_condition(current_time):
+            if self.run_stop_event.is_set():
                 return False
 
             await asyncio.sleep(self.minimum_time_accuracy.total_seconds())
@@ -199,12 +197,14 @@ class TimerRunner:
     def _calculate_on_off_intervals(self) -> tuple[TimeInterval, ...]:
         return merge_and_sort_intervals(tuple(map(lambda timer: timer.interval, self.timers)))
 
-    def _do_on_action(self):
-        logger.info("Performing on action!")
-        self.on_action()
-        self._turned_on = True
+    def _set_on(self):
+        if not self._turned_on:
+            logger.info("Performing on action!")
+            self.on_action()
+            self._turned_on = True
 
-    def _do_off_action(self):
-        logger.info("Performing off action!")
-        self.off_action()
-        self._turned_on = False
+    def _set_off(self):
+        if self._turned_on:
+            logger.info("Performing off action!")
+            self.off_action()
+            self._turned_on = False

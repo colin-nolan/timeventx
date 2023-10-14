@@ -315,14 +315,34 @@ class TestTimerRunner:
             on_event = asyncio.Event()
             off_event = asyncio.Event()
             on_action.side_effect = on_event.set
-            off_event = asyncio.Event()
             off_action.side_effect = off_event.set
 
-            timer = create_example_timer(start_time, timedelta(seconds=1))
-            timer_runner.timers.add(timer)
+            timer_runner.timers.add(create_example_timer(start_time, timedelta(seconds=1)))
             await on_event.wait()
 
             time_setter.value = start_time + timedelta(hours=1)
+            await off_event.wait()
+
+        await self._test_run(
+            actions_during_run=actions_during_run,
+            start_time=start_time,
+        )
+
+    @pytest.mark.asyncio
+    async def test_run_stop_when_on(self):
+        start_time = DayTime(0, 0, 0)
+
+        async def actions_during_run(
+            timer_runner: TimerRunner, time_setter: TimeSetter, on_action: MagicMock, off_action: MagicMock
+        ):
+            on_event = asyncio.Event()
+            off_event = asyncio.Event()
+            on_action.side_effect = on_event.set
+            off_action.side_effect = off_event.set
+
+            timer_runner.timers.add(create_example_timer(start_time, timedelta(seconds=1)))
+            await on_event.wait()
+            timer_runner.run_stop_event.set()
             await off_event.wait()
 
         await self._test_run(
