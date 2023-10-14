@@ -127,10 +127,28 @@ class TestTimerRunner:
     @pytest.mark.asyncio
     async def test_run_no_timers(self):
         await self._test_run(
-            (),
-            lambda *_: short_sleep(),
-            assert_no_magic_mocks_called,
+            actions_during_run=lambda *_: short_sleep(),
+            action_assertions=assert_no_magic_mocks_called,
         )
+
+    @pytest.mark.asyncio
+    async def test_run_when_already_running(self):
+        timer_runner, *_ = _create_timer_runner()
+        run_tasks = []
+        with pytest.raises(RuntimeError):
+            try:
+                run_tasks.extend((asyncio.create_task(timer_runner.run()), asyncio.create_task(timer_runner.run())))
+                await asyncio.gather(*run_tasks)
+            finally:
+                for task in run_tasks:
+                    task.cancel()
+
+    @pytest.mark.asyncio
+    async def test_run_when_top_flag_set(self):
+        timer_runner, *_ = _create_timer_runner()
+        timer_runner.run_stop_event.set()
+        with pytest.raises(RuntimeError):
+            await timer_runner.run()
 
     @pytest.mark.asyncio
     async def test_run_timer_in_future_on_start(self):
@@ -166,20 +184,21 @@ class TestTimerRunner:
         async def actions_during_run(
             timer_runner: TimerRunner, time_setter: TimeSetter, on_action: MagicMock, off_action: MagicMock
         ):
-            on_event = asyncio.Event()
-            on_action.side_effect = on_event.set
-            time_setter.value = DayTime(0, 0, 1)
-            await on_event.wait()
-
+            await short_sleep()
             off_event = asyncio.Event()
             off_action.side_effect = off_event.set
             time_setter.value = DayTime(0, 0, 3)
             await off_event.wait()
 
+        def action_assertions(on_action: MagicMock, off_action: MagicMock):
+            on_action.assert_called_once()
+            off_action.assert_called_once()
+
         await self._test_run(
-            ((start_time + timedelta(seconds=1), timedelta(seconds=1)),),
+            ((start_time, timedelta(seconds=1)),),
             actions_during_run,
-            start_time=start_time,
+            action_assertions,
+            start_time,
         )
 
     @pytest.mark.asyncio
@@ -211,7 +230,7 @@ class TestTimerRunner:
         start_time = DayTime(0, 0, 0)
 
         async def actions_during_run(
-            timer_runner: TimerRunner, _: TimeSetter, on_action: MagicMock, off_action: MagicMock
+            timer_runner: TimerRunner, time_setter: TimeSetter, on_action: MagicMock, off_action: MagicMock
         ):
             timer = create_example_timer(start_time, timedelta(seconds=1))
             timer_runner.timers.add(timer)
@@ -236,7 +255,7 @@ class TestTimerRunner:
         start_time = DayTime(0, 0, 0)
 
         async def actions_during_run(
-            timer_runner: TimerRunner, _: TimeSetter, on_action: MagicMock, off_action: MagicMock
+            timer_runner: TimerRunner, time_setter: TimeSetter, on_action: MagicMock, off_action: MagicMock
         ):
             on_event = asyncio.Event()
             on_action.side_effect = on_event.set
@@ -260,7 +279,7 @@ class TestTimerRunner:
         start_time = DayTime(0, 0, 0)
 
         async def actions_during_run(
-            timer_runner: TimerRunner, _: TimeSetter, on_action: MagicMock, off_action: MagicMock
+            timer_runner: TimerRunner, time_setter: TimeSetter, on_action: MagicMock, off_action: MagicMock
         ):
             on_event = asyncio.Event()
             on_action.side_effect = on_event.set
@@ -322,12 +341,12 @@ class TestTimerRunner:
     ):
         timer_runner, time_setter, on_action, off_action = _create_timer_runner(start_duration_pairs, start_time)
 
-        stop_event = asyncio.Event()
-        task = asyncio.create_task(timer_runner.run(stop_event, timedelta(microseconds=1)))
+        timer_runner.minimum_time_accuracy = timedelta(microseconds=1)
+        task = asyncio.create_task(timer_runner.run())
 
         await actions_during_run(timer_runner, time_setter, on_action, off_action)
 
-        stop_event.set()
+        timer_runner.run_stop_event.set()
         # Trigger re-evaluation of stop event
         timer_runner.timers_change_event.set()
         await task

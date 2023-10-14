@@ -35,8 +35,7 @@ class TimerRunner:
         off_action: Callable,
         current_time_getter: Callable[[], DayTime] = DayTime.now,
     ):
-        if not issubclass(type(timers), ListenableTimersCollection):
-            raise TypeError(f"Timers must be a ListenableTimersCollection, got: {type(timers)}")
+        assert issubclass(type(timers), ListenableTimersCollection)
 
         self.timers = timers
         self.on_action = on_action
@@ -45,6 +44,11 @@ class TimerRunner:
         self._current_time_getter = current_time_getter
         self._on_off_intervals = self._calculate_on_off_intervals()
         self.timers_change_event = asyncio.Event()
+
+        self._running = False
+        self._running_lock = asyncio.Lock()
+        self.run_stop_event = asyncio.Event()
+        self.minimum_time_accuracy: timedelta = timedelta(seconds=1)
 
         def on_timers_change(*args) -> None:
             self._on_off_intervals = self._calculate_on_off_intervals()
@@ -77,13 +81,15 @@ class TimerRunner:
                     return interval, False
         return self._on_off_intervals[0], False
 
-    async def run(
-        self, stop_event: Optional[asyncio.Event] = None, min_time_accuracy: timedelta = timedelta(seconds=1)
-    ):
-        # TODO: only one invocation allowed
-        # TODO: consider moving properties to instance?
+    async def run(self):
+        async with self._running_lock:
+            if self._running:
+                raise RuntimeError("Already running in another thread")
+            self._running = True
+        if self.run_stop_event.is_set():
+            raise RuntimeError("Run stop event must be cleared before running")
 
-        while stop_event is None or not stop_event.is_set():
+        while not self.run_stop_event.is_set():
             while len(self.timers) == 0:
                 if self._turned_on:
                     self._do_off_action()
@@ -91,10 +97,10 @@ class TimerRunner:
                 logger.debug(f"Waiting for timers change event, currently: {self.timers_change_event.is_set()}")
                 # Wait for timers to change
                 await self.timers_change_event.wait()
-                # FIXME: need to lock before doing this as it's possible length has changed in the meantime!
+                # FIXME: need to lock before doing this as it's possible length has changed in the meantime?
                 self.timers_change_event.clear()
 
-                if stop_event is not None and stop_event.is_set():
+                if self.run_stop_event.is_set():
                     return
 
             self.timers_change_event.clear()
@@ -115,7 +121,7 @@ class TimerRunner:
                 logger.info(f"Waiting for next interval start time: {next_interval.start_time}")
 
                 def on_time_missed_condition(current_time: DayTime) -> bool:
-                    if stop_event.is_set():
+                    if self.run_stop_event.is_set():
                         return
                     # `True` when the start time has been missed and we've "gone around the clock"
                     return (
@@ -132,7 +138,7 @@ class TimerRunner:
                     continue
 
             def off_time_missed_condition(current_time: DayTime) -> bool:
-                if stop_event.is_set():
+                if self.run_stop_event.is_set():
                     return
                 # `True` when the end time has been missed and we've "gone around the clock"
                 return (
@@ -150,27 +156,22 @@ class TimerRunner:
                 self._do_on_action()
 
             logger.debug(f"Waiting for interval end time: {next_interval.end_time}")
-            timers_changed = await self._wait_for_time(
-                next_interval.end_time, off_time_missed_condition, "off action", min_time_accuracy
-            )
+            timers_changed = await self._wait_for_time(next_interval.end_time, off_time_missed_condition, "off action")
             if timers_changed:
                 continue
 
             self._do_off_action()
 
+        self._running = False
+
     async def _wait_for_time(
-        self,
-        waiting_for: DayTime,
-        early_exit_condition: callable,
-        wait_description: str = "wait time",
-        min_time_accuracy: timedelta = timedelta(seconds=1),
+        self, waiting_for: DayTime, early_exit_condition: callable, wait_description: str = "wait time"
     ) -> bool:
         """
         Waits until the specified time is reached, returning early if the timers collection changes.
         :param waiting_for: the time to wait for
         :param early_exit_condition: exit early if condition ever returns `True`. Passed current time as first and only arg
         :param wait_description: description of the wait for logging purposes
-        :param min_time_accuracy: minimum time accuracy
         :returns: `True` if the timers have changed and subsequently exited early
         """
         # Unfortunately, timeouts aren't implemented on asyncio events:
@@ -193,7 +194,7 @@ class TimerRunner:
             if early_exit_condition(current_time):
                 return False
 
-            await asyncio.sleep(min_time_accuracy.total_seconds())
+            await asyncio.sleep(self.minimum_time_accuracy.total_seconds())
 
     def _calculate_on_off_intervals(self) -> tuple[TimeInterval, ...]:
         return merge_and_sort_intervals(tuple(map(lambda timer: timer.interval, self.timers)))

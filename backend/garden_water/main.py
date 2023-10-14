@@ -36,8 +36,7 @@ async def inner_main(configuration: Configuration):
     on_action = lambda: None
     off_action = lambda: None
     timer_runner = TimerRunner(timers_database, on_action, off_action)
-    timer_runner_stop_event = asyncio.Event()
-    timer_runner_task = asyncio.create_task(timer_runner.run(timer_runner_stop_event))
+    timer_runner_task = asyncio.create_task(timer_runner.run())
 
     logger.info("Starting web server")
     app.configuration = configuration
@@ -53,7 +52,7 @@ async def inner_main(configuration: Configuration):
     logger.info("Awaiting tasks")
     await server_task
 
-    timer_runner_stop_event.set()
+    timer_runner.run_stop_event.set()
     timer_runner.timers_change_event.set()
     await timer_runner_task
 
