@@ -140,10 +140,6 @@ class TimerRunner:
                     < TimeInterval(current_time, next_interval.end_time).duration
                 )
 
-            if off_time_missed_condition(self._current_time_getter()):
-                logger.warning(f"Timer window has been missed, skipping: {next_interval}")
-                continue
-
             self._set_on()
 
             logger.debug(f"Waiting for interval end time: {next_interval.end_time}")
