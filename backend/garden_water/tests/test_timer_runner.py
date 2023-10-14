@@ -236,21 +236,44 @@ class TestTimerRunner:
         start_time = DayTime(0, 0, 0)
 
         async def actions_during_run(
-            timer_runner: TimerRunner, time_setter: TimeSetter, on_action: MagicMock, off_action: MagicMock
+            timer_runner: TimerRunner, _: TimeSetter, on_action: MagicMock, off_action: MagicMock
         ):
-            timer = create_example_timer(start_time, timedelta(seconds=10))
-            timer_runner.timers.add(timer)
-
             on_event = asyncio.Event()
             on_action.side_effect = on_event.set
-            time_setter.value = DayTime(0, 0, 2)
+            timer = create_example_timer(start_time, timedelta(seconds=10))
+            timer_runner.timers.add(timer)
             await on_event.wait()
 
-            replacement_timer = create_example_timer(start_time + timedelta(seconds=1), timedelta(seconds=5))
+            replacement_timer = create_example_timer(start_time, timedelta(seconds=5))
             timer_runner.timers.add(replacement_timer)
             timer_runner.timers.remove(timer)
             await short_sleep()
             off_action.assert_not_called()
+
+        await self._test_run(
+            actions_during_run=actions_during_run,
+            start_time=start_time,
+        )
+
+    @pytest.mark.asyncio
+    async def test_run_misses_off_time(self):
+        start_time = DayTime(0, 0, 0)
+
+        async def actions_during_run(
+            timer_runner: TimerRunner, time_setter: TimeSetter, on_action: MagicMock, off_action: MagicMock
+        ):
+            on_event = asyncio.Event()
+            off_event = asyncio.Event()
+            on_action.side_effect = on_event.set
+            off_event = asyncio.Event()
+            off_action.side_effect = off_event.set
+
+            timer = create_example_timer(start_time, timedelta(seconds=1))
+            timer_runner.timers.add(timer)
+            await on_event.wait()
+
+            time_setter.value = start_time + timedelta(hours=1)
+            await off_event.wait()
 
         await self._test_run(
             actions_during_run=actions_during_run,

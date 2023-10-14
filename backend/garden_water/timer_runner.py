@@ -83,7 +83,7 @@ class TimerRunner:
         while stop_event is None or not stop_event.is_set():
             while len(self.timers) == 0:
                 if self._turned_on:
-                    self.do_off_action()
+                    self._do_off_action()
 
                 logger.debug(f"Waiting for timers change event, currently: {self.timers_change_event.is_set()}")
                 # Wait for timers to change
@@ -107,7 +107,7 @@ class TimerRunner:
 
             if not on_now:
                 if self._turned_on:
-                    self.do_off_action()
+                    self._do_off_action()
 
                 logger.info(f"Waiting for next interval start time: {next_interval.start_time}")
 
@@ -144,7 +144,7 @@ class TimerRunner:
                 continue
 
             if not self._turned_on:
-                self.do_on_action()
+                self._do_on_action()
 
             logger.debug(f"Waiting for interval end time: {next_interval.end_time}")
             timers_changed = await self._wait_for_time(
@@ -153,17 +153,7 @@ class TimerRunner:
             if timers_changed:
                 continue
 
-            self.do_off_action()
-
-    def do_on_action(self):
-        logger.info("Performing on action!")
-        self.on_action()
-        self._turned_on = True
-
-    def do_off_action(self):
-        logger.info("Performing off action!")
-        self.off_action()
-        self._turned_on = False
+            self._do_off_action()
 
     async def _wait_for_time(
         self,
@@ -204,3 +194,13 @@ class TimerRunner:
 
     def _calculate_on_off_intervals(self) -> tuple[TimeInterval, ...]:
         return merge_and_sort_intervals(tuple(map(lambda timer: timer.interval, self.timers)))
+
+    def _do_on_action(self):
+        logger.info("Performing on action!")
+        self.on_action()
+        self._turned_on = True
+
+    def _do_off_action(self):
+        logger.info("Performing off action!")
+        self.off_action()
+        self._turned_on = False
