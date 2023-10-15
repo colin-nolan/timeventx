@@ -27,4 +27,5 @@ GARDEN_WATER_TIMERS_DATABASE_LOCATION="${database_location}" \
     GARDEN_WATER_BACKEND_INTERFACE=127.0.0.1 \
     GARDEN_WATER_RESTART_ON_ERROR=false \
     GARDEN_WATER_LOG_LEVEL=10 \
+    GARDEN_WATER_ACTION_CONTROLLER_MODULE=garden_water.actions.noop \
     PYTHONPATH=. coverage run garden_water/main.py

@@ -83,6 +83,9 @@ class Configuration:
         lambda value: True if value.lower() == "true" else False,
         default=True,
     )
+    ACTION_CONTROLLER_MODULE = ConfigurationDescription(
+        f"{ENVIRONMENT_VARIABLE_PREFIX}_ACTION_CONTROLLER_MODULE", "actions.module", str
+    )
 
     @staticmethod
     def write_env_to_config_file(config_file_location: Path):

@@ -43,6 +43,7 @@ def service(tmp_path: Path) -> ServiceLocation:
                 Configuration.BACKEND_HOST: "127.0.0.1",
                 Configuration.RESTART_ON_ERROR: False,
                 Configuration.LOG_LEVEL: logging.DEBUG,
+                Configuration.ACTION_CONTROLLER_MODULE: "garden_water.actions.noop",
             }.items()
         },
     ):

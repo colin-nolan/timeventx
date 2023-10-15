@@ -6,7 +6,7 @@ from typing import Optional
 
 from garden_water._common import RP2040_DETECTED
 from garden_water._logging import get_logger, setup_logging
-from garden_water.actions import NoopActionController, get_action_controller
+from garden_water.actions.actions import ActionController, get_global_action_controller
 from garden_water.configuration import DEFAULT_CONFIGURATION_FILE_NAME, Configuration
 from garden_water.rp2040 import setup_device
 from garden_water.timer_runner import TimerRunner
@@ -33,11 +33,7 @@ async def inner_main(configuration: Configuration):
     timers_database = ListenableTimersCollection(TimersDatabase(configuration[Configuration.TIMERS_DATABASE_LOCATION]))
 
     logger.info("Starting task runner")
-    # TODO: implement global setting mechanism
-    # action_controller = get_action_controller()
-    action_controller = NoopActionController()
-    if action_controller is None:
-        raise RuntimeError("Action controller not set up")
+    action_controller = get_action_controller(configuration)
     timer_runner = TimerRunner(timers_database, action_controller)
     timer_runner_task = asyncio.create_task(timer_runner.run())
 
@@ -60,6 +56,15 @@ async def inner_main(configuration: Configuration):
     await timer_runner_task
 
     logger.error("Website has shutdown")
+
+
+def get_action_controller(configuration: Configuration) -> ActionController:
+    # Not using `imp` module as not implemented on MicroPython
+    __import__(configuration[Configuration.ACTION_CONTROLLER_MODULE])
+
+    action_controller = get_global_action_controller()
+    if action_controller is None:
+        raise RuntimeError("Action controller not set up")
 
 
 def reset(cooldown_time_in_seconds: int = 10):

@@ -6,7 +6,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from garden_water.actions import ActionController
+from garden_water.actions.actions import ActionController
 from garden_water.tests._common import (
     EXAMPLE_TIMER_1,
     EXAMPLE_TIMERS,
