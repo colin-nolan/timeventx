@@ -6,6 +6,7 @@ from typing import Optional
 
 from garden_water._common import RP2040_DETECTED
 from garden_water._logging import get_logger, setup_logging
+from garden_water.actions import NoopActionController, get_action_controller
 from garden_water.configuration import DEFAULT_CONFIGURATION_FILE_NAME, Configuration
 from garden_water.rp2040 import setup_device
 from garden_water.timer_runner import TimerRunner
@@ -32,10 +33,12 @@ async def inner_main(configuration: Configuration):
     timers_database = ListenableTimersCollection(TimersDatabase(configuration[Configuration.TIMERS_DATABASE_LOCATION]))
 
     logger.info("Starting task runner")
-    # TODO: setup on/off actions
-    on_action = lambda: None
-    off_action = lambda: None
-    timer_runner = TimerRunner(timers_database, on_action, off_action)
+    # TODO: implement global setting mechanism
+    # action_controller = get_action_controller()
+    action_controller = NoopActionController()
+    if action_controller is None:
+        raise RuntimeError("Action controller not set up")
+    timer_runner = TimerRunner(timers_database, action_controller)
     timer_runner_task = asyncio.create_task(timer_runner.run())
 
     logger.info("Starting web server")

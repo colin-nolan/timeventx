@@ -6,6 +6,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
+from garden_water.actions import ActionController
 from garden_water.tests._common import (
     EXAMPLE_TIMER_1,
     EXAMPLE_TIMERS,
@@ -36,34 +37,31 @@ StartDurationPairsIterable = Iterable[tuple[str, timedelta]]
 TimeSetter = MutableItem[DayTime]
 
 
-def _create_timer_runner(
-    start_duration_pairs: StartDurationPairsIterable = (), current_time: DayTime = DayTime(0, 0, 0)
-) -> tuple[TimerRunner, MutableItem[DayTime], MagicMock, MagicMock]:
-    timers = (create_example_timer(start_time, duration) for start_time, duration in start_duration_pairs)
-    time_setter = TimeSetter(current_time)
+class MockActionController(ActionController):
+    def __init__(self):
+        super().__init__()
+        self.on_action_mock = MagicMock()
+        self.on_action_called_event = asyncio.Event()
+        self.off_action_mock = MagicMock()
+        self.off_action_called_event = asyncio.Event()
 
-    on_action = MagicMock()
-    off_action = MagicMock()
+    async def on_action(self):
+        self.on_action_mock()
+        self.on_action_called_event.set()
 
-    def current_time_getter() -> DayTime:
-        return time_setter.value
+    async def off_action(self):
+        self.off_action_mock()
+        self.off_action_called_event.set()
 
-    return (
-        TimerRunner(
-            ListenableTimersCollection(InMemoryIdentifiableTimersCollection(timers)),
-            on_action,
-            off_action,
-            current_time_getter=current_time_getter,
-        ),
-        time_setter,
-        on_action,
-        off_action,
-    )
-
-
-def _create_interval(start_time: str, duration: timedelta) -> TimeInterval:
-    start_time = deserialise_daytime(start_time)
-    return TimeInterval(start_time, start_time + duration)
+    def assert_actions_called(self, on_action: bool = True, off_action: bool = True):
+        if on_action:
+            self.on_action_mock.assert_called()
+        else:
+            self.on_action_mock.assert_not_called()
+        if off_action:
+            self.off_action_mock.assert_called()
+        else:
+            self.off_action_mock.assert_not_called()
 
 
 class TestTimerRunner:
@@ -127,8 +125,8 @@ class TestTimerRunner:
     @pytest.mark.asyncio
     async def test_run_no_timers(self):
         await self._test_run(
-            actions_during_run=lambda *_: short_sleep(),
-            action_assertions=assert_no_magic_mocks_called,
+            actions_during_run=lambda *_: _short_sleep(),
+            action_assertions=lambda action_controller: action_controller.assert_actions_called(False, False),
         )
 
     @pytest.mark.asyncio
@@ -156,8 +154,8 @@ class TestTimerRunner:
 
         await self._test_run(
             ((start_time + timedelta(seconds=1), timedelta(seconds=1)),),
-            lambda *_: short_sleep(),
-            assert_no_magic_mocks_called,
+            lambda *_: _short_sleep(),
+            lambda action_controller: action_controller.assert_actions_called(False, False),
             start_time,
         )
 
@@ -166,14 +164,14 @@ class TestTimerRunner:
         start_time = DayTime(0, 0, 0)
 
         async def actions_during_run(timer_runner: TimerRunner, *_):
-            await short_sleep()
+            await _short_sleep()
             timer_runner.timers.add(create_example_timer(start_time + timedelta(seconds=1), timedelta(seconds=1)))
-            await short_sleep()
+            await _short_sleep()
 
         await self._test_run(
             (),
             actions_during_run,
-            assert_no_magic_mocks_called,
+            lambda action_controller: action_controller.assert_actions_called(False, False),
             start_time,
         )
 
@@ -182,27 +180,16 @@ class TestTimerRunner:
         start_time = DayTime(0, 0, 0)
 
         async def actions_during_run(
-            timer_runner: TimerRunner, time_setter: TimeSetter, on_action: MagicMock, off_action: MagicMock
+            timer_runner: TimerRunner, time_setter: TimeSetter, action_controller: MockActionController
         ):
-            off_event = asyncio.Event()
-            off_action.side_effect = off_event.set
-
-            # It's not ideal but the setup does not provide a good way to block until the on_action is called
-            # before changing the time to the end
-            await short_sleep()
-            on_action.assert_called_once()
+            await action_controller.on_action_called_event.wait()
             time_setter.value = DayTime(0, 0, 1)
-
-            await off_event.wait()
-
-        def action_assertions(on_action: MagicMock, off_action: MagicMock):
-            on_action.assert_called_once()
-            off_action.assert_called_once()
+            await action_controller.off_action_called_event.wait()
 
         await self._test_run(
             ((start_time, timedelta(seconds=1)),),
             actions_during_run,
-            action_assertions,
+            lambda action_controller: action_controller.assert_actions_called(),
             start_time,
         )
 
@@ -211,19 +198,15 @@ class TestTimerRunner:
         start_time = DayTime(0, 0, 0)
 
         async def actions_during_run(
-            timer_runner: TimerRunner, time_setter: TimeSetter, on_action: MagicMock, off_action: MagicMock
+            timer_runner: TimerRunner, time_setter: TimeSetter, action_controller: MockActionController
         ):
             timer_runner.timers.add(create_example_timer(start_time + timedelta(seconds=1), timedelta(seconds=1)))
 
-            on_event = asyncio.Event()
-            on_action.side_effect = on_event.set
             time_setter.value = DayTime(0, 0, 1)
-            await on_event.wait()
+            await action_controller.on_action_called_event.wait()
 
-            off_event = asyncio.Event()
-            off_action.side_effect = off_event.set
             time_setter.value = DayTime(0, 0, 2)
-            await off_event.wait()
+            await action_controller.off_action_called_event.wait()
 
         await self._test_run(
             actions_during_run=actions_during_run,
@@ -235,20 +218,15 @@ class TestTimerRunner:
         start_time = DayTime(0, 0, 0)
 
         async def actions_during_run(
-            timer_runner: TimerRunner, time_setter: TimeSetter, on_action: MagicMock, off_action: MagicMock
+            timer_runner: TimerRunner, time_setter: TimeSetter, action_controller: MockActionController
         ):
             timer = create_example_timer(start_time, timedelta(seconds=1))
             timer_runner.timers.add(timer)
+            await action_controller.on_action_called_event.wait()
 
-            on_event = asyncio.Event()
-            on_action.side_effect = on_event.set
-            await on_event.wait()
-
-            # Expect off event without timer change when timer is removed
-            off_event = asyncio.Event()
-            off_action.side_effect = off_event.set
             timer_runner.timers.remove(timer.id)
-            await off_event.wait()
+
+            await action_controller.off_action_called_event.wait()
 
         await self._test_run(
             actions_during_run=actions_during_run,
@@ -260,19 +238,17 @@ class TestTimerRunner:
         start_time = DayTime(0, 0, 0)
 
         async def actions_during_run(
-            timer_runner: TimerRunner, time_setter: TimeSetter, on_action: MagicMock, off_action: MagicMock
+            timer_runner: TimerRunner, time_setter: TimeSetter, action_controller: MockActionController
         ):
-            on_event = asyncio.Event()
-            on_action.side_effect = on_event.set
             timer = create_example_timer(start_time, timedelta(seconds=10))
             timer_runner.timers.add(timer)
-            await on_event.wait()
+            await action_controller.on_action_called_event.wait()
 
             replacement_timer = create_example_timer(start_time, timedelta(seconds=5))
             timer_runner.timers.add(replacement_timer)
             timer_runner.timers.remove(timer.id)
-            await short_sleep()
-            off_action.assert_not_called()
+            await _short_sleep()
+            action_controller.off_action_mock.assert_not_called()
 
         await self._test_run(
             actions_during_run=actions_during_run,
@@ -284,29 +260,20 @@ class TestTimerRunner:
         start_time = DayTime(0, 0, 0)
 
         async def actions_during_run(
-            timer_runner: TimerRunner, time_setter: TimeSetter, on_action: MagicMock, off_action: MagicMock
+            timer_runner: TimerRunner, time_setter: TimeSetter, action_controller: MockActionController
         ):
-            on_event = asyncio.Event()
-            on_action.side_effect = on_event.set
-            off_event = asyncio.Event()
-            off_action.side_effect = off_event.set
-
             timer = create_example_timer(start_time, timedelta(seconds=10))
             timer_runner.timers.add(timer)
-            await on_event.wait()
+            await action_controller.on_action_called_event.wait()
 
             replacement_timer = create_example_timer(timer.end_time + timedelta(seconds=1), timedelta(seconds=1))
             timer_runner.timers.add(replacement_timer)
             timer_runner.timers.remove(timer.id)
-            await off_event.wait()
-
-        def action_assertions(on_action: MagicMock, off_action: MagicMock):
-            on_action.assert_called_once()
-            off_action.assert_called_once()
+            await action_controller.off_action_called_event.wait()
 
         await self._test_run(
             actions_during_run=actions_during_run,
-            action_assertions=action_assertions,
+            action_assertions=lambda action_controller: action_controller.assert_actions_called(),
             start_time=start_time,
         )
 
@@ -315,20 +282,14 @@ class TestTimerRunner:
         start_time = DayTime(0, 0, 0)
 
         async def actions_during_run(
-            timer_runner: TimerRunner, time_setter: TimeSetter, on_action: MagicMock, off_action: MagicMock
+            timer_runner: TimerRunner, time_setter: TimeSetter, action_controller: MockActionController
         ):
-            on_event = asyncio.Event()
-            off_event = asyncio.Event()
-            on_action.side_effect = on_event.set
-            off_action.side_effect = off_event.set
-
-            timer_runner.timers.add(create_example_timer(start_time, timedelta(seconds=1)))
-            await on_event.wait()
-
+            await action_controller.on_action_called_event.wait()
             time_setter.value = start_time + timedelta(hours=1)
-            await off_event.wait()
+            await action_controller.off_action_called_event.wait()
 
         await self._test_run(
+            ((start_time, timedelta(seconds=1)),),
             actions_during_run=actions_during_run,
             start_time=start_time,
         )
@@ -338,19 +299,14 @@ class TestTimerRunner:
         start_time = DayTime(0, 0, 0)
 
         async def actions_during_run(
-            timer_runner: TimerRunner, time_setter: TimeSetter, on_action: MagicMock, off_action: MagicMock
+            timer_runner: TimerRunner, time_setter: TimeSetter, action_controller: MockActionController
         ):
-            on_event = asyncio.Event()
-            off_event = asyncio.Event()
-            on_action.side_effect = on_event.set
-            off_action.side_effect = off_event.set
-
-            timer_runner.timers.add(create_example_timer(start_time, timedelta(seconds=1)))
-            await on_event.wait()
+            await action_controller.on_action_called_event.wait()
             timer_runner.run_stop_event.set()
-            await off_event.wait()
+            await action_controller.off_action_called_event.wait()
 
         await self._test_run(
+            ((start_time, timedelta(seconds=1)),),
             actions_during_run=actions_during_run,
             start_time=start_time,
         )
@@ -359,30 +315,51 @@ class TestTimerRunner:
         self,
         start_duration_pairs: StartDurationPairsIterable = (),
         actions_during_run: Callable[
-            [TimerRunner, TimeSetter, MagicMock, MagicMock], Awaitable[None]
+            [TimerRunner, TimeSetter, MockActionController], Awaitable[None]
         ] = lambda *_: None,
-        action_assertions: Callable[[MagicMock, MagicMock], None] = lambda *_: None,
+        action_assertions: Callable[[MockActionController], None] = lambda *_: None,
         start_time: DayTime = DayTime(0, 0, 0),
     ):
-        timer_runner, time_setter, on_action, off_action = _create_timer_runner(start_duration_pairs, start_time)
+        timer_runner, time_setter, action_controller = _create_timer_runner(start_duration_pairs, start_time)
 
         timer_runner.minimum_time_accuracy = timedelta(microseconds=1)
         task = asyncio.create_task(timer_runner.run())
 
-        await actions_during_run(timer_runner, time_setter, on_action, off_action)
+        await actions_during_run(timer_runner, time_setter, action_controller)
 
         timer_runner.run_stop_event.set()
         # Trigger re-evaluation of stop event
         timer_runner.timers_change_event.set()
         await task
 
-        action_assertions(on_action, off_action)
+        action_assertions(action_controller)
 
 
-async def short_sleep():
+def _create_timer_runner(
+    start_duration_pairs: StartDurationPairsIterable = (), current_time: DayTime = DayTime(0, 0, 0)
+) -> tuple[TimerRunner, MutableItem[DayTime], MockActionController]:
+    timers = (create_example_timer(start_time, duration) for start_time, duration in start_duration_pairs)
+    time_setter = TimeSetter(current_time)
+    action_controller = MockActionController()
+
+    def current_time_getter() -> DayTime:
+        return time_setter.value
+
+    return (
+        TimerRunner(
+            ListenableTimersCollection(InMemoryIdentifiableTimersCollection(timers)),
+            action_controller,
+            current_time_getter=current_time_getter,
+        ),
+        time_setter,
+        action_controller,
+    )
+
+
+def _create_interval(start_time: str, duration: timedelta) -> TimeInterval:
+    start_time = deserialise_daytime(start_time)
+    return TimeInterval(start_time, start_time + duration)
+
+
+async def _short_sleep():
     await asyncio.sleep(0.05)
-
-
-def assert_no_magic_mocks_called(*magic_mocks: tuple[MagicMock, ...]):
-    for magic_mock in magic_mocks:
-        magic_mock.assert_not_called()

@@ -1,8 +1,8 @@
 from datetime import timedelta
-from time import sleep
 from typing import Callable, Optional
 
-from garden_water._logging import flush_file_logs, get_logger
+from garden_water._logging import get_logger
+from garden_water.actions import ActionController
 from garden_water.timers.collections.listenable import Event, ListenableTimersCollection
 from garden_water.timers.intervals import TimeInterval, merge_and_sort_intervals
 from garden_water.timers.timers import DayTime
@@ -31,15 +31,13 @@ class TimerRunner:
     def __init__(
         self,
         timers: ListenableTimersCollection,
-        on_action: Callable,
-        off_action: Callable,
+        action_controller: ActionController,
         current_time_getter: Callable[[], DayTime] = DayTime.now,
     ):
         assert issubclass(type(timers), ListenableTimersCollection)
 
         self.timers = timers
-        self.on_action = on_action
-        self.off_action = off_action
+        self.action_controller = action_controller
         self._turned_on = False
         self._current_time_getter = current_time_getter
         self._on_off_intervals = self._calculate_on_off_intervals()
@@ -196,11 +194,11 @@ class TimerRunner:
     def _set_on(self):
         if not self._turned_on:
             logger.info("Performing on action!")
-            self.on_action()
+            asyncio.create_task(self.action_controller.on_action())
             self._turned_on = True
 
     def _set_off(self):
         if self._turned_on:
             logger.info("Performing off action!")
-            self.off_action()
+            asyncio.create_task(self.action_controller.off_action())
             self._turned_on = False
