@@ -8,15 +8,15 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from garden_water._logging import _LOG_FILE_LOCK as fl
-from garden_water._logging import (
+from timeventx._logging import _LOG_FILE_LOCK as fl
+from timeventx._logging import (
     LockableHandler,
     clear_logs,
     flush_file_logs,
     get_logger,
     setup_logging,
 )
-from garden_water.tests._common import changes_logging_test
+from timeventx.tests._common import changes_logging_test
 
 
 @pytest.fixture()

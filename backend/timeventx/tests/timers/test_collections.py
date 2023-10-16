@@ -4,17 +4,17 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from garden_water.tests._common import (
+from timeventx.tests._common import (
     EXAMPLE_IDENTIFIABLE_TIMER_1,
     EXAMPLE_TIMER_1,
     EXAMPLE_TIMER_2,
     EXAMPLE_TIMERS,
 )
-from garden_water.timers.collections.abc import IdentifiableTimersCollection
-from garden_water.timers.collections.database import TimersDatabase
-from garden_water.timers.collections.listenable import Event, ListenableTimersCollection
-from garden_water.timers.collections.memory import InMemoryIdentifiableTimersCollection
-from garden_water.timers.timers import IdentifiableTimer, TimerId
+from timeventx.timers.collections.abc import IdentifiableTimersCollection
+from timeventx.timers.collections.database import TimersDatabase
+from timeventx.timers.collections.listenable import Event, ListenableTimersCollection
+from timeventx.timers.collections.memory import InMemoryIdentifiableTimersCollection
+from timeventx.timers.timers import IdentifiableTimer, TimerId
 
 
 def timers_database() -> TimersDatabase:

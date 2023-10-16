@@ -112,7 +112,7 @@ class Timer:
     # Avoiding circular dependency
     # def interval(self) -> "TimeInterval:
     def interval(self):
-        from garden_water.timers.intervals import TimeInterval
+        from timeventx.timers.intervals import TimeInterval
 
         return TimeInterval(self.start_time, self.end_time)
 

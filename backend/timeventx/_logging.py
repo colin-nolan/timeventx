@@ -5,7 +5,7 @@ from logging import FileHandler, Formatter, Handler, Logger, StreamHandler
 from pathlib import Path
 from typing import Any, Callable, Collection, Coroutine, Optional, TypeAlias, Union
 
-from garden_water._common import RP2040_DETECTED
+from timeventx._common import RP2040_DETECTED
 
 SyncLogListener: TypeAlias = Callable[[str], None]
 AsyncLogListener: TypeAlias = Coroutine
@@ -42,7 +42,7 @@ logger = get_logger(__name__)
 
 
 def setup_logging(logger_level: int, log_file_location: Optional[Path] = None) -> bool:
-    from garden_water.configuration import Configuration, ConfigurationNotFoundError
+    from timeventx.configuration import Configuration, ConfigurationNotFoundError
 
     global _LOGGER_LEVEL, _LOGGER_HANDLERS, _LOG_FILE_LOCATION
 

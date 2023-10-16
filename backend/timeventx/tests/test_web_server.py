@@ -9,18 +9,18 @@ from unittest.mock import patch
 import pytest
 from microdot_asyncio_test_client import TestClient
 
-from garden_water._logging import get_logger, reset_logging, setup_logging
-from garden_water.configuration import Configuration
-from garden_water.tests._common import (
+from timeventx._logging import get_logger, reset_logging, setup_logging
+from timeventx.configuration import Configuration
+from timeventx.tests._common import (
     EXAMPLE_IDENTIFIABLE_TIMER_1,
     EXAMPLE_IDENTIFIABLE_TIMER_2,
     EXAMPLE_TIMER_1,
 )
-from garden_water.timers.collections.abc import IdentifiableTimersCollection
-from garden_water.timers.collections.listenable import ListenableTimersCollection
-from garden_water.timers.collections.memory import InMemoryIdentifiableTimersCollection
-from garden_water.timers.serialisation import timer_to_json
-from garden_water.web_server import API_VERSION, app
+from timeventx.timers.collections.abc import IdentifiableTimersCollection
+from timeventx.timers.collections.listenable import ListenableTimersCollection
+from timeventx.timers.collections.memory import InMemoryIdentifiableTimersCollection
+from timeventx.timers.serialisation import timer_to_json
+from timeventx.web_server import API_VERSION, app
 
 logger = get_logger(__name__)
 

@@ -36,8 +36,8 @@ format-frontend:
 format-backend:
 	poetry_check_flag=$(if $(filter true,$(CHECK)),--check,); \
 	cd backend; \
-	poetry run black $${poetry_check_flag} garden_water; \
-	poetry run isort $${poetry_check_flag} garden_water
+	poetry run black $${poetry_check_flag} timeventx; \
+	poetry run isort $${poetry_check_flag} timeventx
 
 format-markdown:
 	mdformat_check_flag=$(if $(filter true,$(CHECK)),--check,); \

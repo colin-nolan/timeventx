@@ -1,7 +1,7 @@
 from abc import abstractmethod
 from typing import Collection, Iterable, TypeAlias, cast
 
-from garden_water.timers.timers import IdentifiableTimer, Timer, TimerId
+from timeventx.timers.timers import IdentifiableTimer, Timer, TimerId
 
 try:
     IdentifiableTimerCollection: TypeAlias = Collection[IdentifiableTimer]

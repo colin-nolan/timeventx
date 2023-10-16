@@ -6,18 +6,18 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from garden_water.actions.actions import ActionController
-from garden_water.tests._common import (
+from timeventx.actions.actions import ActionController
+from timeventx.tests._common import (
     EXAMPLE_TIMER_1,
     EXAMPLE_TIMERS,
     create_example_timer,
 )
-from garden_water.timer_runner import NoTimersError, TimerRunner
-from garden_water.timers.collections.listenable import ListenableTimersCollection
-from garden_water.timers.collections.memory import InMemoryIdentifiableTimersCollection
-from garden_water.timers.intervals import TimeInterval
-from garden_water.timers.serialisation import deserialise_daytime
-from garden_water.timers.timers import DayTime
+from timeventx.timer_runner import NoTimersError, TimerRunner
+from timeventx.timers.collections.listenable import ListenableTimersCollection
+from timeventx.timers.collections.memory import InMemoryIdentifiableTimersCollection
+from timeventx.timers.intervals import TimeInterval
+from timeventx.timers.serialisation import deserialise_daytime
+from timeventx.timers.timers import DayTime
 
 EXAMPLE_TIME_INTERVALS = (
     ("00:00:00", timedelta(hours=1)),

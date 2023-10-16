@@ -4,9 +4,9 @@ from configparser import ConfigParser
 from pathlib import Path
 from typing import Any, Optional
 
-from garden_water._logging import get_logger
+from timeventx._logging import get_logger
 
-ENVIRONMENT_VARIABLE_PREFIX = "GARDEN_WATER"
+ENVIRONMENT_VARIABLE_PREFIX = "TIMEVENTX"
 DEFAULT_CONFIGURATION_FILE_NAME = "config.ini"
 
 logger = get_logger(__name__)

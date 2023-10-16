@@ -3,7 +3,7 @@
 import sys
 from pathlib import Path
 
-from garden_water.configuration import DEFAULT_CONFIGURATION_FILE_NAME, Configuration
+from timeventx.configuration import DEFAULT_CONFIGURATION_FILE_NAME, Configuration
 
 config_directory = sys.argv[1]
 

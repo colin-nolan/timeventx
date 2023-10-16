@@ -3,9 +3,9 @@ import json
 from pathlib import Path
 from typing import Iterable
 
-from garden_water.timers.collections.abc import IdentifiableTimersCollection
-from garden_water.timers.serialisation import json_to_identifiable_timer, timer_to_json
-from garden_water.timers.timers import IdentifiableTimer, Timer, TimerId
+from timeventx.timers.collections.abc import IdentifiableTimersCollection
+from timeventx.timers.serialisation import json_to_identifiable_timer, timer_to_json
+from timeventx.timers.timers import IdentifiableTimer, Timer, TimerId
 
 
 class TimersDatabase(IdentifiableTimersCollection):

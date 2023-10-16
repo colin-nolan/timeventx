@@ -1,6 +1,6 @@
 from datetime import timedelta
 
-from garden_water.timers.timers import DayTime, IdentifiableTimer, Timer, TimerId
+from timeventx.timers.timers import DayTime, IdentifiableTimer, Timer, TimerId
 
 
 def serialise_daytime(start_time: DayTime) -> str:

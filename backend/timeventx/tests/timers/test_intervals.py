@@ -3,8 +3,8 @@ from typing import Iterable
 
 import pytest
 
-from garden_water.timers.intervals import TimeInterval, merge_and_sort_intervals
-from garden_water.timers.serialisation import deserialise_daytime
+from timeventx.timers.intervals import TimeInterval, merge_and_sort_intervals
+from timeventx.timers.serialisation import deserialise_daytime
 
 
 def _to_time_interval(serialised_start_time: str, serialised_end_time: str) -> TimeInterval:

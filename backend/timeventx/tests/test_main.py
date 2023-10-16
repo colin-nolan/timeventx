@@ -10,8 +10,8 @@ from unittest.mock import patch
 import pytest
 import requests
 
-from garden_water.configuration import Configuration
-from garden_water.main import main
+from timeventx.configuration import Configuration
+from timeventx.main import main
 
 ServiceLocation: TypeAlias = str
 
@@ -43,7 +43,7 @@ def service(tmp_path: Path) -> ServiceLocation:
                 Configuration.BACKEND_HOST: "127.0.0.1",
                 Configuration.RESTART_ON_ERROR: False,
                 Configuration.LOG_LEVEL: logging.DEBUG,
-                Configuration.ACTION_CONTROLLER_MODULE: "garden_water.actions.noop",
+                Configuration.ACTION_CONTROLLER_MODULE: "timeventx.actions.noop",
             }.items()
         },
     ):

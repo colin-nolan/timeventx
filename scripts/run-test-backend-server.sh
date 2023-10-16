@@ -20,12 +20,12 @@ echo "Hello world" > "${frontend_directory}/index.html"
 
 pushd "${backend_directory}" > /dev/null
 
-GARDEN_WATER_TIMERS_DATABASE_LOCATION="${database_location}" \
-    GARDEN_WATER_LOG_FILE_LOCATION="${log_location}" \
-    GARDEN_WATER_BACKEND_PORT=${port} \
-    GARDEN_WATER_FRONTEND_ROOT_DIRECTORY="${frontend_directory}" \
-    GARDEN_WATER_BACKEND_INTERFACE=127.0.0.1 \
-    GARDEN_WATER_RESTART_ON_ERROR=false \
-    GARDEN_WATER_LOG_LEVEL=10 \
-    GARDEN_WATER_ACTION_CONTROLLER_MODULE=garden_water.actions.noop \
-    PYTHONPATH=. coverage run garden_water/main.py
+TIMEVENTX_TIMERS_DATABASE_LOCATION="${database_location}" \
+    TIMEVENTX_LOG_FILE_LOCATION="${log_location}" \
+    TIMEVENTX_BACKEND_PORT=${port} \
+    TIMEVENTX_FRONTEND_ROOT_DIRECTORY="${frontend_directory}" \
+    TIMEVENTX_BACKEND_INTERFACE=127.0.0.1 \
+    TIMEVENTX_RESTART_ON_ERROR=false \
+    TIMEVENTX_LOG_LEVEL=10 \
+    TIMEVENTX_ACTION_CONTROLLER_MODULE=timeventx.actions.noop \
+    PYTHONPATH=. coverage run timeventx/main.py

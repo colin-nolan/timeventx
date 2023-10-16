@@ -1,11 +1,11 @@
 from datetime import timedelta
 from typing import Callable
 
-from garden_water._logging import get_logger
-from garden_water.actions.actions import ActionController
-from garden_water.timers.collections.listenable import Event, ListenableTimersCollection
-from garden_water.timers.intervals import TimeInterval, merge_and_sort_intervals
-from garden_water.timers.timers import DayTime
+from timeventx._logging import get_logger
+from timeventx.actions.actions import ActionController
+from timeventx.timers.collections.listenable import Event, ListenableTimersCollection
+from timeventx.timers.intervals import TimeInterval, merge_and_sort_intervals
+from timeventx.timers.timers import DayTime
 
 try:
     import asyncio

@@ -2,9 +2,9 @@ from datetime import timedelta
 from threading import Lock
 from uuid import uuid4
 
-from garden_water._logging import reset_logging
-from garden_water.timers.serialisation import deserialise_daytime
-from garden_water.timers.timers import DayTime, IdentifiableTimer, Timer, TimerId
+from timeventx._logging import reset_logging
+from timeventx.timers.serialisation import deserialise_daytime
+from timeventx.timers.timers import DayTime, IdentifiableTimer, Timer, TimerId
 
 EXAMPLE_TIMER_1 = Timer("test-1", deserialise_daytime("00:01:02"), timedelta(minutes=10))
 EXAMPLE_IDENTIFIABLE_TIMER_1 = IdentifiableTimer(

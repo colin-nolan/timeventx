@@ -2,8 +2,8 @@ import math
 import os
 import time
 
-from garden_water._common import noop_if_not_rp2040
-from garden_water.configuration import Configuration
+from timeventx._common import noop_if_not_rp2040
+from timeventx.configuration import Configuration
 
 WIFI_CONNECTION_CHECK_PERIOD = 0.5
 
@@ -41,7 +41,7 @@ def sync_time():
 
 @noop_if_not_rp2040
 def setup_device(configuration: Configuration):
-    from garden_water._logging import get_logger
+    from timeventx._logging import get_logger
 
     logger = get_logger(__name__)
 

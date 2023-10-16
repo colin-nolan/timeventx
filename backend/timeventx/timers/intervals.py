@@ -1,7 +1,7 @@
 from datetime import timedelta
 from typing import Collection
 
-from garden_water.timers.timers import DayTime
+from timeventx.timers.timers import DayTime
 
 
 # Not using `dataclass` because it is not available in MicroPython (or installable using `mip`)

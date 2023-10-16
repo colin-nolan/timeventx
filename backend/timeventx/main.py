@@ -4,15 +4,15 @@ from pathlib import Path
 from time import sleep
 from typing import Optional
 
-from garden_water._common import RP2040_DETECTED
-from garden_water._logging import get_logger, setup_logging
-from garden_water.actions.actions import ActionController, get_global_action_controller
-from garden_water.configuration import DEFAULT_CONFIGURATION_FILE_NAME, Configuration
-from garden_water.rp2040 import setup_device
-from garden_water.timer_runner import TimerRunner
-from garden_water.timers.collections.database import TimersDatabase
-from garden_water.timers.collections.listenable import ListenableTimersCollection
-from garden_water.web_server import app
+from timeventx._common import RP2040_DETECTED
+from timeventx._logging import get_logger, setup_logging
+from timeventx.actions.actions import ActionController, get_global_action_controller
+from timeventx.configuration import DEFAULT_CONFIGURATION_FILE_NAME, Configuration
+from timeventx.rp2040 import setup_device
+from timeventx.timer_runner import TimerRunner
+from timeventx.timers.collections.database import TimersDatabase
+from timeventx.timers.collections.listenable import ListenableTimersCollection
+from timeventx.web_server import app
 
 try:
     import asyncio

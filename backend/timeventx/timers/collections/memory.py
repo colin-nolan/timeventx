@@ -1,7 +1,7 @@
 from typing import Iterable, Iterator
 
-from garden_water.timers.collections.abc import IdentifiableTimersCollection
-from garden_water.timers.timers import IdentifiableTimer, Timer, TimerId
+from timeventx.timers.collections.abc import IdentifiableTimersCollection
+from timeventx.timers.timers import IdentifiableTimer, Timer, TimerId
 
 
 class InMemoryIdentifiableTimersCollection(IdentifiableTimersCollection):

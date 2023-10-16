@@ -1,6 +1,6 @@
-[![Build Status](https://ci.colinnolan.uk/api/badges/colin-nolan/garden-watering/status.svg)](https://ci.colinnolan.uk/colin-nolan/garden-watering) [![Overage Coverage](https://codecov.io/gh/colin-nolan/garden-watering/graph/badge.svg?token=UKCB5SVPED)](https://codecov.io/gh/colin-nolan/garden-watering)
+[![Build Status](https://ci.colinnolan.uk/api/badges/colin-nolan/timeventx/status.svg)](https://ci.colinnolan.uk/colin-nolan/timeventx) [![Overage Coverage](https://codecov.io/gh/colin-nolan/timeventx/graph/badge.svg?token=UKCB5SVPED)](https://codecov.io/gh/colin-nolan/timeventx)
 
-# Garden Water
+# Timeventx
 
 This system is designed to be ran on a RP2040 microcontroller, specifically a [Raspberry Pi Pico](https://www.raspberrypi.com/products/raspberry-pi-pico/).
 
@@ -9,7 +9,7 @@ This system is designed to be ran on a RP2040 microcontroller, specifically a [R
 To build files for a device:
 
 ```text
-GARDEN_WATER_WIFI_SSID=<wifi_ssid> GARDEN_WATER_WIFI_PASSWORD=<wifi_password> \
+TIMEVENTX_WIFI_SSID=<wifi_ssid> TIMEVENTX_WIFI_PASSWORD=<wifi_password> \
     make build API_SERVER_LOCATION=<backend_api_location> [ARCH=architecture (default: any)]
 ```
 

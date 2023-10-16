@@ -1,4 +1,4 @@
-# Garden Water: Backend
+# Backend
 
 ## Setup
 

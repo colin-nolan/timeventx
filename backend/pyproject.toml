@@ -1,11 +1,11 @@
 [tool.poetry]
-name = "garden-water"
+name = "timeventx"
 version = "0.1.0"
 description = ""
 authors = ["Colin Nolan <cn580@alumni.york.ac.uk>"]
 readme = "README.md"
-packages = [{include = "garden_water"}]
-exclude = ["garden_water/tests"]
+packages = [{include = "timeventx"}]
+exclude = ["timeventx/tests"]
 
 [tool.poetry.dependencies]
 python = "^3.11"
@@ -30,7 +30,7 @@ requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.pytest.ini_options]
-testpaths = ["garden_water/tests"]
+testpaths = ["timeventx/tests"]
 log_cli = true
 log_file = "pytest.log"
 
@@ -42,7 +42,7 @@ profile = "black"
 
 [tool.coverage.run]
 omit = [
-    "garden_water/tests/*",
+    "timeventx/tests/*",
     "*.pyc",
 ]
 branch = true

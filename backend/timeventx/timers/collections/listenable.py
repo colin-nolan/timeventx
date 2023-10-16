@@ -1,8 +1,8 @@
 from collections import defaultdict
 from typing import Callable, Iterator, TypeAlias
 
-from garden_water.timers.collections.abc import IdentifiableTimersCollection
-from garden_water.timers.timers import IdentifiableTimer, Timer, TimerId
+from timeventx.timers.collections.abc import IdentifiableTimersCollection
+from timeventx.timers.timers import IdentifiableTimer, Timer, TimerId
 
 AddListener: TypeAlias = Callable[[IdentifiableTimer], None]
 RemoveListener: TypeAlias = Callable[[TimerId], None]

@@ -13,7 +13,7 @@ RP2040_DETECTED = sys.platform == "rp2"
 
 
 def noop_if_not_rp2040(wrappable: callable) -> callable:
-    from garden_water._logging import get_logger
+    from timeventx._logging import get_logger
 
     logger = get_logger(__name__)
 
