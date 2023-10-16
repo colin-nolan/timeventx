@@ -107,7 +107,7 @@ steps:
       - make test-frontend-unit
     depends_on: []
 
-  - name: run-tests-system
+  - name: run-tests-e2e
     image: node:20
     commands:
       - *installBackend
@@ -117,7 +117,7 @@ steps:
           yarn playwright install
           yarn playwright install-deps 
           cd -
-      - make test-frontend-system
+      - make test-frontend-e2e
     depends_on: []
 
   - name: check-format
@@ -155,7 +155,7 @@ steps:
         from_secret: codecov_token
     depends_on:
       - run-tests-unit
-      - run-tests-system
+      - run-tests-e2e
 
 ---
 

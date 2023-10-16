@@ -7,7 +7,7 @@
         "build": "vite build",
         "run-backend": "../scripts/run-test-backend-server.sh",
         "test-unit": "start-server-and-test run-backend http://localhost:3005/api/v1/healthcheck 'BACKEND_URL=http://localhost:3005 jest --silent'",
-        "test-system": "nyc yarn playwright test"
+        "test-e2e": "nyc yarn playwright test"
     },
     "dependencies": {
         "@emotion/react": "^11.11.1",

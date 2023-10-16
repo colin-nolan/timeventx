@@ -51,15 +51,15 @@ test-backend-unit:
 	cd backend; \
 	coverage run --concurrency=multiprocessing -m pytest
 
-test-frontend: test-frontend-unit test-frontend-system
+test-frontend: test-frontend-unit test-frontend-e2e
 
 test-frontend-unit:
 	cd frontend; \
 	yarn run test-unit
 
-test-frontend-system:
+test-frontend-e2e:
 	cd frontend; \
-	yarn run test-system; \
+	yarn run test-e2e; \
 	yarn nyc report --reporter=lcov
 
-.PHONY: all build build-frontend build-backend fmt format format-backend format-markdown test test-backend test-backend-unit test-frontend test-frontend-unit test-frontend-system
+.PHONY: all build build-frontend build-backend fmt format format-backend format-markdown test test-backend test-backend-unit test-frontend test-frontend-unit test-frontend-e2e
