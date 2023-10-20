@@ -1,14 +1,10 @@
 import { defineConfig, devices } from "@playwright/test";
-import { temporaryDirectory } from "tempy";
 import { dirname } from "path";
 import { fileURLToPath } from "url";
 
 // XXX: it would be better if these were set to random free ports
 const FRONTEND_PORT = 3003;
 const BACKEND_PORT = 3004;
-
-const DATABASE_DIRECTORY = temporaryDirectory();
-const LOG_LOCATION = `${temporaryDirectory()}/log.txt`;
 
 /**
  * Read environment variables from file.

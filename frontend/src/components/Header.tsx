@@ -25,6 +25,9 @@ export function Header() {
                 component="nav"
                 style={{ display: "flex", justifyContent: "center", alignItems: "center" }}
             >
+                <a href="/">
+                    <img src="/logo-transparent-32x32.png" alt="Logo" />
+                </a>
                 <div>
                     <List
                         role="menubar"
