@@ -8,24 +8,60 @@
 
 This system is designed to be ran on a RP2040 microcontroller, specifically a [Raspberry Pi Pico](https://www.raspberrypi.com/products/raspberry-pi-pico/).
 
+The system features a static frontend web UI to:
+
+- Set timers.
+- View set timer intervals.
+- View system logs.
+- View system stats (CPU usage, RAM usage, etc.)
+- Trigger a restart.
+
+![Screenshot of web UI](docs/frontend.png)
+
 ## Usage
+
+### Build
 
 To build files for a device:
 
 ```text
-TIMEVENTX_WIFI_SSID=<wifi_ssid> TIMEVENTX_WIFI_PASSWORD=<wifi_password> \
-    make build API_SERVER_LOCATION=<backend_api_location> [ARCH=architecture (default: any)]
+make build API_SERVER_LOCATION=<backend_api_location> [ARCH=architecture (default: any)]
 ```
 
-where `ARCH=any` does not compile the Python code for the target platform.
+The following environmnet variables must be set:
 
-_Note: because the frontend is static, and compiled, the location of the deployed backend must be known at build time._
+```text
+TIMEVENTX_WIFI_SSID
+TIMEVENTX_WIFI_PASSWORD
+```
 
-To subsequently deploy the files to a device:
+### Deploy
+
+To deploy the built files to a device:
 
 ```shell
 ./scripts/deploy.sh -d [architecture (default: any)] [device (default: /dev/ttyACM0)]
 ```
+
+The following environmnet variables must be set:
+
+```text
+TIMEVENTX_WIFI_SSID 
+TIMEVENTX_WIFI_PASSWORD
+TIMEVENTX_ACTION_CONTROLLER_MODULE
+```
+
+Additional configuration is possible
+
+| Environment Variable                 | Default Value |
+| ------------------------------------ | ------------- |
+| `TIMEVENTX_LOG_LEVEL`                | logging.INFO  |
+| `TIMEVENTX_LOG_FILE_LOCATION`        | /main.log     |
+| `TIMEVENTX_TIMERS_DATABASE_LOCATION` | /data/timers  |
+| `TIMEVENTX_FRONTEND_ROOT_DIRECTORY`  | /frontend     |
+| `TIMEVENTX_BACKEND_PORT`             | 8080          |
+| `TIMEVENTX_BACKEND_INTERFACE`        | 0.0.0.0       |
+| `TIMEVENTX_RESTART_ON_ERROR`         | True          |
 
 To manually interact with the RP2040 device:
 
