@@ -250,7 +250,7 @@ async def get_file(request: Request, path: str):
 def serve_ui(request: Request, path: Path):
     # MicroPython `pathlib` implementation does not support `is_absolute`
     if str(path).startswith("/"):
-        raise ValueError("Absolute paths not allowed")
+        abort(HTTPStatus.NOT_FOUND, "Path should not start with double slash //")
 
     try:
         frontend_location = request.app.configuration[Configuration.FRONTEND_ROOT_DIRECTORY]
