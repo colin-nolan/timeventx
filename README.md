@@ -45,23 +45,23 @@ To deploy the built files to a device:
 
 The following environmnet variables must be set:
 
-```text
-TIMEVENTX_WIFI_SSID 
-TIMEVENTX_WIFI_PASSWORD
-TIMEVENTX_ACTION_CONTROLLER_MODULE
-```
+| Environment Variable             | Description                                                                                                                                     | Example                  |
+| -------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------ |
+TIMEVENTX_WIFI_SSID                | Name of Wi-Fi network to connect                                                                                                                | `homewifi`               |
+TIMEVENTX_WIFI_PASSWORD            | Password for the Wi-Fi network                                                                                                                  | `password123`            |
+TIMEVENTX_ACTION_CONTROLLER_MODULE | Location of module that sets the action to perform when a timer triggers ([see example](timeventx/blob/main/backend/timeventx/actions/noop.py)) | `timeventx.actions.noop` |
 
-Additional configuration is possible
+Additional configuration is possible:
 
-| Environment Variable                 | Default Value |
-| ------------------------------------ | ------------- |
-| `TIMEVENTX_LOG_LEVEL`                | logging.INFO  |
-| `TIMEVENTX_LOG_FILE_LOCATION`        | /main.log     |
-| `TIMEVENTX_TIMERS_DATABASE_LOCATION` | /data/timers  |
-| `TIMEVENTX_FRONTEND_ROOT_DIRECTORY`  | /frontend     |
-| `TIMEVENTX_BACKEND_PORT`             | 8080          |
-| `TIMEVENTX_BACKEND_INTERFACE`        | 0.0.0.0       |
-| `TIMEVENTX_RESTART_ON_ERROR`         | True          |
+| Environment Variable                 | Description                                                                                                     | Default Value |
+| ------------------------------------ | --------------------------------------------------------------------------------------------------------------- |-------------- |
+| `TIMEVENTX_LOG_LEVEL`                | Determines log verbosity - [see possible values](https://docs.python.org/3/library/logging.html#logging-levels) | logging.INFO  |
+| `TIMEVENTX_LOG_FILE_LOCATION`        | Where logs should be written to                                                                                 | /main.log     |
+| `TIMEVENTX_TIMERS_DATABASE_LOCATION` | Location of persistent database storing timer timers                                                            | /data/timers  |
+| `TIMEVENTX_FRONTEND_ROOT_DIRECTORY`  | Directory containing built frontend code                                                                        | /frontend     |
+| `TIMEVENTX_BACKEND_PORT`             | Port to run backend on                                                                                          | 8080          |
+| `TIMEVENTX_BACKEND_INTERFACE`        | Network interface to run backend on                                                                             | 0.0.0.0       |
+| `TIMEVENTX_RESTART_ON_ERROR`         | Whether the device should restart if an error is encountered                                                    | True          |
 
 To manually interact with the RP2040 device:
 
