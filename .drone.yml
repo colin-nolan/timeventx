@@ -27,7 +27,7 @@ steps:
     depends_on: []
 
   - name: check-build
-    # Note: not using alpine as `mpy-cross` is not supported on that platform
+    # Note: not using Alpine as `mpy-cross` is not supported on that platform
     image: python:3.11
     commands:
       - *poetryInstall

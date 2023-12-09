@@ -6,9 +6,7 @@
 
 # Timeventx
 
-This system is designed to be ran on a RP2040 microcontroller, specifically a [Raspberry Pi Pico](https://www.raspberrypi.com/products/raspberry-pi-pico/).
-
-The system features a static frontend web UI to:
+Timevente (/taɪmventeks/) is a system for scheduling an event to be performed at programmable times each day (e.g. watering plants, feeding fish). It is designed to be ran on a RP2040 microcontroller, specifically a [Raspberry Pi Pico](https://www.raspberrypi.com/products/raspberry-pi-pico/). The system features a static frontend web UI to:
 
 - Set timers.
 - View set timer intervals.
@@ -28,7 +26,7 @@ To build files for a device:
 make build API_SERVER_LOCATION=<backend_api_location> [ARCH=architecture (default: any)]
 ```
 
-The following environmnet variables must be set:
+The following environment variables must be set:
 
 ```text
 TIMEVENTX_WIFI_SSID
@@ -43,18 +41,18 @@ To deploy the built files to a device:
 ./scripts/deploy.sh -d [architecture (default: any)] [device (default: /dev/ttyACM0)]
 ```
 
-The following environmnet variables must be set:
+The following environment variables must be set:
 
-| Environment Variable             | Description                                                                                                                                     | Example                  |
-| -------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------ |
-TIMEVENTX_WIFI_SSID                | Name of Wi-Fi network to connect                                                                                                                | `homewifi`               |
-TIMEVENTX_WIFI_PASSWORD            | Password for the Wi-Fi network                                                                                                                  | `password123`            |
-TIMEVENTX_ACTION_CONTROLLER_MODULE | Location of module that sets the action to perform when a timer triggers ([see example](timeventx/blob/main/backend/timeventx/actions/noop.py)) | `timeventx.actions.noop` |
+| Environment Variable                 | Description                                                                                                                                     | Example                  |
+| ------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------ |
+| `TIMEVENTX_WIFI_SSID`                | Name of Wi-Fi network to connect                                                                                                                | `homewifi`               |
+| `TIMEVENTX_WIFI_PASSWORD`            | Password for the Wi-Fi network                                                                                                                  | `password123`            |
+| `TIMEVENTX_ACTION_CONTROLLER_MODULE` | Location of module that sets the action to perform when a timer triggers ([see example](timeventx/blob/main/backend/timeventx/actions/noop.py)) | `timeventx.actions.noop` |
 
 Additional configuration is possible:
 
 | Environment Variable                 | Description                                                                                                     | Default Value |
-| ------------------------------------ | --------------------------------------------------------------------------------------------------------------- |-------------- |
+| ------------------------------------ | --------------------------------------------------------------------------------------------------------------- | ------------- |
 | `TIMEVENTX_LOG_LEVEL`                | Determines log verbosity - [see possible values](https://docs.python.org/3/library/logging.html#logging-levels) | logging.INFO  |
 | `TIMEVENTX_LOG_FILE_LOCATION`        | Where logs should be written to                                                                                 | /main.log     |
 | `TIMEVENTX_TIMERS_DATABASE_LOCATION` | Location of persistent database storing timer timers                                                            | /data/timers  |

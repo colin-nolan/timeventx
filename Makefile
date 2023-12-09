@@ -40,6 +40,7 @@ format-backend:
 	poetry run isort $${poetry_check_flag} timeventx
 
 format-markdown:
+	# Requires: `pip install mdformat-gfm`
 	mdformat_check_flag=$(if $(filter true,$(CHECK)),--check,); \
 	mdformat $${mdformat_check_flag} $(MARKDOWN_FILES)
 
