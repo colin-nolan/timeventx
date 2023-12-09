@@ -212,6 +212,7 @@ async def test_delete_logs(api_test_client: TestClient):
             response = await api_test_client.delete(f"/api/{API_VERSION}/logs")
             assert response.status_code == 200, response.text
 
+
 @pytest.mark.asyncio
 async def test_double_slash_root(api_test_client: TestClient):
     response = await api_test_client.get(f"//")
