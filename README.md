@@ -6,7 +6,7 @@
 
 # Timeventx
 
-Timevente (/taɪmventeks/) is a system for scheduling an event to be performed at programmable times each day (e.g. watering plants, feeding fish). It is designed to be ran on a RP2040 microcontroller, specifically a [Raspberry Pi Pico](https://www.raspberrypi.com/products/raspberry-pi-pico/). The system features a static frontend web UI to:
+Timevente */taɪmventeks/* is a system for scheduling an event to be performed at programmable times each day (e.g. watering plants, feeding fish). It is designed to be ran on a RP2040 microcontroller (tested with a [Raspberry Pi Pico](https://www.raspberrypi.com/products/raspberry-pi-pico/)) running MicroPython. The system features a static frontend web UI to:
 
 - Set timers.
 - View set timer intervals.
