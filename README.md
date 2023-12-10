@@ -51,15 +51,16 @@ The following environment variables must be set:
 
 Additional configuration is possible:
 
-| Environment Variable                 | Description                                                                                                     | Default Value |
-| ------------------------------------ | --------------------------------------------------------------------------------------------------------------- | ------------- |
-| `TIMEVENTX_LOG_LEVEL`                | Determines log verbosity - [see possible values](https://docs.python.org/3/library/logging.html#logging-levels) | logging.INFO  |
-| `TIMEVENTX_LOG_FILE_LOCATION`        | Where logs should be written to                                                                                 | /main.log     |
-| `TIMEVENTX_TIMERS_DATABASE_LOCATION` | Location of persistent database storing timer timers                                                            | /data/timers  |
-| `TIMEVENTX_FRONTEND_ROOT_DIRECTORY`  | Directory containing built frontend code                                                                        | /frontend     |
-| `TIMEVENTX_BACKEND_PORT`             | Port to run backend on                                                                                          | 8080          |
-| `TIMEVENTX_BACKEND_INTERFACE`        | Network interface to run backend on                                                                             | 0.0.0.0       |
-| `TIMEVENTX_RESTART_ON_ERROR`         | Whether the device should restart if an error is encountered                                                    | True          |
+| Environment Variable                   | Description                                                                                                     | Default Value |
+| -------------------------------------- | --------------------------------------------------------------------------------------------------------------- | ------------- |
+| `TIMEVENTX_LOG_LEVEL`                  | Determines log verbosity - [see possible values](https://docs.python.org/3/library/logging.html#logging-levels) | logging.INFO  |
+| `TIMEVENTX_LOG_FILE_LOCATION`          | Where logs should be written to                                                                                 | /main.log     |
+| `TIMEVENTX_TIMERS_DATABASE_LOCATION`   | Location of persistent database storing timer timers                                                            | /data/timers  |
+| `TIMEVENTX_FRONTEND_ROOT_DIRECTORY`    | Directory containing built frontend code                                                                        | /frontend     |
+| `TIMEVENTX_BACKEND_PORT`               | Port to run backend on                                                                                          | 8080          |
+| `TIMEVENTX_BACKEND_INTERFACE`          | Network interface to run backend on                                                                             | 0.0.0.0       |
+| `TIMEVENTX_RESTART_ON_ERROR`           | Whether the device should restart if an error is encountered                                                    | True          |
+| `TIMEVENTX_BASE64_ENCODED_CREDENTIALS` | Enables basic authentication when set to base64 encoded credentials of users in the form `user:pass,user2:pass` | None          |
 
 To manually interact with the RP2040 device:
 
