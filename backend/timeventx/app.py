@@ -1,7 +1,7 @@
 import json
 from datetime import timedelta
 from pathlib import Path
-from typing import TypeAlias
+from typing import Dict, Tuple, TypeAlias, Union
 
 from microdot_asyncio import Microdot, Request, Response, abort, send_file
 from microdot_cors import CORS
@@ -26,7 +26,9 @@ from timeventx.timers.timers import IdentifiableTimer, Timer, TimerId
 
 API_VERSION = "v1"
 
-EndpointResponse: TypeAlias = Response | str | tuple[str, int] | tuple[str, int, dict[str, str]]
+# | and use of subscriptable tuple/dict sis not supported on target device
+EndpointResponse: TypeAlias = Union[Response, str, Tuple[str, int], Tuple[str, int, Dict[str, str]]]
+
 
 logger = get_logger(__name__)
 app = Microdot()

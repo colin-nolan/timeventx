@@ -42,6 +42,7 @@ PYTHONPATH="${backend_directory}" "${script_directory}/create-config.py" "${dist
 if [[ "${architecture}" == "any" ]]; then
     >&2 echo "Not pre-compiling libs to be architecture agnostic"
 else
+    # Note: RPi Pico's architecture is armv6m
     >&2 echo "Pre-compiling libs for ${architecture}..."
     # Find py files, compile them, and remove the original
     find "${dist_directory}" -name "*.py" -type f \

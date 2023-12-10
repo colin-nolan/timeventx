@@ -1,3 +1,4 @@
+from logging import getLogger
 from pathlib import Path
 from typing import Callable, Optional
 
@@ -42,6 +43,8 @@ _FILE_EXTENSION_TO_CONTENT_TYPE = {
 
 _BASIC_AUTH_HEADER = ("WWW-Authenticate", 'Basic realm="timeventx"')
 
+logger = getLogger(__name__)
+
 
 # mimetypes module does not exist for MicroPython
 def get_content_type(path: Path) -> str:
@@ -78,5 +81,7 @@ def _handle_authorisation(request: Request) -> tuple[bool, Optional[Response]]:
     client_base64_encoded_credentials = authorisation_header.split(" ")[1]
     if client_base64_encoded_credentials not in base64_encoded_credentials:
         return False, Response("Invalid credentials", HttpStatus.UNAUTHORISED, dict((_BASIC_AUTH_HEADER,)))
+
+    # TODO: log who has authenticated
 
     return True, None

@@ -72,7 +72,7 @@ class Configuration:
         default="/frontend",
     )
     BACKEND_PORT = ConfigurationDescription(
-        f"{ENVIRONMENT_VARIABLE_PREFIX}_BACKEND_PORT", "backend.port", int, default=8080
+        f"{ENVIRONMENT_VARIABLE_PREFIX}_BACKEND_PORT", "backend.port", int, default=80
     )
     BACKEND_HOST = ConfigurationDescription(
         f"{ENVIRONMENT_VARIABLE_PREFIX}_BACKEND_INTERFACE", "backend.interface", str, default="0.0.0.0"
@@ -84,7 +84,7 @@ class Configuration:
         default=True,
     )
     ACTION_CONTROLLER_MODULE = ConfigurationDescription(
-        f"{ENVIRONMENT_VARIABLE_PREFIX}_ACTION_CONTROLLER_MODULE", "actions.module", str
+        f"{ENVIRONMENT_VARIABLE_PREFIX}_ACTION_CONTROLLER_MODULE", "actions.module", str, allow_none=False
     )
     # Credentials expected in the form: base64("user:password"),base64("user2:password2")
     BASE64_ENCODED_CREDENTIALS = ConfigurationDescription(

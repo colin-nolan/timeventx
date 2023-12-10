@@ -6,7 +6,7 @@
 
 # Timeventx
 
-Timevente */taɪmventeks/* is a system for scheduling an event to be performed at programmable times each day (e.g. watering plants, feeding fish). It is designed to be ran on a RP2040 microcontroller (tested with a [Raspberry Pi Pico](https://www.raspberrypi.com/products/raspberry-pi-pico/)) running MicroPython. The system features a static frontend web UI to:
+Timevente */taɪmventeks/* is a system for scheduling an event to be performed at programmable times each day (e.g. watering plants, feeding fish). It is designed to be ran on a RP2040 microcontroller (tested with a [Raspberry Pi Pico W](https://www.raspberrypi.com/products/raspberry-pi-pico/)) running [MicroPython `>=1.21.0`](https://micropython.org/download/RPI_PICO_W/). The system features a static frontend web UI to:
 
 - Set timers.
 - View set timer intervals.
@@ -20,25 +20,10 @@ Timevente */taɪmventeks/* is a system for scheduling an event to be performed a
 
 ### Build
 
-To build files for a device:
+To build files for a device, including the configuration:
 
 ```text
-make build API_SERVER_LOCATION=<backend_api_location> [ARCH=architecture (default: any)]
-```
-
-The following environment variables must be set:
-
-```text
-TIMEVENTX_WIFI_SSID
-TIMEVENTX_WIFI_PASSWORD
-```
-
-### Deploy
-
-To deploy the built files to a device:
-
-```shell
-./scripts/deploy.sh -d [architecture (default: any)] [device (default: /dev/ttyACM0)]
+make build [API_SERVER_LOCATION=backend_api_location (default: /api/v1)] [ARCH=architecture (default: armv6m; examples: armv6m, any)]
 ```
 
 The following environment variables must be set:
@@ -57,10 +42,20 @@ Additional configuration is possible:
 | `TIMEVENTX_LOG_FILE_LOCATION`          | Where logs should be written to                                                                                 | /main.log     |
 | `TIMEVENTX_TIMERS_DATABASE_LOCATION`   | Location of persistent database storing timer timers                                                            | /data/timers  |
 | `TIMEVENTX_FRONTEND_ROOT_DIRECTORY`    | Directory containing built frontend code                                                                        | /frontend     |
-| `TIMEVENTX_BACKEND_PORT`               | Port to run backend on                                                                                          | 8080          |
+| `TIMEVENTX_BACKEND_PORT`               | Port to run backend on                                                                                          | 80            |
 | `TIMEVENTX_BACKEND_INTERFACE`          | Network interface to run backend on                                                                             | 0.0.0.0       |
 | `TIMEVENTX_RESTART_ON_ERROR`           | Whether the device should restart if an error is encountered                                                    | True          |
 | `TIMEVENTX_BASE64_ENCODED_CREDENTIALS` | Enables basic authentication when set to base64 encoded credentials of users in the form `user:pass,user2:pass` | None          |
+
+### Deploy
+
+To deploy the built files (see section on building above) to a device:
+
+```shell
+./scripts/deploy.sh [-d] [architecture (default: armv6m)] [device (default: /dev/ttyACM0)]
+```
+
+where `-d` deletes all existing files on the device first - including any the timers configuration database! It may be useful if the device contains legacy files.
 
 To manually interact with the RP2040 device:
 

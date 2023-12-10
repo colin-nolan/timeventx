@@ -1,27 +1,24 @@
 MARKDOWN_FILES := $(shell find . -type f -name '*.md' ! -path '*/site-packages/*' ! -path '*build/*' ! -path '*/node_modules/*' ! -path '*/.venv/*' ! -path '*/.pytest_cache/*')
 
-ARCH ?= any
+ARCH ?= armv6m
 
 CHECK := false
 
 SHELL := /bin/bash
 .SHELLFLAGS := -euf -o pipefail -c
 
+API_SERVER_LOCATION := /api/v1
+
 all: build
 
-.must_have_api_server_location:
-ifndef API_SERVER_LOCATION
-	$(error API_SERVER_LOCATION must be set)
-endif
-
-build: .must_have_api_server_location
+build:
 	@# XXX: it would be more idomatic if build was composed of `build-frontend` and `build-backend`
 	./scripts/build.sh $(API_SERVER_LOCATION) $(ARCH)
 
 build-backend:
 	./scripts/build-backend.sh $(ARCH)
 
-build-frontend: .must_have_api_server_location
+build-frontend:
 	./scripts/build-frontend.sh $(API_SERVER_LOCATION)
 
 fmt: format

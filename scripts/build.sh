@@ -4,7 +4,7 @@
 set -eu -o pipefail
 
 backend_api_root="$1"
-architecture="${2:-any}"
+architecture="${2:-armv6m}"
 
 script_directory="$(cd "$(dirname "${BASH_SOURCE[0]}")" > /dev/null 2>&1 && pwd)"
 project_directory="$(cd "${script_directory}/.." > /dev/null 2>&1 && pwd)"

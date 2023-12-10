@@ -4,7 +4,8 @@ import os
 import mip
 
 LIBRARIES_TO_INSTALL = (
-    "abc",
+    # pfalcon's abc package has a couple more dummy definitions than that in micropython-lib
+    "github:pfalcon/pycopy-lib/abc/abc.py",
     (
         "github:colin-nolan/micropython-lib/micropython/ucontextlib-async/ucontextlib/_async.py",
         dict(version="async_contextlib"),
