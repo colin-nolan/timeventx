@@ -15,7 +15,7 @@ while getopts "d" options; do
 done
 shift $((OPTIND - 1))
 
-architecture="${1:-any}"
+architecture="${1:-armv6m}"
 device="${2:-/dev/ttyACM0}"
 
 script_directory="$(cd "$(dirname "${BASH_SOURCE[0]}")" > /dev/null 2>&1 && pwd)"

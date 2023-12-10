@@ -40,7 +40,7 @@ steps:
           make
           make install
           cd -
-      - TIMEVENTX_WIFI_SSID=example-ssid TIMEVENTX_WIFI_PASSWORD=example-password make build-backend
+      - TIMEVENTX_WIFI_SSID=example-ssid TIMEVENTX_WIFI_PASSWORD=example-password TIMEVENTX_ACTION_CONTROLLER_MODULE=timeventx.actions.noop make build-backend
     depends_on: []
 
   - name: publish-coverage

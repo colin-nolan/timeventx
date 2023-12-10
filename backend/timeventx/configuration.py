@@ -72,7 +72,7 @@ class Configuration:
         default="/frontend",
     )
     BACKEND_PORT = ConfigurationDescription(
-        f"{ENVIRONMENT_VARIABLE_PREFIX}_BACKEND_PORT", "backend.port", int, default=8080
+        f"{ENVIRONMENT_VARIABLE_PREFIX}_BACKEND_PORT", "backend.port", int, default=80
     )
     BACKEND_HOST = ConfigurationDescription(
         f"{ENVIRONMENT_VARIABLE_PREFIX}_BACKEND_INTERFACE", "backend.interface", str, default="0.0.0.0"
@@ -84,7 +84,14 @@ class Configuration:
         default=True,
     )
     ACTION_CONTROLLER_MODULE = ConfigurationDescription(
-        f"{ENVIRONMENT_VARIABLE_PREFIX}_ACTION_CONTROLLER_MODULE", "actions.module", str
+        f"{ENVIRONMENT_VARIABLE_PREFIX}_ACTION_CONTROLLER_MODULE", "actions.module", str, allow_none=False
+    )
+    # Credentials expected in the form: base64("user:password"),base64("user2:password2")
+    BASE64_ENCODED_CREDENTIALS = ConfigurationDescription(
+        f"{ENVIRONMENT_VARIABLE_PREFIX}_BASE64_ENCODED_CREDENTIALS",
+        "authentication.base64_credentials",
+        lambda x: x.split(","),
+        default=None,
     )
 
     @staticmethod
@@ -112,10 +119,11 @@ class Configuration:
                     if not configuration_description.allow_none:
                         raise ValueError(
                             f"Configuration value must be set for {configuration_description.name} "
-                            + f"(try {configuration_description.environment_variable_name})"
+                            + f"(could set {configuration_description.environment_variable_name})"
                         )
-
-                value = str(value)
+                    continue
+                else:
+                    value = str(value)
 
             section = configuration_description.get_ini_section()
             if not configuration_parser.has_section(section):

@@ -7,12 +7,12 @@ from typing import Optional
 from timeventx._common import RP2040_DETECTED
 from timeventx._logging import get_logger, setup_logging
 from timeventx.actions.actions import ActionController, get_global_action_controller
+from timeventx.app import app
 from timeventx.configuration import DEFAULT_CONFIGURATION_FILE_NAME, Configuration
 from timeventx.rp2040 import setup_device
 from timeventx.timer_runner import TimerRunner
 from timeventx.timers.collections.database import TimersDatabase
 from timeventx.timers.collections.listenable import ListenableTimersCollection
-from timeventx.web_server import app
 
 try:
     import asyncio

@@ -1,6 +1,7 @@
 import logging
 import os
 import tempfile
+from base64 import b64encode
 from copy import deepcopy
 from pathlib import Path
 from tempfile import NamedTemporaryFile
@@ -10,6 +11,7 @@ import pytest
 from microdot_asyncio_test_client import TestClient
 
 from timeventx._logging import get_logger, reset_logging, setup_logging
+from timeventx.app import API_VERSION, app
 from timeventx.configuration import Configuration
 from timeventx.tests._common import (
     EXAMPLE_IDENTIFIABLE_TIMER_1,
@@ -20,7 +22,6 @@ from timeventx.timers.collections.abc import IdentifiableTimersCollection
 from timeventx.timers.collections.listenable import ListenableTimersCollection
 from timeventx.timers.collections.memory import InMemoryIdentifiableTimersCollection
 from timeventx.timers.serialisation import timer_to_json
-from timeventx.web_server import API_VERSION, app
 
 logger = get_logger(__name__)
 
@@ -217,3 +218,23 @@ async def test_delete_logs(api_test_client: TestClient):
 async def test_double_slash_root(api_test_client: TestClient):
     response = await api_test_client.get(f"//")
     assert response.status_code == 404, response.text
+
+
+@pytest.mark.asyncio
+async def test_authorisation(api_test_client: TestClient, configuration: Configuration):
+    with patch.dict(
+        os.environ,
+        {Configuration.BASE64_ENCODED_CREDENTIALS.environment_variable_name: b64encode(b"user:pass").decode("UTF-8")},
+    ):
+        response = await api_test_client.get(f"/api/{API_VERSION}/timers")
+        assert response.status_code == 401, response.text
+
+        response = await api_test_client.get(
+            f"/api/{API_VERSION}/timers", headers={"Authorization": f"Basic {b64encode(b'user:pass2').decode('UTF-8')}"}
+        )
+        assert response.status_code == 401, response.text
+
+        response = await api_test_client.get(
+            f"/api/{API_VERSION}/timers", headers={"Authorization": f"Basic {b64encode(b'user:pass').decode('UTF-8')}"}
+        )
+        assert response.status_code == 200, response.text

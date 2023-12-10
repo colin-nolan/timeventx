@@ -14,6 +14,6 @@ pushd "${project_directory}/frontend" > /dev/null
 
 >&2 echo "Packaging frontend..."
 VITE_BACKEND_API_ROOT="${backend_api_root}" \
-    yarn build --base / --emptyOutDir --outDir "${build_directory}/frontend/dist"
+    yarn build --base / --emptyOutDir --outDir "${build_directory}/dist/frontend"
 
 popd > /dev/null

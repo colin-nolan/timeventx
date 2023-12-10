@@ -23,7 +23,7 @@ def _get_free_port() -> int:
 
 
 @pytest.fixture()
-def service(tmp_path: Path) -> ServiceLocation:
+def url(tmp_path: Path) -> ServiceLocation:
     frontend_path = tmp_path / "frontend"
     os.mkdir(frontend_path)
 
@@ -55,7 +55,7 @@ def service(tmp_path: Path) -> ServiceLocation:
 
     while service_process.is_alive():
         try:
-            requests.head(url)
+            requests.head(f"{url}/api/v1/healthcheck")
             break
         except requests.exceptions.ConnectionError:
             pass
@@ -68,7 +68,7 @@ def service(tmp_path: Path) -> ServiceLocation:
     service_process.join()
 
 
-def test_main(service: ServiceLocation):
-    response = requests.get(f"{service}/api/v1/timers")
+def test_main(url: ServiceLocation):
+    response = requests.get(f"{url}/api/v1/timers")
     assert response.status_code == 200
     assert response.json() == []
