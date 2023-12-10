@@ -207,6 +207,24 @@ async def delete_logs(request: Request) -> EndpointResponse:
     return "", HttpStatus.OK, create_content_type_header(ContentType.TEXT)
 
 
+@app.get(f"/api/{API_VERSION}/config")
+@handle_authorisation
+async def get_config(request: Request) -> EndpointResponse:
+    configuration: Configuration = request.app.configuration
+    configuration_descriptions = configuration.get_configuration_descriptions()
+    configuration_map = dict(
+        map(
+            lambda x: (x[0], str(x[1]) if isinstance(x[1], Path) else x[1]),
+            (
+                (configuration_description.name, configuration.get_with_standard_default(configuration_description))
+                for configuration_description in configuration_descriptions
+            ),
+        )
+    )
+
+    return json.dumps(configuration_map), HttpStatus.OK, create_content_type_header(ContentType.JSON)
+
+
 @app.post(f"/api/{API_VERSION}/shutdown")
 @handle_authorisation
 async def post_shutdown(request: Request) -> EndpointResponse:

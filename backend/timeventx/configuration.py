@@ -2,7 +2,7 @@ import logging
 import os
 from configparser import ConfigParser
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any, Iterable, Optional
 
 from timeventx._logging import get_logger
 
@@ -95,21 +95,24 @@ class Configuration:
     )
 
     @staticmethod
-    def write_env_to_config_file(config_file_location: Path):
-        """
-        Writes environment variables to a configuration file.
-        :param config_file_location: the location of the configuration file to write to
-        """
-        configuration_descriptions = (
+    def get_configuration_descriptions() -> Iterable[ConfigurationDescription]:
+        return (
             getattr(Configuration, attr_name)
             for attr_name in dir(Configuration)
             if not attr_name.startswith("_")
             and attr_name.isupper()
             and isinstance(getattr(Configuration, attr_name), ConfigurationDescription)
         )
+
+    @staticmethod
+    def write_env_to_config_file(config_file_location: Path):
+        """
+        Writes environment variables to a configuration file.
+        :param config_file_location: the location of the configuration file to write to
+        """
         configuration_parser = ConfigParser()
 
-        for configuration_description in configuration_descriptions:
+        for configuration_description in Configuration.get_configuration_descriptions():
             value = os.environ.get(configuration_description.environment_variable_name)
 
             if value is None:

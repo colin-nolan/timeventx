@@ -28,10 +28,10 @@ make build [API_SERVER_LOCATION=backend_api_location (default: /api/v1)] [ARCH=a
 
 The following environment variables must be set:
 
-| Environment Variable                 | Description                                                                                                                                     | Example                  |
-| ------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------ |
-| `TIMEVENTX_WIFI_SSID`                | Name of Wi-Fi network to connect                                                                                                                | `homewifi`               |
-| `TIMEVENTX_WIFI_PASSWORD`            | Password for the Wi-Fi network                                                                                                                  | `password123`            |
+| Environment Variable                 | Description                                                                                                                 | Example                  |
+| ------------------------------------ | --------------------------------------------------------------------------------------------------------------------------- | ------------------------ |
+| `TIMEVENTX_WIFI_SSID`                | Name of Wi-Fi network to connect                                                                                            | `homewifi`               |
+| `TIMEVENTX_WIFI_PASSWORD`            | Password for the Wi-Fi network                                                                                              | `password123`            |
 | `TIMEVENTX_ACTION_CONTROLLER_MODULE` | Location of module that sets the action to perform when a timer triggers ([see example](backend/timeventx/actions/noop.py)) | `timeventx.actions.noop` |
 
 Additional configuration is possible:
