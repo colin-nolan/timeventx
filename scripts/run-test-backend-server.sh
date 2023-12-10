@@ -2,6 +2,19 @@
 
 set -euf -o pipefail
 
+require_authorisation=false
+while getopts "a" options; do
+    case "${options}" in
+        a)
+            require_authorisation=true
+            ;;
+        ?)
+            exit 1
+            ;;
+    esac
+done
+shift $((OPTIND - 1))
+
 port="${1:-3005}"
 
 script_directory="$(cd "$(dirname "${BASH_SOURCE[0]}")" > /dev/null 2>&1 && pwd)"
@@ -20,6 +33,10 @@ echo "Hello world" > "${frontend_directory}/index.html"
 
 pushd "${backend_directory}" > /dev/null
 
+if ${require_authorisation}; then
+    export TIMEVENTX_BASE64_ENCODED_CREDENTIALS="$(echo -n 'user:pass' | base64),$(echo -n 'user2:pass2' | base64)";
+fi
+
 TIMEVENTX_TIMERS_DATABASE_LOCATION="${database_location}" \
     TIMEVENTX_LOG_FILE_LOCATION="${log_location}" \
     TIMEVENTX_BACKEND_PORT="${port}" \
@@ -28,5 +45,4 @@ TIMEVENTX_TIMERS_DATABASE_LOCATION="${database_location}" \
     TIMEVENTX_RESTART_ON_ERROR=false \
     TIMEVENTX_LOG_LEVEL=10 \
     TIMEVENTX_ACTION_CONTROLLER_MODULE=timeventx.actions.noop \
-    TIMEVENTX_BASE64_ENCODED_CREDENTIALS="$(echo -n 'user:pass' | base64),$(echo -n 'user2:pass2' | base64)" \
     PYTHONPATH=. coverage run timeventx/main.py

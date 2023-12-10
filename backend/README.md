@@ -19,5 +19,5 @@ poetry install --no-root
 A convenience script for starting a backend server with a sensible configuration can be used:
 
 ```
-../scripts/run-test-backend-server.sh
+../scripts/run-test-backend-server.sh [-a] [port]
 ```
