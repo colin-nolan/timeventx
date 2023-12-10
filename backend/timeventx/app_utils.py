@@ -56,7 +56,7 @@ def create_content_type_header(content_type: str) -> dict:
     return {"Content-Type": content_type}
 
 
-def require_authorisation(func: Callable):
+def handle_authorisation(func: Callable):
     def wrapped(request, *args, **kwargs):
         authorised, unauthorised_response = _handle_authorisation(request)
         print(authorised, unauthorised_response)

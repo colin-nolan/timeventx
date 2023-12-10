@@ -13,7 +13,7 @@ from timeventx.app_utils import (
     HttpStatus,
     create_content_type_header,
     get_content_type,
-    require_authorisation,
+    handle_authorisation,
 )
 from timeventx.configuration import Configuration, ConfigurationNotFoundError
 from timeventx.rp2040 import get_disk_usage, get_memory_usage
@@ -52,11 +52,13 @@ def _after_error_request(request: Request, response: Response):
 
 
 @app.get(f"/api/{API_VERSION}/healthcheck")
+# Deliberately put behind auth check
 async def get_healthcheck(request: Request) -> EndpointResponse:
     return json.dumps(True), HttpStatus.OK, create_content_type_header(ContentType.JSON)
 
 
 @app.get(f"/api/{API_VERSION}/timers")
+@handle_authorisation
 async def get_timers(request: Request) -> EndpointResponse:
     return (
         json.dumps([timer_to_json(timer) for timer in request.app.database]),
@@ -66,6 +68,7 @@ async def get_timers(request: Request) -> EndpointResponse:
 
 
 @app.post(f"/api/{API_VERSION}/timer")
+@handle_authorisation
 async def post_timer(request: Request) -> EndpointResponse:
     timer = _create_timer_from_request(request)
 
@@ -81,6 +84,7 @@ async def post_timer(request: Request) -> EndpointResponse:
 
 
 @app.put(f"/api/{API_VERSION}/timer/<int:timer_id>")
+@handle_authorisation
 async def put_timer(request: Request, timer_id: TimerId) -> EndpointResponse:
     timer = _create_timer_from_request(request)
     request.app.database.remove(timer_id)
@@ -121,6 +125,7 @@ def _create_timer_from_request(request: Request) -> Timer | IdentifiableTimer:
 
 
 @app.delete(f"/api/{API_VERSION}/timer/<int:timer_id>")
+@handle_authorisation
 async def delete_timer(request: Request, timer_id: TimerId) -> EndpointResponse:
     removed = request.app.database.remove(timer_id)
     return (
@@ -131,6 +136,7 @@ async def delete_timer(request: Request, timer_id: TimerId) -> EndpointResponse:
 
 
 @app.get(f"/api/{API_VERSION}/intervals")
+@handle_authorisation
 async def get_intervals(request: Request) -> EndpointResponse:
     return (
         json.dumps(
@@ -145,6 +151,7 @@ async def get_intervals(request: Request) -> EndpointResponse:
 
 
 @app.get(f"/api/{API_VERSION}/stats")
+@handle_authorisation
 async def get_stats(request: Request) -> EndpointResponse:
     if not RP2040_DETECTED:
         abort(HttpStatus.NOT_IMPLEMENTED, "Not implemented on non-RP2040 devices")
@@ -155,6 +162,7 @@ async def get_stats(request: Request) -> EndpointResponse:
 
 
 @app.post(f"/api/{API_VERSION}/reset")
+@handle_authorisation
 async def post_reset(request: Request) -> EndpointResponse:
     if not RP2040_DETECTED:
         abort(HttpStatus.NOT_IMPLEMENTED, "Not implemented on non-RP2040 devices")
@@ -172,7 +180,7 @@ async def post_reset(request: Request) -> EndpointResponse:
 
 
 @app.get(f"/api/{API_VERSION}/logs")
-@require_authorisation
+@handle_authorisation
 async def get_logs(request: Request) -> EndpointResponse:
     try:
         log_location = request.app.configuration[Configuration.LOG_FILE_LOCATION]
@@ -187,6 +195,7 @@ async def get_logs(request: Request) -> EndpointResponse:
 
 
 @app.delete(f"/api/{API_VERSION}/logs")
+@handle_authorisation
 async def delete_logs(request: Request) -> EndpointResponse:
     try:
         request.app.configuration[Configuration.LOG_FILE_LOCATION]
@@ -199,6 +208,7 @@ async def delete_logs(request: Request) -> EndpointResponse:
 
 
 @app.post(f"/api/{API_VERSION}/shutdown")
+@handle_authorisation
 async def post_shutdown(request: Request) -> EndpointResponse:
     logger.info("Server shutting down")
     flush_file_logs()
@@ -208,12 +218,14 @@ async def post_shutdown(request: Request) -> EndpointResponse:
 
 
 @app.get(f"/")
+@handle_authorisation
 async def get_root(request: Request) -> EndpointResponse:
     return serve_ui(request, Path("index.html"))
 
 
 # This route MUST be defined last
 @app.get(f"/<re:.*:path>")
+@handle_authorisation
 async def get_file(request: Request, path: str) -> EndpointResponse:
     return serve_ui(request, Path(path))
 
