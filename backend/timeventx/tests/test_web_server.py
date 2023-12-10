@@ -9,8 +9,8 @@ from unittest.mock import patch
 import pytest
 from microdot_asyncio_test_client import TestClient
 
-from backend.timeventx.app import API_VERSION, app
 from timeventx._logging import get_logger, reset_logging, setup_logging
+from timeventx.app import API_VERSION, app
 from timeventx.configuration import Configuration
 from timeventx.tests._common import (
     EXAMPLE_IDENTIFIABLE_TIMER_1,

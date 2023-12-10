@@ -119,10 +119,11 @@ class Configuration:
                     if not configuration_description.allow_none:
                         raise ValueError(
                             f"Configuration value must be set for {configuration_description.name} "
-                            + f"(try {configuration_description.environment_variable_name})"
+                            + f"(could set {configuration_description.environment_variable_name})"
                         )
-
-                value = str(value)
+                    continue
+                else:
+                    value = str(value)
 
             section = configuration_description.get_ini_section()
             if not configuration_parser.has_section(section):

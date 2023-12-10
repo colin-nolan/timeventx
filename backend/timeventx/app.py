@@ -26,9 +26,7 @@ from timeventx.timers.timers import IdentifiableTimer, Timer, TimerId
 
 API_VERSION = "v1"
 
-
 EndpointResponse: TypeAlias = Response | str | tuple[str, int] | tuple[str, int, dict[str, str]]
-
 
 logger = get_logger(__name__)
 app = Microdot()

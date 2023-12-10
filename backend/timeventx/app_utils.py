@@ -59,7 +59,6 @@ def create_content_type_header(content_type: str) -> dict:
 def handle_authorisation(func: Callable):
     def wrapped(request, *args, **kwargs):
         authorised, unauthorised_response = _handle_authorisation(request)
-        print(authorised, unauthorised_response)
         if not authorised:
             return unauthorised_response
         return func(request, *args, **kwargs)
