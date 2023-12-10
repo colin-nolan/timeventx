@@ -45,7 +45,8 @@ else
     # Note: RPi Pico's architecture is armv6m
     >&2 echo "Pre-compiling libs for ${architecture}..."
     # Find py files, compile them, and remove the original
-    find "${dist_directory}" -name "*.py" -type f \
+    # Note: do not compile `main.py` as RPi Pico will not recognise it as the entrypoint
+    find "${dist_directory}" -name "*.py" -type f ! -name main.py \
         -exec sh -c "mpy-cross -march=\"${architecture}\" \"\$0\"; rm \"\$0\"" {} \;
 fi
 
