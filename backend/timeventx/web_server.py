@@ -1,6 +1,7 @@
 import json
 from datetime import timedelta
 from pathlib import Path
+from typing import TypeAlias
 
 from microdot_asyncio import Microdot, Request, Response, abort, send_file
 from microdot_cors import CORS
@@ -17,7 +18,7 @@ from timeventx.timers.serialisation import (
 from timeventx.timers.timers import IdentifiableTimer, Timer, TimerId
 
 
-class HTTPStatus:
+class HttpStatus:
     OK = 200
     CREATED = 201
     ACCEPTED = 202
@@ -52,6 +53,8 @@ FILE_EXTENSION_TO_CONTENT_TYPE = {
 
 API_VERSION = "v1"
 
+EndpointResponse: TypeAlias = Response | str | tuple[str, int] | tuple[str, int, dict[str, str]]
+
 
 logger = get_logger(__name__)
 app = Microdot()
@@ -79,42 +82,41 @@ def _after_error_request(request: Request, response: Response):
     return _after_request(request, response)
 
 
-# TODO: return type
 @app.get(f"/api/{API_VERSION}/healthcheck")
-async def get_healthcheck(request: Request):
-    return json.dumps(True), HTTPStatus.OK, _create_content_type_header(ContentType.JSON)
+async def get_healthcheck(request: Request) -> EndpointResponse:
+    return json.dumps(True), HttpStatus.OK, _create_content_type_header(ContentType.JSON)
 
 
 @app.get(f"/api/{API_VERSION}/timers")
-async def get_timers(request: Request):
+async def get_timers(request: Request) -> EndpointResponse:
     return (
         json.dumps([timer_to_json(timer) for timer in request.app.database]),
-        HTTPStatus.OK,
+        HttpStatus.OK,
         _create_content_type_header(ContentType.JSON),
     )
 
 
 @app.post(f"/api/{API_VERSION}/timer")
-async def post_timer(request: Request):
+async def post_timer(request: Request) -> EndpointResponse:
     timer = _create_timer_from_request(request)
 
     if isinstance(timer, IdentifiableTimer):
-        abort(HTTPStatus.FORBIDDEN, f"Timer cannot be posted with an ID (it will be automatically assigned)")
+        abort(HttpStatus.FORBIDDEN, f"Timer cannot be posted with an ID (it will be automatically assigned)")
 
     identifiable_timer = request.app.database.add(timer)
     return (
         json.dumps(timer_to_json(identifiable_timer)),
-        HTTPStatus.CREATED,
+        HttpStatus.CREATED,
         _create_content_type_header(ContentType.JSON),
     )
 
 
 @app.put(f"/api/{API_VERSION}/timer/<int:timer_id>")
-async def put_timer(request: Request, timer_id: TimerId):
+async def put_timer(request: Request, timer_id: TimerId) -> EndpointResponse:
     timer = _create_timer_from_request(request)
     request.app.database.remove(timer_id)
     request.app.database.add(timer)
-    return json.dumps(timer_to_json(timer)), HTTPStatus.CREATED, _create_content_type_header(ContentType.JSON)
+    return json.dumps(timer_to_json(timer)), HttpStatus.CREATED, _create_content_type_header(ContentType.JSON)
 
 
 def _create_timer_from_request(request: Request) -> Timer | IdentifiableTimer:
@@ -125,13 +127,13 @@ def _create_timer_from_request(request: Request) -> Timer | IdentifiableTimer:
     try:
         serialised_timer = request.json
     except json.JSONDecodeError:
-        abort(HTTPStatus.BAD_REQUEST, f"Invalid JSON")
+        abort(HttpStatus.BAD_REQUEST, f"Invalid JSON")
     if serialised_timer is None:
-        abort(HTTPStatus.BAD_REQUEST, f"Timer attributes must be set")
+        abort(HttpStatus.BAD_REQUEST, f"Timer attributes must be set")
     try:
         start_time = deserialise_daytime(serialised_timer["startTime"])
     except (KeyError, ValueError, TypeError) as e:
-        abort(HTTPStatus.BAD_REQUEST, f"Invalid start_time: {e}")
+        abort(HttpStatus.BAD_REQUEST, f"Invalid start_time: {e}")
 
     arguments = dict(
         name=serialised_timer["name"],
@@ -146,21 +148,21 @@ def _create_timer_from_request(request: Request) -> Timer | IdentifiableTimer:
     try:
         return timer_type(**arguments)
     except (TypeError, KeyError, ValueError) as e:
-        abort(HTTPStatus.BAD_REQUEST, f"Invalid timer attributes: {e}")
+        abort(HttpStatus.BAD_REQUEST, f"Invalid timer attributes: {e}")
 
 
 @app.delete(f"/api/{API_VERSION}/timer/<int:timer_id>")
-async def delete_timer(request: Request, timer_id: TimerId):
+async def delete_timer(request: Request, timer_id: TimerId) -> EndpointResponse:
     removed = request.app.database.remove(timer_id)
     return (
         json.dumps(removed),
-        HTTPStatus.OK if removed else HTTPStatus.NOT_FOUND,
+        HttpStatus.OK if removed else HttpStatus.NOT_FOUND,
         _create_content_type_header(ContentType.JSON),
     )
 
 
 @app.get(f"/api/{API_VERSION}/intervals")
-async def get_intervals(request: Request):
+async def get_intervals(request: Request) -> EndpointResponse:
     return (
         json.dumps(
             [
@@ -168,25 +170,25 @@ async def get_intervals(request: Request):
                 for interval in request.app.timer_runner.on_off_intervals
             ]
         ),
-        HTTPStatus.OK,
+        HttpStatus.OK,
         _create_content_type_header(ContentType.JSON),
     )
 
 
 @app.get(f"/api/{API_VERSION}/stats")
-async def get_stats(request: Request):
+async def get_stats(request: Request) -> EndpointResponse:
     if not RP2040_DETECTED:
-        abort(HTTPStatus.NOT_IMPLEMENTED, "Not implemented on non-RP2040 devices")
+        abort(HttpStatus.NOT_IMPLEMENTED, "Not implemented on non-RP2040 devices")
 
     output = f"Memory: {get_memory_usage()}\nStorage: {get_disk_usage()}"
 
-    return output, HTTPStatus.OK, _create_content_type_header(ContentType.TEXT)
+    return output, HttpStatus.OK, _create_content_type_header(ContentType.TEXT)
 
 
 @app.post(f"/api/{API_VERSION}/reset")
-async def post_reset(request: Request):
+async def post_reset(request: Request) -> EndpointResponse:
     if not RP2040_DETECTED:
-        abort(HTTPStatus.NOT_IMPLEMENTED, "Not implemented on non-RP2040 devices")
+        abort(HttpStatus.NOT_IMPLEMENTED, "Not implemented on non-RP2040 devices")
 
     def reset_device():
         import machine
@@ -201,56 +203,63 @@ async def post_reset(request: Request):
 
 
 @app.get(f"/api/{API_VERSION}/logs")
-async def get_logs(request: Request):
+async def get_logs(request: Request) -> EndpointResponse:
     try:
         log_location = request.app.configuration[Configuration.LOG_FILE_LOCATION]
     except ConfigurationNotFoundError:
-        abort(HTTPStatus.NOT_IMPLEMENTED, "Logs not being saved to file")
+        abort(HttpStatus.NOT_IMPLEMENTED, "Logs not being saved to file")
     flush_file_logs()
 
     if log_location.exists():
         return send_file(str(log_location), max_age=0, content_type=ContentType.TEXT)
     else:
-        return "", HTTPStatus.OK, _create_content_type_header(ContentType.TEXT)
+        return "", HttpStatus.OK, _create_content_type_header(ContentType.TEXT)
 
 
 @app.delete(f"/api/{API_VERSION}/logs")
-async def delete_logs(request: Request):
+async def delete_logs(request: Request) -> EndpointResponse:
     try:
         request.app.configuration[Configuration.LOG_FILE_LOCATION]
     except ConfigurationNotFoundError:
-        abort(HTTPStatus.NOT_IMPLEMENTED, "Logs not being saved to file")
+        abort(HttpStatus.NOT_IMPLEMENTED, "Logs not being saved to file")
 
     clear_logs()
 
-    return "", HTTPStatus.OK, _create_content_type_header(ContentType.TEXT)
+    return "", HttpStatus.OK, _create_content_type_header(ContentType.TEXT)
 
 
 # FIXME: secure!
 @app.post(f"/api/{API_VERSION}/shutdown")
-async def post_shutdown(request):
+async def post_shutdown(request: Request) -> EndpointResponse:
     logger.info("Server shutting down")
     flush_file_logs()
     # TODO: delay shutdown to allow a 202 to be returned, instead of dropping the connection
     request.app.shutdown()
-    return "Shutting down...", HTTPStatus.ACCEPTED
+    return "Shutting down...", HttpStatus.ACCEPTED
+
+
+# FIXME
+@app.get(f"/kitten")
+async def get_kitten(request: Request) -> EndpointResponse:
+    print(request.headers.get("Authorization"))
+    return "Testing", 401, {"WWW-Authenticate": "Basic realm=\"timeventx\""}
 
 
 @app.get(f"/")
-async def get_root(request: Request):
+async def get_root(request: Request) -> EndpointResponse:
     return serve_ui(request, Path("index.html"))
 
 
 # This route MUST be defined last
 @app.get(f"/<re:.*:path>")
-async def get_file(request: Request, path: str):
+async def get_file(request: Request, path: str) -> EndpointResponse:
     return serve_ui(request, Path(path))
 
 
 def serve_ui(request: Request, path: Path):
     # MicroPython `pathlib` implementation does not support `is_absolute`
     if str(path).startswith("/"):
-        abort(HTTPStatus.NOT_FOUND, "Path should not start with double slash //")
+        abort(HttpStatus.NOT_FOUND, "Path should not start with double slash //")
 
     try:
         frontend_location = request.app.configuration[Configuration.FRONTEND_ROOT_DIRECTORY]
@@ -263,7 +272,7 @@ def serve_ui(request: Request, path: Path):
         # `Path.__truediv__` is not implemented in `pathlib` module in use with MicroPython
         full_path = resolve_path(Path(f"{frontend_location}/{path}"))
     except OSError:
-        abort(HTTPStatus.NOT_FOUND)
+        abort(HttpStatus.NOT_FOUND)
 
     if (
         not str(full_path).startswith(str(frontend_location))
@@ -271,7 +280,7 @@ def serve_ui(request: Request, path: Path):
         or not full_path.exists()
         or not full_path.is_file()
     ):
-        abort(HTTPStatus.NOT_FOUND)
+        abort(HttpStatus.NOT_FOUND)
 
     content_type = _get_content_type(full_path)
 

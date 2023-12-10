@@ -1,4 +1,3 @@
-# TODO: move script to micropython directory?
 import argparse
 import os
 
@@ -6,6 +5,7 @@ import mip
 
 LIBRARIES_TO_INSTALL = (
     "abc",
+    "base64",
     (
         "github:colin-nolan/micropython-lib/micropython/ucontextlib-async/ucontextlib/_async.py",
         dict(version="async_contextlib"),
