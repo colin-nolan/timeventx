@@ -9,6 +9,7 @@ from unittest.mock import patch
 import pytest
 from microdot_asyncio_test_client import TestClient
 
+from backend.timeventx.app import API_VERSION, app
 from timeventx._logging import get_logger, reset_logging, setup_logging
 from timeventx.configuration import Configuration
 from timeventx.tests._common import (
@@ -20,7 +21,6 @@ from timeventx.timers.collections.abc import IdentifiableTimersCollection
 from timeventx.timers.collections.listenable import ListenableTimersCollection
 from timeventx.timers.collections.memory import InMemoryIdentifiableTimersCollection
 from timeventx.timers.serialisation import timer_to_json
-from timeventx.web_server import API_VERSION, app
 
 logger = get_logger(__name__)
 

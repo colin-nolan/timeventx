@@ -86,6 +86,13 @@ class Configuration:
     ACTION_CONTROLLER_MODULE = ConfigurationDescription(
         f"{ENVIRONMENT_VARIABLE_PREFIX}_ACTION_CONTROLLER_MODULE", "actions.module", str
     )
+    # Credentials expected in the form: base64("user:password"),base64("user2:password2")
+    BASE64_ENCODED_CREDENTIALS = ConfigurationDescription(
+        f"{ENVIRONMENT_VARIABLE_PREFIX}_BASE64_ENCODED_CREDENTIALS",
+        "authentication.base64_credentials",
+        lambda x: x.split(","),
+        default=None,
+    )
 
     @staticmethod
     def write_env_to_config_file(config_file_location: Path):
