@@ -17,7 +17,7 @@ class ConfigurationDescription:
     @property
     def name(self) -> str:
         return self.ini_name
-    
+
     @property
     def ini_section(self) -> str:
         section = "".join(self.ini_name.split(".")[:-1])
@@ -135,9 +135,7 @@ class Configuration:
                 configuration_parser.add_section(section)
 
             # Using subscribable syntax as expected to run on CPython's implementation of `configparser`
-            configuration_parser[configuration_description.ini_section][
-                configuration_description.ini_option
-            ] = value
+            configuration_parser[configuration_description.ini_section][configuration_description.ini_option] = value
 
         with open(config_file_location, "w") as config_file:
             configuration_parser.write(config_file)

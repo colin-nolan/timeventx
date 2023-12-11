@@ -229,7 +229,9 @@ async def test_get_config(api_test_client: TestClient):
     ):
         response = await api_test_client.get(f"/api/{API_VERSION}/config")
         assert response.status_code == 200, response.text
-        assert response.json[Configuration.WIFI_SSID.ini_section][Configuration.WIFI_SSID.ini_option] == example_wifi_ssid
+        assert (
+            response.json[Configuration.WIFI_SSID.ini_section][Configuration.WIFI_SSID.ini_option] == example_wifi_ssid
+        )
 
 
 @pytest.mark.asyncio
