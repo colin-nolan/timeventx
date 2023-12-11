@@ -17,6 +17,15 @@ class ConfigurationDescription:
     @property
     def name(self) -> str:
         return self.ini_name
+    
+    @property
+    def ini_section(self) -> str:
+        section = "".join(self.ini_name.split(".")[:-1])
+        return section if section != self.ini_name else "DEFAULT"
+
+    @property
+    def ini_option(self) -> str:
+        return self.ini_name.split(".")[-1]
 
     def __init__(
         self,
@@ -31,13 +40,6 @@ class ConfigurationDescription:
         self.deserialiser = deserialiser
         self.default = default
         self.allow_none = allow_none
-
-    def get_ini_section(self) -> str:
-        section = "".join(self.ini_name.split(".")[:-1])
-        return section if section != self.ini_name else "DEFAULT"
-
-    def get_ini_option(self) -> str:
-        return self.ini_name.split(".")[-1]
 
 
 class ConfigurationNotFoundError(RuntimeError):
@@ -128,13 +130,13 @@ class Configuration:
                 else:
                     value = str(value)
 
-            section = configuration_description.get_ini_section()
+            section = configuration_description.ini_section
             if not configuration_parser.has_section(section):
                 configuration_parser.add_section(section)
 
             # Using subscribable syntax as expected to run on CPython's implementation of `configparser`
-            configuration_parser[configuration_description.get_ini_section()][
-                configuration_description.get_ini_option()
+            configuration_parser[configuration_description.ini_section][
+                configuration_description.ini_option
             ] = value
 
         with open(config_file_location, "w") as config_file:
@@ -165,7 +167,7 @@ class Configuration:
                 # Using legacy API `get` opposed to subscribable syntax as expected to run on minimal `configparser`
                 # implementation that is compatible with MicroPython
                 value = self._configuration_parser.get(
-                    configuration_description.get_ini_section(), configuration_description.get_ini_option()
+                    configuration_description.ini_section, configuration_description.ini_option
                 )
             except Exception as e:
                 raise ConfigurationNotFoundError(configuration_description) from e

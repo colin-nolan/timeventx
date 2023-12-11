@@ -1,3 +1,4 @@
+from collections import defaultdict
 import json
 from datetime import timedelta
 from pathlib import Path
@@ -212,15 +213,13 @@ async def delete_logs(request: Request) -> EndpointResponse:
 async def get_config(request: Request) -> EndpointResponse:
     configuration: Configuration = request.app.configuration
     configuration_descriptions = configuration.get_configuration_descriptions()
-    configuration_map = dict(
-        map(
-            lambda x: (x[0], str(x[1]) if isinstance(x[1], Path) else x[1]),
-            (
-                (configuration_description.name, configuration.get_with_standard_default(configuration_description))
-                for configuration_description in configuration_descriptions
-            ),
-        )
-    )
+
+    configuration_map = defaultdict(dict)
+    for configuration_description in configuration_descriptions:
+        value = configuration.get_with_standard_default(configuration_description)
+        if isinstance(value, Path):
+            value = str(value)
+        configuration_map[configuration_description.ini_section][configuration_description.ini_option] = value
 
     return json.dumps(configuration_map), HttpStatus.OK, create_content_type_header(ContentType.JSON)
 
