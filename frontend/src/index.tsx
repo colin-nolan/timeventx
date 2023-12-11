@@ -6,6 +6,7 @@ import { Header } from "./components/Header";
 import { JoyToaster } from "./components/JoyToaster";
 import { Timers } from "./pages/Timers";
 import { Logs } from "./pages/Logs";
+import { Config } from "./pages/Config";
 import { Reset } from "./pages/Reset";
 import { Stats } from "./pages/Stats";
 import { NotFound } from "./pages/_404";
@@ -26,6 +27,7 @@ export function App() {
                         <Router>
                             <Route default path="/" component={Timers} apiRootUrl={BACKEND_API_ROOT} />
                             <Route path="/logs" component={Logs} apiRootUrl={BACKEND_API_ROOT} />
+                            <Route path="/config" component={Config} apiRootUrl={BACKEND_API_ROOT} />
                             <Route path="/stats" component={Stats} apiRootUrl={BACKEND_API_ROOT} />
                             <Route path="/reset" component={Reset} apiRootUrl={BACKEND_API_ROOT} />
                             <Route default component={NotFound} />

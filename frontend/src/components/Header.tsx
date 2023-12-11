@@ -44,6 +44,8 @@ export function Header() {
                         <ListDivider />
                         <NavListItem title="Logs" link="/logs" />
                         <ListDivider />
+                        <NavListItem title="Configuration" link="/config" />
+                        <ListDivider />
                         <NavListItem title="Stats" link="/stats" />
                         <ListDivider />
                         <NavListItem title="Reset" link="/reset" />
