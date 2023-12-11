@@ -10,6 +10,7 @@ from unittest.mock import patch
 import pytest
 import requests
 
+from timeventx.app import API_VERSION
 from timeventx.configuration import Configuration
 from timeventx.main import main
 
@@ -55,7 +56,7 @@ def url(tmp_path: Path) -> ServiceLocation:
 
     while service_process.is_alive():
         try:
-            requests.head(f"{url}/api/v1/healthcheck")
+            requests.head(f"{url}/api/{API_VERSION}/healthcheck")
             break
         except requests.exceptions.ConnectionError:
             pass
@@ -63,12 +64,12 @@ def url(tmp_path: Path) -> ServiceLocation:
 
     yield url
 
-    response = requests.post(f"{url}/api/v1/shutdown")
+    response = requests.post(f"{url}/api/{API_VERSION}/shutdown")
     assert response.status_code == 202
     service_process.join()
 
 
 def test_main(url: ServiceLocation):
-    response = requests.get(f"{url}/api/v1/timers")
+    response = requests.get(f"{url}/api/{API_VERSION}/timers")
     assert response.status_code == 200
     assert response.json() == []

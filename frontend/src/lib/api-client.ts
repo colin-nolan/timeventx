@@ -52,6 +52,19 @@ export class ApiClient {
         });
     }
 
+    getConfig(): Promise<object> {
+        return new Promise<object>((resolve, reject) => {
+            wrappedFetch("getting config", `${this.apiRootUrl}/config`)
+                .then(async (response) => {
+                    const config = await response.json();
+                    resolve(config);
+                })
+                .catch((error) => {
+                    reject(error);
+                });
+        });
+    }
+
     clearLogs(): Promise<void> {
         return new Promise<void>((resolve, reject) => {
             wrappedFetch("clearing logs", `${this.apiRootUrl}/logs`, { method: "DELETE" })

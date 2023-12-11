@@ -1,4 +1,5 @@
 import json
+from collections import defaultdict
 from datetime import timedelta
 from pathlib import Path
 from typing import Dict, Tuple, TypeAlias, Union
@@ -205,6 +206,22 @@ async def delete_logs(request: Request) -> EndpointResponse:
     clear_logs()
 
     return "", HttpStatus.OK, create_content_type_header(ContentType.TEXT)
+
+
+@app.get(f"/api/{API_VERSION}/config")
+@handle_authorisation
+async def get_config(request: Request) -> EndpointResponse:
+    configuration: Configuration = request.app.configuration
+    configuration_descriptions = configuration.get_configuration_descriptions()
+
+    configuration_map = defaultdict(dict)
+    for configuration_description in configuration_descriptions:
+        value = configuration.get_with_standard_default(configuration_description)
+        if isinstance(value, Path):
+            value = str(value)
+        configuration_map[configuration_description.ini_section][configuration_description.ini_option] = value
+
+    return json.dumps(configuration_map), HttpStatus.OK, create_content_type_header(ContentType.JSON)
 
 
 @app.post(f"/api/{API_VERSION}/shutdown")

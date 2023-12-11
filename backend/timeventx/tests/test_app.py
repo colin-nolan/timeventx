@@ -44,7 +44,12 @@ def api_test_client(database: IdentifiableTimersCollection, configuration: Confi
     test_app = deepcopy(app)
     test_app.configuration = configuration
     test_app.database = database
-    return TestClient(test_app)
+
+    # Use of the test client can lead to a change to a temp directory that gets removed
+    # - this causes future failures
+    original_cwd = os.getcwd()
+    yield TestClient(test_app)
+    os.chdir(original_cwd)
 
 
 @pytest.mark.asyncio
@@ -218,6 +223,20 @@ async def test_delete_logs(api_test_client: TestClient):
 async def test_double_slash_root(api_test_client: TestClient):
     response = await api_test_client.get(f"//")
     assert response.status_code == 404, response.text
+
+
+@pytest.mark.asyncio
+async def test_get_config(api_test_client: TestClient):
+    example_wifi_ssid = "example_wifi_ssid"
+    with patch.dict(
+        os.environ,
+        {Configuration.WIFI_SSID.environment_variable_name: example_wifi_ssid},
+    ):
+        response = await api_test_client.get(f"/api/{API_VERSION}/config")
+        assert response.status_code == 200, response.text
+        assert (
+            response.json[Configuration.WIFI_SSID.ini_section][Configuration.WIFI_SSID.ini_option] == example_wifi_ssid
+        )
 
 
 @pytest.mark.asyncio
