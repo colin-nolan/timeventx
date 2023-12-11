@@ -221,6 +221,18 @@ async def test_double_slash_root(api_test_client: TestClient):
 
 
 @pytest.mark.asyncio
+async def test_get_config(api_test_client: TestClient):
+    example_wifi_ssid = "example_wifi_ssid"
+    with patch.dict(
+        os.environ,
+        {Configuration.WIFI_SSID.environment_variable_name: example_wifi_ssid},
+    ):
+        response = await api_test_client.get(f"/api/{API_VERSION}/config")
+        assert response.status_code == 200, response.text
+        assert response.json[Configuration.WIFI_SSID.ini_name] == example_wifi_ssid
+
+
+@pytest.mark.asyncio
 async def test_authorisation(api_test_client: TestClient, configuration: Configuration):
     with patch.dict(
         os.environ,
