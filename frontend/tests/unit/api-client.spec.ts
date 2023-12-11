@@ -23,6 +23,11 @@ test("clear logs", async () => {
     await client.clearLogs();
 });
 
+test("get config", async () => {
+    const client = createClient();
+    await expect(client.getConfig()).toBeDefined();
+});
+
 test("reset device", async () => {
     const client = createClient();
     // Expecting because not implemented outside of rp2040
