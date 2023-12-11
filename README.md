@@ -11,6 +11,7 @@ Timevente */taɪmventeks/* is a system for scheduling an event to be performed a
 - Set timers.
 - View set timer intervals.
 - View system logs.
+- View system configuration.
 - View system stats (CPU usage, RAM usage, etc.)
 - Trigger a restart.
 
