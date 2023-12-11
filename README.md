@@ -58,9 +58,11 @@ To deploy the built files (see section on building above) to a device:
 
 where `-d` deletes all existing files on the device first - including any the timers configuration database! It may be useful if the device contains legacy files.
 
-To manually interact with the RP2040 device:
+The device needs to be reset to start the application, e.g.:
 
-- `mpremote`
+```shell
+mpremote reset
+```
 
 ## Legal
 

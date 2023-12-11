@@ -221,7 +221,9 @@ async def get_config(request: Request) -> EndpointResponse:
             value = str(value)
         configuration_map[configuration_description.ini_section][configuration_description.ini_option] = value
 
-    return json.dumps(configuration_map), HttpStatus.OK, create_content_type_header(ContentType.JSON)
+    # Workaround for `defaultdict` implementation being used with MicroPython
+    serialisable_configuration_map = {x: y for x, y in configuration_map.items()}
+    return json.dumps(serialisable_configuration_map), HttpStatus.OK, create_content_type_header(ContentType.JSON)
 
 
 @app.post(f"/api/{API_VERSION}/shutdown")
