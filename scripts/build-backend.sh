@@ -26,7 +26,6 @@ cp dist/*.whl "${build_directory}"
 pip3 install -t "${packaged_libs_directory}" "${build_directory}"/*.whl
 rm -rf "${packaged_libs_directory}"/*.dist-info
 find "${packaged_libs_directory}" -type d -name __pycache__ -exec rm -r {} +
-rm "${packaged_libs_directory}/microdot_test_client.py"
 
 >&2 echo "Downloading mip requirements..."
 micropython mips-requirements.py "${stdlib_libs_directory}"
