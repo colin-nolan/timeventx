@@ -81,7 +81,7 @@ export default defineConfig({
     /* Run your local dev server before starting the tests */
     webServer: [
         {
-            command: `VITE_BACKEND_API_ROOT=http://127.0.0.1:${BACKEND_PORT}/api/v1 yarn run dev-no-backend --port ${FRONTEND_PORT}`,
+            command: `VITE_BACKEND_API_ROOT=http://127.0.0.1:${BACKEND_PORT}/api/v1 yarn run dev-no-backend --port ${FRONTEND_PORT} --host 127.0.0.1`,
             url: `http://127.0.0.1:${FRONTEND_PORT}`,
             reuseExistingServer: !process.env.CI,
         },
