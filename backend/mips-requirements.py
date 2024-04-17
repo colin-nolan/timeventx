@@ -1,6 +1,5 @@
 import argparse
 import os
-from typing import Callable, Optional
 
 import mip
 
@@ -9,9 +8,9 @@ class Library:
     def __init__(
         self,
         name: str,
-        mips_kwargs: Optional[dict] = None,
-        modifier: Optional[Callable[[str, str, dict], None]] = None,
-        package: Optional[str] = None,
+        mips_kwargs = None, # type: Optional[dict] 
+        modifier = None, # type: Optional[Callable[[str, str, dict], None]]
+        package = None, # type: Optional[str]
     ) -> None:
         self.name = name
         self.mips_kwargs = mips_kwargs
