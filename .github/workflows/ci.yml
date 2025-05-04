@@ -1,0 +1,223 @@
+name: CI
+
+on:
+  push:
+
+jobs:
+  backend-tests:
+    name: Backend Unit Tests
+    runs-on: ubuntu-latest
+    container: python:3.11-alpine
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          apk add --no-cache bash gcc libffi-dev make musl-dev
+          pip install poetry
+          poetry config virtualenvs.create false
+          cd backend
+          poetry install --no-root --without=dist,deploy
+
+      - name: Run backend unit tests
+        run: |
+          make test-backend-unit
+
+      - name: Install Codecov uploader
+        run: |
+          apk add --no-cache curl
+          if [ "$(uname -m)" = "aarch64" ]; then arch=aarch64; else arch=linux; fi
+          curl -fL "https://uploader.codecov.io/v0.6.3/${arch}/codecov" > /usr/local/bin/codecov
+          chmod +x /usr/local/bin/codecov
+
+      - name: Publish backend coverage
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+        run: |
+          cd backend
+          coverage combine
+          coverage xml
+          cd -
+          codecov
+
+  backend-format:
+    name: Backend Format Check
+    runs-on: ubuntu-latest
+    container: python:3-alpine
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          apk add --no-cache bash gcc libffi-dev make musl-dev
+          pip install poetry && poetry config virtualenvs.create false
+          cd backend
+          poetry install --no-root --only=dev
+
+      - name: Check backend formatting
+        run: |
+          make format-backend CHECK=true
+
+  backend-build:
+    name: Backend Build Check
+    runs-on: ubuntu-latest
+    container: python:3.11
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          pip install poetry && poetry config virtualenvs.create false
+          git config --global --add safe.directory "$PWD"
+          cd backend && poetry install --no-root --only=dist && cd -
+          MICROPYTHON_VERSION=1.21.0
+          curl -sL "https://github.com/micropython/micropython/releases/download/v${MICROPYTHON_VERSION}/micropython-${MICROPYTHON_VERSION}.tar.xz" | tar -xJ -C /usr/local/src
+          cd "/usr/local/src/micropython-${MICROPYTHON_VERSION}/ports/unix"
+          make
+          make install
+
+      - name: Build backend
+        run: |
+          TIMEVENTX_WIFI_SSID=example-ssid TIMEVENTX_WIFI_PASSWORD=example-password TIMEVENTX_ACTION_CONTROLLER_MODULE=timeventx.actions.noop make build-backend
+
+  frontend-tests:
+    name: Frontend Tests
+    runs-on: ubuntu-latest
+    container: node:20
+    env:
+      # Required to work around: https://github.com/microsoft/playwright/issues/6500
+      HOME: /root
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Cache backend and frontend dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/pypoetry
+            ~/.cache/pip
+            frontend/node_modules
+            ~/.cache/yarn
+            ~/.cache/ms-playwright/
+          key: ${{ runner.os }}-deps-${{ hashFiles('backend/poetry.lock', 'frontend/yarn.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-deps-
+
+      - name: Install backend and frontend dependencies
+        run: |
+          apt-get update
+          apt-get install -y --no-install-recommends python-is-python3 pipx python3-pip python3-poetry
+          poetry config virtualenvs.create false
+          poetry self add coverage
+
+          cd backend
+          poetry install --no-root --only=main
+          cd -
+
+          cd frontend
+          max_retries=3
+          success=false
+          for i in $(seq 3); do
+              yarn install --network-timeout 3600000  \
+                  && { success=true; break; } \
+                  || { >&2 echo "Package install with Yarn failed - retrying ($i / $max_retries)"; sleep 5; }
+          done
+          if ! $success; then >&2 echo "Failed to install packages with Yarn"; exit 1; fi
+
+          yarn playwright install
+          yarn playwright install-deps
+
+      - name: Run frontend unit tests
+        run: |
+          make test-frontend-unit
+
+      - name: Run end-to-end tests
+        run: |
+          make test-frontend-e2e
+
+      - name: Install Codecov uploader
+        run: |
+          if [ "$(uname -m)" = "aarch64" ]; then arch=aarch64; else arch=linux; fi
+          curl -fL "https://uploader.codecov.io/v0.6.3/${arch}/codecov" > /usr/local/bin/codecov && chmod +x /usr/local/bin/codecov
+
+      - name: Publish frontend coverage
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+        run: |
+          pipx install coverage
+          cd backend
+          coverage combine
+          coverage xml
+          cd -
+          codecov
+
+  frontend-format:
+    name: Frontend Format Check
+    runs-on: ubuntu-latest
+    container: node:20-alpine
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          apk add --no-cache bash make
+          cd frontend
+          max_retries=3
+          success=false
+          for i in $(seq 3); do
+              yarn install --network-timeout 3600000  \
+                  && { success=true; break; } \
+                  || { >&2 echo "Package install with Yarn failed - retrying ($i / $max_retries)"; sleep 5; }
+          done
+          if ! $success; then >&2 echo "Failed to install packages with Yarn"; exit 1; fi
+
+      - name: Check frontend formatting
+        run: |
+          make format-frontend CHECK=true
+
+  frontend-build:
+    name: Frontend Build Check
+    runs-on: ubuntu-latest
+    container: node:20-alpine
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          apk add --no-cache bash make
+          cd frontend
+          max_retries=3
+          success=false
+          for i in $(seq 3); do
+              yarn install --network-timeout 3600000  \
+                  && { success=true; break; } \
+                  || { >&2 echo "Package install with Yarn failed - retrying ($i / $max_retries)"; sleep 5; }
+          done
+          if ! $success; then >&2 echo "Failed to install packages with Yarn"; exit 1; fi
+
+      - name: Build frontend
+        run: |
+          make build-frontend API_SERVER_LOCATION=http://localhost:8000
+
+  markdown-check:
+    name: Markdown Format Check
+    runs-on: ubuntu-latest
+    container: python:3-alpine
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          apk add --no-cache bash make
+          pip install mdformat-gfm
+
+      - name: Check markdown formatting
+        run: |
+          make format-markdown CHECK=true
