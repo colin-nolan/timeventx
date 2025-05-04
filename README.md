@@ -2,7 +2,7 @@
     <img alt="Timeventx Logo" src="docs/logo.png" width="300px"/>
 </p>
 
-[![Build Status](https://ci.colinnolan.uk/api/badges/colin-nolan/timeventx/status.svg)](https://ci.colinnolan.uk/colin-nolan/timeventx) [![Overage Coverage](https://codecov.io/gh/colin-nolan/timeventx/graph/badge.svg?token=UKCB5SVPED)](https://codecov.io/gh/colin-nolan/timeventx)
+[![CI](https://github.com/colin-nolan/garden-watering/actions/workflows/ci.yml/badge.svg)](https://github.com/colin-nolan/garden-watering/actions/workflows/ci.yml) [![Overage Coverage](https://codecov.io/gh/colin-nolan/timeventx/graph/badge.svg?token=UKCB5SVPED)](https://codecov.io/gh/colin-nolan/timeventx)
 
 # Timeventx
 
