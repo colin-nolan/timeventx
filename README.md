@@ -66,6 +66,6 @@ mpremote reset
 
 ## Legal
 
-AGPL v3 (contact for other licencing). Copyright 2023 Colin Nolan.
+AGPL v3 (contact for other licencing). Copyright 2023, 2025 Colin Nolan.
 
 This work is in no way related to any company that I may work for.
